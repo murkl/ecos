@@ -17,9 +17,9 @@ SCRIPT_ID="ecos"
 #/////////////////////////////////////////////////////
 
 # URLS
-ECOS_URL="http://ecos.webhop.me"
+ECOS_URL="https://raw.githubusercontent.com/murkl/ecos/main"
 ECOS_CORE_URL="$ECOS_URL/ecos"
-ECOS_DOTS_URL="$ECOS_URL:3000/ecos/dotfiles"
+ECOS_DOTS_URL="https://github.com/murkl/dotfiles.git"
 
 ARCH_ISO_URL="https://arch.jensgutermuth.de/iso/2021.04.01/archlinux-2021.04.01-x86_64.iso"
 
