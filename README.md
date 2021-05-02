@@ -16,10 +16,10 @@
 # Installation
 
 - Create bootable USB Stick
-  - `curl -s http://ecos.webhop.me/ecos | bash`
+  - `curl -sL http://ecos.webhop.me | bash`
 - Boot from USB Stick...
   - `loadkeys de-latin1`
-  - `curl http://ecos.webhop.me/ecos > ecos`
+  - `curl -L http://ecos.webhop.me > ecos`
   - `bash ecos`
 
 # Documentation
