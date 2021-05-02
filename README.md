@@ -32,19 +32,15 @@
 - Set Boot Mode to UEFI (Legacy BIOS supported)
 - Connect to Internet via cable
 
-## Package Information
+## Core Installation
 
-The following packages will be automatically installed during the installation routine.
-
-### Core Installation
-
-This is the first installation step and will install all essential packages and configurations. You have to reboot after this step.
+This is the first installation step and will install all essential packages and configurations. You have to reboot after this step. The following packages will be installed during this installation step.
 
 ```
 base base-devel linux linux-firmware efibootmgr dosfstools gptfdisk networkmanager zsh
 ```
 
-### Dotfiles Installation
+## Dotfiles Installation
 
 After the first reboot the ECOS TUI will open again automatically. Feel free to execute the ECOS Dotfiles Installation or exit the TUI and install your system manually. The following packages will install before execute your personal `.init` file.
 
