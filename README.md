@@ -44,15 +44,15 @@ This is the first installation step and will install all essential packages and 
 base base-devel linux linux-firmware efibootmgr dosfstools gptfdisk networkmanager zsh
 ```
 
-### Base Installation - [Go to Base Repository...](http://murkl.ddns.net:3000/ecos/base)
+### Dotfiles Installation
 
-After the first reboot the ECOS TUI will open again automatically. Feel free to execute the Base Installation or exit the TUI and install your system manually.
+After the first reboot the ECOS TUI will open again automatically. Feel free to execute the ECOS Dotfiles Installation or exit the TUI and install your system manually. The following packages will install before execute your personal `.init` file.
 
 ```
 git paru
 ```
 
-**Note:** _The base installation routine will execute the personal `~/.init` file inside your dotfiles repository_
+**Note:** _The ECOS Dotfiles Installation routine will ask you for your Dotfiles URL and will execute the personal `~/.init` file inside your Dotfiles Repository_
 
 ## Configuration
 
