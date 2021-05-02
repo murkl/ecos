@@ -1,0 +1,1716 @@
+#!/bin/bash
+SCRIPT_VERSION=1.1.5
+SCRIPT_ID="ecos"
+
+#/////////////////////////////////////////////////////
+# HOW TO
+#/////////////////////////////////////////////////////
+
+# Redirect:
+# https://www.cyberciti.biz/faq/linux-redirect-error-output-to-file/
+
+# BIOS:
+# https://unixsheikh.com/tutorials/real-full-disk-encryption-using-grub-on-arch-linux-for-bios-and-uefi.html
+
+#/////////////////////////////////////////////////////
+# VARIABLES
+#/////////////////////////////////////////////////////
+
+# URLS
+ECOS_URL="http://ecos.webhop.me"
+ECOS_CORE_URL="$ECOS_URL/ecos"
+ECOS_DOTS_URL="$ECOS_URL:3000/ecos/dotfiles"
+
+ARCH_ISO_URL="https://arch.jensgutermuth.de/iso/2021.04.01/archlinux-2021.04.01-x86_64.iso"
+
+# WORKING DIR
+SCRIPT_DIR="$(cd "$(dirname "$0")" >/dev/null 2>&1 && pwd)"
+SCRIPT_FILE="$SCRIPT_DIR/$(basename "$0")"
+
+CONFIG_FILE="$SCRIPT_DIR/$SCRIPT_ID.conf"
+LOG_FILE="$SCRIPT_DIR/$SCRIPT_ID.log"
+TUI_FILE="$SCRIPT_DIR/$SCRIPT_ID.tui"
+
+# TUI
+TUI_WIDTH=64
+TUI_HEIGHT=24
+
+# ECOS
+ECOS_CORE="$HOME/.local/bin/$SCRIPT_ID"
+ECOS_CONFIG_HOME="$HOME/.config/ecos"
+ECOS_CONFIG_FILE="$ECOS_CONFIG_HOME/config"
+ECOS_INIT="$HOME/.init"
+ECOS_INITIALIZED="$HOME/.cache/$SCRIPT_ID.initialized"
+ARCH_ISO_FILE="$HOME/.cache/archlinux-x86_64.iso"
+
+# CONFIG VALUES
+USERNAME=''
+HOSTNAME=''
+WORKSTATION=''
+SWAP_SIZE='0'
+DISK=''
+BOOT_PARTITION=''
+ROOT_PARTITION=''
+UCODE=''
+LOCALE_LANG=''
+LOCALE_GEN=('')
+TIMEZONE=''
+VCONSOLE_KEYMAP=''
+X11_KEYBOARD_LAYOUT=''
+X11_KEYBOARD_VARIANT=''
+CUSTOM_PACKAGES=''
+
+#/////////////////////////////////////////////////////
+# MAIN
+#/////////////////////////////////////////////////////
+
+main() {
+
+    #----------------------------------------
+    # CHROOT MODE
+    #----------------------------------------
+    if [ "$1" = "--chroot" ] && [ "$2" != "" ] && [ "$3" != "" ]; then
+        install_chroot "$2" "$3"
+        exit $?
+    fi
+
+    #----------------------------------------
+    # SET ENV
+    #----------------------------------------
+    if [ "$1" = "--set-env" ]; then
+        set_env
+        exit 0
+    fi
+
+    # ---------------------------------------
+    # RECOVERY
+    # ---------------------------------------
+    if [ "$1" = "--recovery" ]; then
+        open_tui_recovery
+        exit 0
+    fi
+
+    # ---------------------------------------
+    # INIT
+    # ---------------------------------------
+    if [ "$1" == "--init" ]; then
+        set_env
+        if [ ! -f "$ECOS_INITIALIZED" ]; then
+            open_tui_init
+        else
+            exit 0
+        fi
+    fi
+
+    # ---------------------------------------
+    # CORE
+    # ---------------------------------------
+    if [ "$1" = "--core" ]; then
+        open_tui_core
+        exit 0
+    fi
+
+    # ---------------------------------------
+    # ECOS
+    # ---------------------------------------
+    if [ "$1" = "--ecos" ]; then
+        open_tui_ecos
+        exit 0
+    fi
+
+    # ---------------------------------------
+    # UPDATE CORE
+    # ---------------------------------------
+    if [ "$1" == "--update" ]; then
+        print_header
+        print_title 'ECOS CORE UPDATE'
+        update_core_installation
+        exit 0
+    fi
+
+    # ---------------------------------------
+    # INSTALL PLYMOUTH
+    # ---------------------------------------
+    if [ "$1" == "--install-plymouth" ]; then
+        install_plymouth
+        exit 0
+    fi
+
+    # ---------------------------------------
+    # PRINT HEADER
+    # ---------------------------------------
+    if [ "$1" == "--print-header" ]; then
+        print_header
+        exit 0
+    fi
+
+    # ---------------------------------------
+    # PRINT TITLE
+    # ---------------------------------------
+    if [ "$1" == "--print-title" ]; then
+        print_title "$2"
+        exit 0
+    fi
+
+    #----------------------------------------
+    # CORE TUI | BASE TUI
+    #----------------------------------------
+    if [ "$1" = "" ]; then
+        # Check if started from live iso
+        if [ "$(cat /proc/sys/kernel/hostname)" = "archiso" ]; then
+            open_tui_core
+        else
+            open_tui_ecos
+        fi
+    fi
+}
+
+#/////////////////////////////////////////////////////
+# LANGUAGES
+#/////////////////////////////////////////////////////
+
+set_lang_en_US() {
+    TIMEZONE='Europe/Berlin'
+    LOCALE_LANG='en_US.UTF-8'
+    LOCALE_GEN=('en_US.UTF-8 UTF-8')
+    VCONSOLE_KEYMAP='en-latin1-nodeadkeys'
+    X11_KEYBOARD_LAYOUT='en'
+    X11_KEYBOARD_VARIANT='nodeadkeys'
+}
+
+set_lang_de_DE() {
+    TIMEZONE='Europe/Berlin'
+    LOCALE_LANG='de_DE.UTF-8'
+    LOCALE_GEN=('de_DE.UTF-8 UTF-8' 'de_DE ISO-8859-1' 'de_DE@euro ISO-8859-15')
+    VCONSOLE_KEYMAP='de-latin1-nodeadkeys'
+    X11_KEYBOARD_LAYOUT='de'
+    X11_KEYBOARD_VARIANT='nodeadkeys'
+}
+
+#/////////////////////////////////////////////////////
+# SET ENV
+#/////////////////////////////////////////////////////
+
+check_env() {
+    config_key="$1"
+    config_value="$2"
+    touch "$ECOS_CONFIG_FILE"
+    if ! grep -qrnw "$ECOS_CONFIG_FILE" -e "$config_key=*"; then
+        echo "export $config_key=\"$config_value\"" >>"$ECOS_CONFIG_FILE"
+    fi
+}
+
+set_env() {
+
+    # Create config dir and file
+    mkdir -p "$ECOS_CONFIG_HOME"
+    touch "$ECOS_CONFIG_FILE"
+
+    # Check values
+    check_env "ECOS_CORE" '$HOME/.local/bin/'$SCRIPT_ID''
+    check_env "ECOS_CONFIG_HOME" '$HOME/.config/ecos'
+    check_env "ECOS_CONFIG_FILE" '$ECOS_CONFIG_HOME/config'
+
+    check_env "ECOS_MONITOR" 'HDMI-2'
+    check_env "ECOS_WIRELESS_INTERFACE" 'wlp8s0'
+    check_env "ECOS_BATTERY_INTERFACE" 'BAT1'
+    check_env "ECOS_BATTERY_ADAPTER" 'ACAD'
+
+    check_env "ECOS_BACKUP_SOURCE" '$HOME'
+    check_env "ECOS_BACKUP_DESTINATION" '/mnt/crypt-usb/$USER'
+    check_env "ECOS_BACKUP_SSH_HOST" ''
+    check_env "ECOS_BACKUP_SSH_USER" ''
+    check_env "ECOS_BACKUP_SSH_PASS" ''
+
+    check_env "ECOS_POSTEO_SERVER" 'posteo.de:993'
+    check_env "ECOS_POSTEO_EMAIL" 'user@posteo.de'
+    check_env "ECOS_POSTEO_PASSWORD" 'pass user@posteo.de'
+    check_env "ECOS_WEATHER_LOCATION" 'Kassel'
+
+    check_env "ECOS_DOWNLOAD_MUSIC" '$HOME/Downloads/Music'
+    check_env "ECOS_DOWNLOAD_VIDEOS" '$HOME/Downloads/Videos'
+    check_env "ECOS_DOWNLOAD_MOVIES" '$HOME/Downloads/Movies'
+
+    check_env "ECOS_SCREENSHOTS" '$HOME/Desktop/Screenshots'
+
+    # ECOS DEFAULT APPS
+    check_env "ECOS_TERMINAL" 'kitty'
+    check_env "ECOS_TERMINAL_CLASS" 'kitty'
+    check_env "ECOS_EDITOR" 'vscodium'
+    check_env "ECOS_EDITOR_CLASS" 'VSCodium'
+    check_env "ECOS_FILES" 'nemo'
+    check_env "ECOS_FILES_CLASS" 'Nemo'
+    check_env "ECOS_BROWSER" 'qutebrowser'
+    check_env "ECOS_BROWSER_CLASS" 'qutebrowser'
+    check_env "ECOS_EMAIL" 'geary'
+    check_env "ECOS_EMAIL_CLASS" 'Geary'
+    check_env "ECOS_MUSIC" 'kitty -e ncmpcpp'
+    check_env "ECOS_MUSIC_CLASS" ''
+
+    # Load config file
+    source "$ECOS_CONFIG_FILE" >/dev/null 2>&1
+}
+
+#/////////////////////////////////////////////////////
+# TUI CORE
+#/////////////////////////////////////////////////////
+
+open_tui_core() {
+
+    #----------------------------------------
+    # Show TUI menu
+    #----------------------------------------
+    tui_init 0 ""
+    if ! menu_input=$(whiptail --menu --notags "$(cat "$TUI_FILE")\n\n" "$TUI_HEIGHT" "$TUI_WIDTH" 3 "1" "Install ECOS Core" "2" "    Recovery" "3" "      Logs" 3>&1 1>&2 2>&3); then
+        exit 0
+    fi
+
+    #----------------------------------------
+    # Install core
+    #----------------------------------------
+    if [ "$menu_input" = "1" ]; then
+        check_internet
+        tui_install_core
+        exit $?
+    fi
+
+    #----------------------------------------
+    # Recovery
+    #----------------------------------------
+    if [ "$menu_input" = "2" ]; then
+        open_tui_recovery
+        exit
+    fi
+
+    #----------------------------------------
+    # Logs
+    #----------------------------------------
+    if [ "$menu_input" = "3" ]; then
+        tui_logs
+        open_tui_core
+        exit
+    fi
+}
+
+#/////////////////////////////////////////////////////
+# TUI RECOVERY
+#/////////////////////////////////////////////////////
+
+open_tui_recovery() {
+
+    #----------------------------------------
+    # Select Disk
+    #----------------------------------------
+    check_disk --force
+
+    #----------------------------------------
+    # Open Crypt
+    #----------------------------------------
+    clear
+    print_header
+    print_title "OPEN CRYPTED: $ROOT_PARTITION"
+    echo -e "\nENTER YOUR ENCRYPTION PASSWORD\n"
+    cryptsetup open $ROOT_PARTITION cryptroot
+
+    #----------------------------------------
+    # Mount
+    #----------------------------------------
+    mnt_recovery='/mnt/recovery'
+    print_title "MOUNT TO $mnt_recovery"
+    mkdir -p "$mnt_recovery"
+    mount /dev/mapper/cryptroot "$mnt_recovery"
+    mkdir -p "$mnt_recovery/boot"
+    mount -p "$BOOT_PARTITION" "$mnt_recovery/boot"
+
+    #----------------------------------------
+    # Chroot
+    #----------------------------------------
+    clear
+    print_header
+    print_title "ECOS RECOVERY"
+
+    # Mount /boot in recovery system
+    if ! arch-chroot "$mnt_recovery" mount $BOOT_PARTITION /boot; then
+        echo "CHROOT Mount /boot"
+        exit 1
+    fi
+    echo -e "\n"
+    echo -e "!! YOUR ARE NOW ON YOUR RECOVERY SYSTEM !!"
+    echo -e "        Leave with command 'exit'         "
+    echo -e "\n"
+    arch-chroot "$mnt_recovery"
+    wait
+
+    #----------------------------------------
+    # Unmount
+    #----------------------------------------
+    clear
+    print_header
+    print_title "UNMOUNT"
+    swapoff -a
+    umount -R "$mnt_recovery"
+    cryptsetup close cryptroot
+}
+
+#/////////////////////////////////////////////////////
+# TUI INIT
+#/////////////////////////////////////////////////////
+
+open_tui_init() {
+    #----------------------------------------
+    # Show TUI menu
+    #----------------------------------------
+    tui_init 0 ""
+    if ! menu_input=$(whiptail --menu --notags "$(cat "$TUI_FILE")\n\n" "$TUI_HEIGHT" "$TUI_WIDTH" 3 "1" " Install ECOS" "2" "Install Plymouth" "3" "Change Password" 3>&1 1>&2 2>&3); then
+        exit 0
+    fi
+
+    #----------------------------------------
+    # Install ECOS
+    #----------------------------------------
+    if [ "$menu_input" = "1" ]; then
+        open_tui_install_ecos
+        exit 0
+    fi
+
+    #----------------------------------------
+    # Install Plymouth
+    #----------------------------------------
+    if [ "$menu_input" = "2" ]; then
+        install_plymouth
+        exit 0
+    fi
+
+    #----------------------------------------
+    # Change Password
+    #----------------------------------------
+    if [ "$menu_input" = "3" ]; then
+        passwd
+        read -p "Press <ENTER> to continue..."
+        exit 0
+    fi
+
+}
+
+#/////////////////////////////////////////////////////
+# TUI ECOS
+#/////////////////////////////////////////////////////
+
+open_tui_ecos() {
+
+    #----------------------------------------
+    # Show TUI menu
+    #----------------------------------------
+    tui_init 24 "INSTALLER"
+    if ! menu_input=$(whiptail --menu --notags "$(cat "$TUI_FILE")\n\n" "$TUI_HEIGHT" "$TUI_WIDTH" 3 "1" "  Install ECOS" "2" "Install Plymouth" "3" "Create USB Stick" 3>&1 1>&2 2>&3); then
+        exit 0
+    fi
+
+    #----------------------------------------
+    # Install ECOS
+    #----------------------------------------
+    if [ "$menu_input" = "1" ]; then
+        open_tui_install_ecos
+        exit 0
+    fi
+
+    #----------------------------------------
+    # Install Plymouth
+    #----------------------------------------
+    if [ "$menu_input" = "2" ]; then
+        install_plymouth
+        exit 0
+    fi
+
+    #----------------------------------------
+    # Create USB Stick
+    #----------------------------------------
+    if [ "$menu_input" = "3" ]; then
+        open_tui_create_usb
+        exit 0
+    fi
+
+}
+
+#/////////////////////////////////////////////////////
+# TUI INSTALL
+#/////////////////////////////////////////////////////
+
+tui_install_core() {
+
+    #----------------------------------------
+    # Ask for reset core config
+    #----------------------------------------
+    if [ -f "$CONFIG_FILE" ]; then
+        tui_init 15 "Continue Setup Configuration?\n"
+        if ! (whiptail --yesno "$(cat "$TUI_FILE")" 0 "$TUI_WIDTH"); then
+            reset_core_config
+        fi
+    fi
+
+    #----------------------------------------
+    # Check config
+    #----------------------------------------
+    tui_check_script_config
+
+    #----------------------------------------
+    # Encryption password
+    #----------------------------------------
+    tui_init 0 "Enter Encryption Password"
+    if ! password_encryption=$(whiptail --passwordbox "$(cat "$TUI_FILE")" "$TUI_HEIGHT" "$TUI_WIDTH" 3>&1 1>&2 2>&3); then
+        exit 0
+    fi
+
+    # Confirm password
+    tui_init 0 "Confirm Encryption Password"
+    if ! password_input_confirm=$(whiptail --passwordbox "$(cat "$TUI_FILE")" "$TUI_HEIGHT" "$TUI_WIDTH" 3>&1 1>&2 2>&3); then
+        exit 0
+    fi
+
+    # Check password
+    if [ "$password_encryption" != "$password_input_confirm" ]; then
+        tui_init 0 "Password Mismatch! Restart the Installation..."
+        whiptail --msgbox "$(cat "$TUI_FILE")" "$TUI_HEIGHT" "$TUI_WIDTH"
+        exit 1
+    fi
+
+    #----------------------------------------
+    # Confirm and execute install
+    #----------------------------------------
+    tui_init 0 "Start Installation"
+    tui_add 0 "!!! ALL YOUR DATA WILL BE LOST !!!"
+    tui_add 0 "Continue?"
+    if (! whiptail --yesno "$(cat "$TUI_FILE")" "$TUI_HEIGHT" "$TUI_WIDTH"); then
+        exit 0
+    fi
+
+    #----------------------------------------
+    # Execute install (will execute chroot)
+    #----------------------------------------
+    tui_init 0 "Core Installation..."
+    install_core "$password_encryption" | whiptail --gauge "$(cat "$TUI_FILE")" "$TUI_HEIGHT" "$TUI_WIDTH" 0 3>&1 1>&2 2>&3
+
+    # Show Result
+    if [ $? = 1 ]; then
+        # Error message
+        tui_init 0 "ERROR: INSTALLATION FAILED!"
+        whiptail --msgbox "$(cat "$TUI_FILE")" "$TUI_HEIGHT" "$TUI_WIDTH"
+
+        # Logs
+        tui_logs
+
+        exit 1
+    else
+        # Success message
+        tui_init 0 "INSTALLATION SUCCESSFULLY FINISHED"
+        whiptail --msgbox "$(cat "$TUI_FILE")" "$TUI_HEIGHT" "$TUI_WIDTH"
+
+        # Logs
+        tui_logs
+
+        # Reboot
+        tui_init 0 "Reboot now?"
+        if (whiptail --yesno "$(cat "$TUI_FILE")" "$TUI_HEIGHT" "$TUI_WIDTH"); then
+            reboot
+        fi
+
+        exit 0
+    fi
+
+}
+
+#/////////////////////////////////////////////////////
+# INSTALL CORE
+#/////////////////////////////////////////////////////
+
+install_core() {
+
+    password_encryption="$1"
+
+    #----------------------------------------
+    # Source config
+    #----------------------------------------
+    . "$CONFIG_FILE"
+
+    log "!!! INSTALLATION START !!!"
+
+    #----------------------------------------
+    # Check UEFI boot
+    #----------------------------------------
+    uefi_mode=true
+    if efivar -l >/dev/null; then
+        log "UEFI detected"
+    else
+        log "BIOS detected"
+        uefi_mode=false
+    fi
+
+    #----------------------------------------
+    # Wipe disk
+    #----------------------------------------
+    gauge_update 4 "Wipe $DISK"
+    exec_wrap sgdisk -Z "$DISK"
+
+    #----------------------------------------
+    # Partition disk
+    #----------------------------------------
+    gauge_update 8 "Partition $DISK"
+
+    # Create new partition table
+    exec_wrap sgdisk -o "$DISK"
+
+    # Reload partition table
+    exec_wrap partprobe "$DISK"
+
+    if [ "$uefi_mode" = "true" ]; then
+
+        # /boot partition: 512MiB
+        exec_wrap sgdisk -n 0:0:+512MiB -t 0:ef00 -c 0:boot "$DISK"
+
+        # / partition: Rest of space
+        exec_wrap sgdisk -n 0:0:0 -t 0:8300 -c 1:root "$DISK"
+
+    else
+
+        # BIOS only: 1MiB partition is needed for GRUB (if GPT is used instead of MBR)
+        exec_wrap sgdisk -n 0:0:+1MiB -t 0:ef02 "$DISK"
+
+        # / partition: Rest of space
+        exec_wrap sgdisk -n 0:0:0 -t 0:8300 -c 0:root "$DISK"
+    fi
+
+    #----------------------------------------
+    # Encrypt disk
+    #----------------------------------------
+    gauge_update 10 "Encrypt $DISK"
+
+    # Set encrypt command
+    if [ "$uefi_mode" = "true" ]; then
+        crypt_cmd="cryptsetup -c aes-xts-plain -s 512 luksFormat $ROOT_PARTITION"
+    else
+        # LUKS2 isnt implemented yet (GRUB)
+        crypt_cmd="cryptsetup -c aes-xts-plain -s 512 luksFormat --type luks1 $ROOT_PARTITION"
+    fi
+
+    # Create encryption
+    if ! echo -n "$password_encryption" | $crypt_cmd -d - >/dev/null; then
+        log "e" "$crypt_cmd"
+        exit 1
+    else
+        log "c" "$crypt_cmd"
+    fi
+
+    # Open encrypt
+    crypt_cmd="cryptsetup open $ROOT_PARTITION cryptroot"
+    if ! echo -n "$password_encryption" | $crypt_cmd -d - >/dev/null; then
+        log "e" "$crypt_cmd"
+        exit 1
+    else
+        log "c" "$crypt_cmd"
+    fi
+
+    #----------------------------------------
+    # Format disk
+    #----------------------------------------
+    gauge_update 12 "Format $DISK"
+
+    # Format /boot
+    if [ "$uefi_mode" = "true" ]; then
+        exec_wrap mkfs.fat -F32 "$BOOT_PARTITION"
+    fi
+
+    # Format crypted /
+    exec_wrap mkfs.ext4 /dev/mapper/cryptroot
+
+    #----------------------------------------
+    # Mount disk to /mnt
+    #----------------------------------------
+    exec_wrap mount /dev/mapper/cryptroot /mnt
+
+    if [ "$uefi_mode" = "true" ]; then
+        exec_wrap mkdir /mnt/boot
+        exec_wrap mount "$BOOT_PARTITION" /mnt/boot
+    fi
+
+    #----------------------------------------
+    # Pacstrap base arch packages
+    #----------------------------------------
+    gauge_update 24 "Pacstrap Installation (may take a while)..."
+    exec_wrap pacstrap /mnt base base-devel linux linux-firmware
+
+    #----------------------------------------
+    # Generate /etc/fstab
+    #----------------------------------------
+    gauge_update 52 "Generate /etc/fstab"
+    log_txt="genfstab -U /mnt >>/mnt/etc/fstab"
+    if ! genfstab -U /mnt >>/mnt/etc/fstab; then
+        log "e" "$log_txt"
+        exit 1
+    else
+        log "c" "$log_txt"
+    fi
+
+    #----------------------------------------
+    # Copy ecos in chroot env
+    #----------------------------------------
+    exec_wrap cp -f "$SCRIPT_FILE" /mnt/$SCRIPT_ID
+    exec_wrap cp -f "$CONFIG_FILE" /mnt/$SCRIPT_ID.conf
+    exec_wrap chmod +x /mnt/$SCRIPT_ID
+
+    #----------------------------------------
+    # Chroot into new system
+    #----------------------------------------
+    gauge_update 54 "Enter CHROOT Environement"
+    log_txt="arch-chroot /mnt /$SCRIPT_ID --chroot $uefi_mode <ENCRYPTION_PASSWORD>"
+    if ! arch-chroot /mnt "/$SCRIPT_ID" --chroot "$uefi_mode" "$password_encryption"; then
+        log "e" "$log_txt"
+        exit 1
+    else
+        log "c" "$log_txt"
+    fi
+
+    #----------------------------------------
+    # Merge ecos logs
+    #----------------------------------------
+    cat "/mnt/$SCRIPT_ID.log" >>"$LOG_FILE"
+    cp "/mnt/$SCRIPT_ID.error" "$SCRIPT_DIR/$SCRIPT_ID.error"
+    rm -f "/mnt/$SCRIPT_ID"
+    rm -f "/mnt/$SCRIPT_ID.conf"
+    rm -f "/mnt/$SCRIPT_ID.log"
+    rm -f "/mnt/$SCRIPT_ID.tui"
+
+    #----------------------------------------
+    # Unmount
+    #----------------------------------------
+    exec_wrap swapoff -a
+    exec_wrap umount -R /mnt
+    exec_wrap cryptsetup close cryptroot
+
+    #----------------------------------------
+    # Finished
+    #----------------------------------------
+    gauge_update 100 "Installation finished!"
+    log "!!! INSTALLATION SUCCESSFULLY FINISHED !!!"
+
+    exit 0
+}
+
+#/////////////////////////////////////////////////////
+# CHROOT CORE
+#/////////////////////////////////////////////////////
+
+install_chroot() {
+
+    uefi_mode="$1"
+    password_encryption="$2"
+
+    #----------------------------------------
+    # Source config
+    #----------------------------------------
+    . "$CONFIG_FILE"
+
+    #----------------------------------------
+    # Essential packages
+    #----------------------------------------
+    gauge_txt="Install Essential Packages (may take a while)..."
+
+    gauge_update 56 "$gauge_txt"
+    exec_wrap pacman -Syy
+
+    # Boootloader, Microcode Kernel Updates for CPU & Core Tools
+    gauge_update 58 "$gauge_txt"
+    bootloader_pkgs="efibootmgr"
+    if [ "$uefi_mode" = "false" ]; then
+        bootloader_pkgs="grub"
+    fi
+    exec_wrap pacman --noconfirm --needed -S $UCODE $bootloader_pkgs dosfstools gptfdisk $CUSTOM_PACKAGES
+
+    # Network manager
+    gauge_update 60 "$gauge_txt"
+    exec_wrap pacman --noconfirm --needed -S networkmanager
+
+    # Default shell
+    gauge_update 70 "$gauge_txt"
+    exec_wrap pacman --noconfirm --needed -S zsh
+
+    if [ "$WORKSTATION" = "notebook" ]; then
+        # Battery safer
+        exec_wrap pacman --noconfirm --needed -S tlp
+    fi
+
+    #----------------------------------------
+    # Swap
+    #----------------------------------------
+    if [ "$SWAP_SIZE" != "0" ] && [ -n "$SWAP_SIZE" ]; then
+        gauge_update 75 "Create Swap File"
+        exec_wrap dd if=/dev/zero of=/swapfile bs=1GiB count="$SWAP_SIZE" status=progress
+        exec_wrap chmod 600 /swapfile
+        exec_wrap mkswap /swapfile
+        exec_wrap swapon /swapfile
+        echo "# Swapfile" >>/etc/fstab
+        echo "/swapfile none swap defaults 0 0" >>/etc/fstab
+    fi
+
+    #----------------------------------------
+    # Timezone and localization
+    #----------------------------------------
+    exec_wrap ln -sf "/usr/share/zoneinfo/$TIMEZONE" /etc/localtime
+    exec_wrap hwclock --systohc
+
+    #----------------------------------------
+    # Keymap
+    #----------------------------------------
+    log "Create /etc/vconsole.conf"
+    echo "KEYMAP=$VCONSOLE_KEYMAP" >/etc/vconsole.conf
+    echo "FONT=lat9w-16" >>/etc/vconsole.conf
+
+    #----------------------------------------
+    # Locale
+    #----------------------------------------
+    log "Create /etc/locale.conf"
+    echo "LANG=$LOCALE_LANG" >/etc/locale.conf
+
+    #----------------------------------------
+    # Set locale.gen
+    #----------------------------------------
+    for locale_gen_item in "${LOCALE_GEN[@]}"; do
+        sed -i "s/^#$locale_gen_item/$locale_gen_item/g" "/etc/locale.gen"
+    done
+
+    gauge_update 78 "Generate Locale"
+    exec_wrap locale-gen
+
+    #----------------------------------------
+    # Set hostname
+    #----------------------------------------
+    log "Create /etc/hostname"
+    echo "$HOSTNAME" >/etc/hostname
+
+    #----------------------------------------
+    # Set hosts
+    #----------------------------------------
+    log "Create /etc/hosts"
+    {
+        echo '127.0.0.1    localhost'
+        echo '::1          localhost'
+    } >/etc/hosts
+
+    #----------------------------------------
+    # Network
+    #----------------------------------------
+    gauge_update 80 "Configure Network"
+    exec_wrap systemctl enable NetworkManager
+
+    #----------------------------------------
+    # Boot loader
+    #----------------------------------------
+    gauge_update 82 "Install Bootloader"
+
+    if [ "$uefi_mode" = true ]; then
+        # Bootloader: systemd-boot
+        exec_wrap bootctl --path=/boot install
+
+        echo 'default arch.conf' >/boot/loader/loader.conf
+        echo 'timeout 0' >>/boot/loader/loader.conf
+        echo 'editor  yes' >>/boot/loader/loader.conf
+
+        echo 'title   Arch Linux' >/boot/loader/entries/arch.conf
+        echo 'linux   /vmlinuz-linux' >>/boot/loader/entries/arch.conf
+        [ -n "$UCODE" ] && echo "initrd  /$UCODE.img" >>/boot/loader/entries/arch.conf
+        echo 'initrd  /initramfs-linux.img' >>/boot/loader/entries/arch.conf
+        echo "options cryptdevice=$ROOT_PARTITION:cryptroot root=/dev/mapper/cryptroot quiet splash loglevel=3 rd.systemd.show_status=false rd.udev.log_priority=3 vt.global_cursor_default=0 rw" >>/boot/loader/entries/arch.conf
+    else
+        # Bootloader: GRUB (for legacy BIOS)
+
+        # Create a keyfile to prevent enter the encryption password twice
+        crypt_key="/crypto_keyfile.bin"
+
+        exec_wrap dd bs=512 count=4 if=/dev/random of="$crypt_key" iflag=fullblock
+        exec_wrap chmod 600 "$crypt_key"
+
+        # When initramfs' permissions are set to 644 (by default), then all users will be able to dump the keyfile
+        exec_wrap chmod 600 /boot/initramfs-linux*
+
+        crypt_cmd="cryptsetup luksAddKey $ROOT_PARTITION $crypt_key"
+        if ! echo -n "$password_encryption" | $crypt_cmd -d - >/dev/null; then
+            log "e" "$crypt_cmd"
+            exit 1
+        else
+            log "c" "$crypt_cmd"
+        fi
+
+        sed -i 's^FILES=()^FILES=('$crypt_key')^g' /etc/mkinitcpio.conf
+        exec_wrap mkinitcpio -p linux
+
+        # Mdify before execute grub-install!
+        echo 'GRUB_ENABLE_CRYPTODISK=y' >/etc/default/grub
+        echo 'GRUB_CMDLINE_LINUX="cryptdevice='$ROOT_PARTITION':cryptroot cryptkey=rootfs:'$crypt_key'"' >>/etc/default/grub
+
+        exec_wrap grub-install --no-floppy "$DISK"
+        exec_wrap grub-mkconfig -o /boot/grub/grub.cfg
+    fi
+
+    #----------------------------------------
+    # Modify HOOKS
+    #----------------------------------------
+    log "Modify /etc/mkinitcpio.conf"
+    cp /etc/mkinitcpio.conf /etc/mkinitcpio.conf.bak
+    sed -i "s/filesystems keyboard fsck/filesystems fsck/g" /etc/mkinitcpio.conf
+    sed -i "s/udev autodetect/udev keyboard autodetect/g" /etc/mkinitcpio.conf
+    sed -i "s/block filesystems/block keymap encrypt filesystems/g" /etc/mkinitcpio.conf
+
+    #----------------------------------------
+    # Rebuild initrc
+    #----------------------------------------
+    gauge_update 85 "Rebuild Initial Ramdisk"
+    exec_wrap mkinitcpio -p linux
+
+    #----------------------------------------
+    # Create new user
+    #----------------------------------------
+    exec_wrap useradd -m -G users,wheel,video,audio,storage,disk -s /bin/zsh "$USERNAME"
+
+    #----------------------------------------
+    # Allow users in group wheel to use sudo
+    #----------------------------------------
+    log "Enable sudo in /etc/sudoers"
+    sed -i '/%wheel\sALL=(ALL)\sALL/s/^#\s//g' /etc/sudoers
+
+    #----------------------------------------
+    # Auto login tty1
+    #----------------------------------------
+    gauge_update 90 "Enable Automatic Login"
+    mkdir -p "/etc/systemd/system/getty@tty1.service.d/"
+    {
+        echo "[Service]"
+        echo "ExecStart="
+        echo "ExecStart=-/usr/bin/agetty --skip-login --nonewline --noissue --autologin $USERNAME --noclear %I \$TERM"
+    } >>"/etc/systemd/system/getty@tty1.service.d/override.conf"
+    exec_wrap systemctl enable getty@tty1
+
+    #----------------------------------------
+    # Xorg config
+    #----------------------------------------
+
+    # Create dir
+    exec_wrap mkdir -p /etc/X11/xorg.conf.d/
+
+    #----------------------------------------
+    # Keyboard config
+    #----------------------------------------
+    log "Create /etc/X11/xorg.conf.d/00-keyboard.conf"
+    {
+        echo 'Section "InputClass"'
+        echo '    Identifier "keyboard"'
+        echo '    MatchIsKeyboard "yes"'
+        echo '    Option "XkbLayout" "'$X11_KEYBOARD_LAYOUT'"'
+        echo '    Option "XkbModel" "pc105"'
+        echo '    Option "XkbVariant" "'$X11_KEYBOARD_VARIANT'"'
+        echo 'EndSection'
+    } >"/etc/X11/xorg.conf.d/00-keyboard.conf"
+
+    #----------------------------------------
+    # Mouse config
+    #----------------------------------------
+    log "Create /etc/X11/xorg.conf.d/50-mouse.conf"
+    {
+        echo 'Section "InputClass"'
+        echo '    Identifier "mouse"'
+        echo '    Driver "libinput"'
+        echo '    MatchIsPointer "yes"'
+        echo '    Option "AccelProfile" "flat"'
+        echo '    Option "AccelSpeed" "0"'
+        echo 'EndSection'
+    } >"/etc/X11/xorg.conf.d/50-mouse.conf"
+
+    #----------------------------------------
+    # Touchpad config
+    #----------------------------------------
+    log "Create /etc/X11/xorg.conf.d/70-touchpad.conf"
+    {
+        echo 'Section "InputClass"'
+        echo '    Identifier "touchpad"'
+        echo '    Driver "libinput"'
+        echo '    MatchIsTouchpad "on"'
+        echo '    Option "ClickMethod" "clickfinger"'
+        echo '    Option "Tapping" "off"'
+        echo '    Option "NaturalScrolling" "true"'
+        echo 'EndSection'
+
+    } >"/etc/X11/xorg.conf.d/70-touchpad.conf"
+
+    gauge_update 92 "Enable Daemons"
+
+    #----------------------------------------
+    # SSD fstrim
+    #----------------------------------------
+    exec_wrap systemctl enable "fstrim.timer"
+
+    #----------------------------------------
+    # Timesync service
+    #----------------------------------------
+    exec_wrap systemctl enable "systemd-timesyncd.service"
+
+    #----------------------------------------
+    # TODO (FAILED): Network browsing service
+    #----------------------------------------
+    #exec_wrap systemctl enable "avahi-daemon"
+
+    #----------------------------------------
+    # TLP (Notebook)
+    #----------------------------------------
+    if [ "$WORKSTATION" = "notebook" ]; then
+        exec_wrap systemctl enable "tlp.service"
+    fi
+
+    #----------------------------------------
+    # Pacman colors & multilib
+    #----------------------------------------
+    gauge_update 95 "Configure Pacman"
+    log "Enable pacman multilib & colors"
+    sed -i 's/^#Color/Color/g;/#\[multilib\]/,/#Include/ s/^#//g' /etc/pacman.conf
+    exec_wrap pacman -Syy
+
+    #----------------------------------------
+    # Local bin
+    #----------------------------------------
+    gauge_update 98 "Local bin"
+
+    # Copy ecos to local bin
+    user_bin="/home/$USERNAME/.local/bin"
+    mkdir -p "$user_bin"
+    cp "$SCRIPT_FILE" "$user_bin/$SCRIPT_ID"
+    chmod +x "$user_bin/$SCRIPT_ID"
+
+    # Create .zlogin
+    echo '#!/bin/sh' >/home/$USERNAME/.zlogin
+    echo '$HOME/.local/bin/'$SCRIPT_ID' --init' >>/home/$USERNAME/.zlogin
+    chmod +x /home/$USERNAME/.zlogin
+
+    #----------------------------------------
+    # Deletes unnecessary files
+    #----------------------------------------
+    rm -f "/home/$USERNAME/.bash_logout"
+    rm -f "/home/$USERNAME/.bash_profile"
+    rm -f "/home/$USERNAME/.bashrc"
+    rm -f "/home/$USERNAME/.zshrc"
+
+    #----------------------------------------
+    # Set user permissions
+    #----------------------------------------
+    chown -R "$USERNAME" "/home/$USERNAME"
+
+    #--------------------------------------------------------
+    # Change passwords
+    #----------------------------------------
+    log "Change passwords"
+    #passwd root < <(echo -e "$password_encryption\n$password_encryption")
+    #passwd "$USERNAME" < <(echo -e "$password_encryption\n$password_encryption")
+    echo -e "$password_encryption\n$password_encryption" | (passwd)
+    echo -e "$password_encryption\n$password_encryption" | (passwd "$USERNAME")
+
+    #----------------------------------------
+    # Chroot finished
+    #----------------------------------------
+    log "CHROOT successfully finished"
+}
+
+#/////////////////////////////////////////////////////
+# CONFIGURATION
+#/////////////////////////////////////////////////////
+
+check_disk() {
+
+    if [ "$1" = "--force" ] || [ "$DISK" = "" ] || [ "$BOOT_PARTITION" = "" ] || [ "$ROOT_PARTITION" = "" ]; then
+
+        disk_array=()
+        while read disk_line; do
+            disk_size=$(lsblk -d -n -o SIZE /dev/$disk_line)
+            disk_array+=("/dev/$disk_line")
+            disk_array+=(" ($disk_size)")
+        done < <(lsblk -I 8 -d -o KNAME -n)
+
+        tui_init 24 "Choose Disk"
+        if ! DISK=$(whiptail --menu "$(cat "$TUI_FILE")" "$TUI_HEIGHT" "$TUI_WIDTH" "${#disk_array[@]}" "${disk_array[@]}" 3>&1 1>&2 2>&3); then
+            exit 0
+        fi
+
+        BOOT_PARTITION="${DISK}1"
+        ROOT_PARTITION="${DISK}2"
+
+        # NVM Express
+        if [[ "$DISK" = "/dev/nvm"* ]]; then
+            BOOT_PARTITION="${DISK}p1"
+            ROOT_PARTITION="${DISK}p2"
+        fi
+
+    fi
+}
+
+tui_check_script_config() {
+
+    if [ -f "$CONFIG_FILE" ]; then
+        . "$CONFIG_FILE"
+    fi
+
+    #----------------------------------------
+    # Check user
+    #----------------------------------------
+    if [ "$USERNAME" = "" ]; then
+        tui_init 0 "Enter Username"
+        if ! USERNAME=$(whiptail --inputbox "$(cat "$TUI_FILE")" "$TUI_HEIGHT" "$TUI_WIDTH" 3>&1 1>&2 2>&3); then
+            exit 0
+        fi
+        if [ "$USERNAME" = "" ]; then
+            tui_init 0 "Username was empty! Restart the Installation..."
+            whiptail --textbox "$TUI_FILE" "$TUI_HEIGHT" "$TUI_WIDTH"
+            exit 0
+        fi
+        replace_config_value "USERNAME" "$USERNAME"
+    fi
+
+    #----------------------------------------
+    # Check workstation
+    #----------------------------------------
+    if [ "$WORKSTATION" = "" ]; then
+        tui_init 20 "Choose Workstation"
+        if ! WORKSTATION=$(whiptail --menu --notags "$(cat "$TUI_FILE")\n" "$TUI_HEIGHT" "$TUI_WIDTH" 2 "desktop" "Desktop" "notebook" "Notebook" 3>&1 1>&2 2>&3); then
+            exit 0
+        fi
+
+        replace_config_value "HOSTNAME" "$USERNAME-$WORKSTATION"
+        replace_config_value "WORKSTATION" "$WORKSTATION"
+    fi
+
+    #----------------------------------------
+    # Check Language
+    #----------------------------------------
+    if [ "$LOCALE_LANG" = "" ] || [ ${#LOCALE_GEN[@]} = 0 ] || [ "$TIMEZONE" = "" ] || [ "$VCONSOLE_KEYMAP" = "" ] || [ "$X11_KEYBOARD_LAYOUT" = "" ] || [ "$X11_KEYBOARD_VARIANT" = "" ]; then
+
+        tui_init 20 "Choose Setup Language"
+        if ! lang_result=$(whiptail --menu --notags "$(cat "$TUI_FILE")\n" "$TUI_HEIGHT" "$TUI_WIDTH" 2 "en_US" "English" "de_DE" "German" 3>&1 1>&2 2>&3); then
+            exit 0
+        fi
+        if [ "$lang_result" = "en_US" ]; then
+            set_lang_en_US
+        fi
+
+        if [ "$lang_result" = "de_DE" ]; then
+            set_lang_de_DE
+        fi
+
+        replace_config_value "TIMEZONE" "$TIMEZONE"
+        replace_config_value "LOCALE_LANG" "$LOCALE_LANG"
+        replace_config_array "LOCALE_GEN" "${LOCALE_GEN[@]}"
+        replace_config_value "VCONSOLE_KEYMAP" "$VCONSOLE_KEYMAP"
+        replace_config_value "X11_KEYBOARD_LAYOUT" "$X11_KEYBOARD_LAYOUT"
+        replace_config_value "X11_KEYBOARD_VARIANT" "$X11_KEYBOARD_VARIANT"
+    fi
+
+    #----------------------------------------
+    # Check Microcode
+    #----------------------------------------
+    if [ "$UCODE" = "" ]; then
+
+        tui_init 18 "Choose Processor Microcode"
+        if ! UCODE=$(whiptail --menu --notags "$(cat "$TUI_FILE")\n" "$TUI_HEIGHT" "$TUI_WIDTH" 3 "none" "Disable" "intel-ucode" "Intel" "amd-ucode" "AMD" 3>&1 1>&2 2>&3); then
+            exit 0
+        fi
+        if [ "$UCODE" = 'none' ]; then
+            UCODE=''
+        fi
+
+        replace_config_value "UCODE" "$UCODE"
+    fi
+
+    #----------------------------------------
+    # Check disk
+    #----------------------------------------
+    check_disk
+    replace_config_value "DISK" "$DISK"
+    replace_config_value "BOOT_PARTITION" "$BOOT_PARTITION"
+    replace_config_value "ROOT_PARTITION" "$ROOT_PARTITION"
+
+    #----------------------------------------
+    # Add default values
+    #----------------------------------------
+    check_script_config_key "SWAP_SIZE" "$SWAP_SIZE"
+    check_script_config_key "CUSTOM_PACKAGES" "$CUSTOM_PACKAGES"
+
+    #----------------------------------------
+    # Show default config screen
+    #----------------------------------------
+    tui_init 0 "$(cat "$CONFIG_FILE")"
+    tui_add 28 "\nEdit Setup Configuration?"
+    if (whiptail --yesno "$(cat "$TUI_FILE")" 0 "$TUI_WIDTH"); then
+        nano "$CONFIG_FILE"
+        wait
+        # Check again after edit
+        tui_check_script_config
+    fi
+
+    #----------------------------------------
+    # Source changes
+    #----------------------------------------
+    . "$CONFIG_FILE"
+}
+
+#/////////////////////////////////////////////////////
+# UPDATE
+#/////////////////////////////////////////////////////
+
+update_core_installation() {
+    check_internet
+    mkdir -p "$HOME/.local/bin"
+    if ! curl -s -L "$ECOS_CORE_URL" >"$ECOS_CORE"; then
+        echo "ERROR: ECOS CORE DOWNLOAD"
+        exit 1
+    fi
+    if ! chmod +x "$ECOS_CORE"; then
+        echo "ERROR: ECOS CORE NOT FOUND"
+        exit 1
+    fi
+    echo -e "ECOS CORE UPDATE SUCCESSFUL"
+}
+
+#/////////////////////////////////////////////////////
+# CHECK
+#/////////////////////////////////////////////////////
+
+check_git() {
+    if ! pacman -Qi git >/dev/null; then
+        echo "Create Git config"
+        mkdir -p "$HOME/.config/git"
+        if [ -f "$HOME/.config/git/config" ]; then
+            mv "$HOME/.config/git/config" "$HOME/.config/git/config.bak"
+        fi
+        {
+            echo "[user]"
+            echo "    email = ${USER}@$(cat /etc/hostname)"
+            echo "    name = ${USER}"
+            echo "[credential]"
+            echo "    helper = /usr/lib/git-core/git-credential-libsecret"
+            echo "[pull]"
+            echo "    rebase = false"
+        } >"$HOME/.config/git/config"
+
+        echo "Install Git"
+        sudo pacman --noconfirm --needed -Syyu git
+    fi
+}
+
+check_paru() {
+    if ! pacman -Qi paru >/dev/null; then
+        echo "Installing AUR Helper Paru (may take a while)..."
+
+        # Prepare
+        paru_build_tmp="$HOME/Downloads/paru"
+        rm -rf "$paru_build_tmp"
+        mkdir -p "$paru_build_tmp"
+
+        # Clone
+        check_git
+        git clone "https://aur.archlinux.org/paru-bin.git" "$paru_build_tmp"
+        cd "$paru_build_tmp" || exit 1
+
+        # Install aur helper
+        makepkg -si --noconfirm --needed
+
+        # Remove download dir
+        rm -rf "$paru_build_tmp"
+
+        # Symlink to yay
+        sudo ln -sf /usr/bin/paru /usr/bin/yay
+
+        # Config
+        sudo sed -i 's/^#BottomUp/BottomUp/g' /etc/paru.conf
+        sudo sed -i 's/^#SudoLoop/SudoLoop/g' /etc/paru.conf
+    fi
+}
+
+#/////////////////////////////////////////////////////
+# INSTALL ECOS
+#/////////////////////////////////////////////////////
+
+open_tui_install_ecos() {
+
+    check_internet
+
+    tui_init 0 "Dotfiles URL"
+    if ! ECOS_DOTS_URL=$(whiptail --inputbox "$(cat "$TUI_FILE")" "$TUI_HEIGHT" "$TUI_WIDTH" "$ECOS_DOTS_URL" 3>&1 1>&2 2>&3); then
+        main
+        exit 0
+    fi
+    if [ "$ECOS_DOTS_URL" = "" ]; then
+        tui_init 0 "Dotfiles URL was empty!"
+        whiptail --textbox "$TUI_FILE" "$TUI_HEIGHT" "$TUI_WIDTH"
+        return
+    fi
+
+    clear
+    print_header
+
+    print_title "INSTALL ECOS CORE"
+    update_core_installation
+
+    print_title "CHECK GIT"
+    check_git
+    echo -e "DONE"
+
+    print_title "CHECK PARU"
+    check_paru
+    echo -e "DONE"
+
+    print_title "CLONE DOTFILES"
+    dots_home="$HOME/.local/share/dotfiles"
+    rm -rf "$dots_home"
+    mkdir -p "$dots_home"
+    cd "$HOME" || exit 1
+    git clone --bare "$ECOS_DOTS_URL" "$dots_home"
+    git --git-dir="$dots_home" --work-tree="$HOME" reset --hard
+    git --git-dir="$dots_home" --work-tree="$HOME" config --local status.showUntrackedFiles no
+
+    echo -e "DONE"
+
+    print_title "INIT DOTFILES"
+    if [ ! -f "$ECOS_INIT" ]; then
+        echo "ERROR: $ECOS_INIT not found"
+        exit 1
+    fi
+
+    # Call init script
+    echo -e "EXECUTE $ECOS_INIT"
+    chmod +x "$ECOS_INIT" && "$ECOS_INIT"
+
+    # Silent Boot
+    echo '# Disable the last login message on startup with this file' >"$HOME/.hushlogin"
+
+    # GnuPG conf
+    mkdir -p "$HOME/.local/share/gnupg"
+    echo 'pinentry-program /usr/bin/pinentry-gnome3' >"$HOME/.local/share/gnupg/gpg-agent.conf"
+
+    # Set correct gnupg permission
+    chmod -R go-rwx "$HOME/.local/share/gnupg"
+
+    # Create initialized state file
+    print_title "DOTFILES INITIALIZED"
+    touch "$ECOS_INITIALIZED"
+    echo -e "DONE"
+
+    print_title "ECOS INSTALLATION FINISHED"
+    read -p 'Please REBOOT NOW! Close with any Key...'
+    wait
+    exit 0
+}
+
+#/////////////////////////////////////////////////////
+# INSTALL PLYMOUTH
+#/////////////////////////////////////////////////////
+
+install_plymouth() {
+
+    print_header
+    print_title 'PLYMOUTH INSTALLATION'
+
+    if ! efivar -l >/dev/null; then
+        echo "BIOS detected. Plymouth only available on UEFI!"
+        return 1
+    fi
+
+    if pacman -Qi plymouth >/dev/null; then
+        echo "Plymouth already installed. Skipping..."
+    else
+
+        #----------------------------------------
+        # Kernel Module
+        #----------------------------------------
+        tui_init 16 "Select Graphic Kernel Module"
+        if ! kms_result=$(whiptail --menu --notags "$(cat "$TUI_FILE")\n\n" "$TUI_HEIGHT" "$TUI_WIDTH" 3 "1" " Intel" "2" "  AMD" "3" "Nouveau" 3>&1 1>&2 2>&3); then
+            exit 0
+        fi
+
+        graphic_module=''
+
+        if [ "$kms_result" = "1" ]; then
+            graphic_module='i915'
+        fi
+        if [ "$kms_result" = "2" ]; then
+            graphic_module='amdgpu'
+        fi
+        if [ "$kms_result" = "3" ]; then
+            graphic_module='nouveau'
+        fi
+
+        #----------------------------------------
+        # Install Plymouth
+        #----------------------------------------
+        print_title 'INSTALL PLYMOUTH'
+        check_paru
+        wait
+        if ! paru --noconfirm --needed --sudoloop -Syyu plymouth; then
+            echo "ERROR paru"
+            exit 1
+        fi
+        echo -e 'OK'
+
+        #----------------------------------------
+        # Configure mkinitcpio
+        #----------------------------------------
+        print_title 'CONFIGURE MKINITCPIO'
+        # Intel graphic support (other: https://wiki.archlinux.org/index.php/Kernel_mode_setting#Early_KMS_start)
+        mkinit_conf='/etc/mkinitcpio.conf'
+        sudo cp "$mkinit_conf" "$mkinit_conf".bak
+        if ! sudo sed -i "s/MODULES=()/MODULES=($graphic_module)/g" "$mkinit_conf"; then
+            echo "ERROR"
+            exit 1
+        fi
+        if ! sudo sed -i "s/keymap encrypt filesystems/keymap plymouth plymouth-encrypt filesystems/g" "$mkinit_conf"; then
+            echo "ERROR"
+            exit 1
+        fi
+        echo -e 'OK'
+
+        #----------------------------------------
+        # Configure Spinner
+        #----------------------------------------
+        print_title 'CONFIGURE SPINNER'
+        spinner_conf='/usr/share/plymouth/themes/spinner/spinner.plymouth'
+        sudo cp -f "$spinner_conf" "$spinner_conf".bak
+
+        replace_spinner_conf_value() {
+            #sed -i "s#$1=.*#$1=$2#g" "$spinner_conf"
+            if ! sudo sed -i "s#$1=.*#$1=$2#g" "$spinner_conf"; then
+                echo "ERROR"
+                exit 1
+            fi
+        }
+
+        replace_spinner_conf_value "DialogVerticalAlignment" ".680"
+        replace_spinner_conf_value "TitleVerticalAlignment" ".680"
+        replace_spinner_conf_value "BackgroundStartColor" "0x2E3440"
+        replace_spinner_conf_value "BackgroundEndColor" "0x2E3440"
+
+        echo -e 'OK'
+
+        #----------------------------------------
+        # Download Watermark
+        #----------------------------------------
+        print_title 'DOWNLOAD WATERMARK'
+        watermark_file='/usr/share/plymouth/themes/spinner/watermark.png'
+        sudo mv -f "$watermark_file" "$watermark_file".bak
+        curl -L "$ECOS_URL/plymouth.png" -o /tmp/watermark.png
+        sudo cp /tmp/watermark.png "$watermark_file"
+
+        #----------------------------------------
+        # Rebuild
+        #----------------------------------------
+        print_title 'REBUILD'
+        if ! sudo mkinitcpio -p linux; then
+            # On error
+            print_title 'ERROR'
+            echo "Error installing plymouth: rolling back..."
+            sudo mv -f "$mkinit_conf".bak "$mkinit_conf"
+            sudo mv -f "$spinner_conf".bak "$spinner_conf"
+            sudo mv -f "$watermark_file".bak "$watermark_file"
+            sudo mkinitcpio -p linux
+        else
+            print_title 'PLYMOUTH SUCCESFUL INSTALLED'
+            echo "Please Reboot..."
+        fi
+    fi
+}
+
+#/////////////////////////////////////////////////////
+# TUI CREATE USB
+#/////////////////////////////////////////////////////
+
+open_tui_create_usb() {
+
+    if ! [ -x "$(command -v whiptail)" ]; then
+        echo "ERROR: whiptail not installed"
+        exit 1
+    fi
+
+    if ! [ -x "$(command -v curl)" ]; then
+        echo "ERROR: curl not installed"
+        exit 1
+    fi
+
+    if ! [ -x "$(command -v dd)" ]; then
+        echo "ERROR: dd not installed"
+        exit 1
+    fi
+
+    # Select Disk
+    #--------------------------------------------
+    disk_array=()
+    while read disk_line; do
+        disk_size=$(lsblk -d -n -o SIZE /dev/$disk_line)
+        disk_array+=("/dev/$disk_line")
+        disk_array+=(" ($disk_size)")
+    done < <(lsblk -I 8 -d -o KNAME -n)
+
+    usb_disk=''
+    tui_init 11 "Choose USB Stick for ECOS Installation"
+    if ! usb_disk=$(whiptail --menu "$(cat "$TUI_FILE")\n" "$TUI_HEIGHT" "$TUI_WIDTH" "${#disk_array[@]}" "${disk_array[@]}" 3>&1 1>&2 2>&3); then
+        exit 0
+    fi
+    tui_init 0 "Arch ISO URL"
+    if ! ARCH_ISO_URL=$(whiptail --inputbox "$(cat "$TUI_FILE")\n" "$TUI_HEIGHT" "$TUI_WIDTH" "$ARCH_ISO_URL" 3>&1 1>&2 2>&3); then
+        exit 0
+    fi
+    if [ "$ARCH_ISO_URL" = "" ]; then
+        echo "URL was empty"
+        exit 1
+    fi
+
+    print_header
+    print_title "USB Disk: $usb_disk"
+    echo -e '\n'
+    print_title "ARCH URL: $ARCH_ISO_URL"
+
+    # Check and download arch iso
+    #--------------------------------------------
+    if ! [ -f "$ARCH_ISO_FILE" ]; then
+        print_title "Downloading $ARCH_ISO_FILE from $ARCH_ISO_URL..."
+
+        if ! curl -L "$ARCH_ISO_URL" -o "$ARCH_ISO_FILE.part"; then
+            echo "ERROR: Downloading ISO"
+            exit 1
+        fi
+        wait
+
+        if ! mv "$ARCH_ISO_FILE.part" "$ARCH_ISO_FILE"; then
+            echo "ERROR: Moving ISO file"
+            exit 1
+        fi
+    fi
+
+    print_title "Arch ISO: $ARCH_ISO_FILE"
+
+    # Create Bootable USB Stick
+    #--------------------------------------------
+    print_title "// Create Bootable USB Stick"
+
+    if ! sudo dd bs=4M if="$ARCH_ISO_FILE" of="$usb_disk" status=progress oflag=sync; then
+        echo "ERROR: Creating USB Stick"
+        exit 1
+    fi
+    wait
+
+    # Unmount
+    #--------------------------------------------
+    print_title "Unmount USB Stick"
+    sudo umount -R "$usb_disk"
+    wait
+
+    print_title "FINISHED! Please remove the USB Stick $usb_disk"
+
+}
+
+#/////////////////////////////////////////////////////
+# SCRIPT RESET
+#/////////////////////////////////////////////////////
+
+reset_core_config() {
+
+    log "Reset core configuration"
+
+    # Reset config
+    if [ -f "$CONFIG_FILE" ]; then
+        mv -f "$CONFIG_FILE" "$CONFIG_FILE"".backup"
+    fi
+
+    # Reset logs
+    if [ -f "$LOG_FILE" ]; then
+        mv -f "$LOG_FILE" "$LOG_FILE"".backup"
+    fi
+
+    # Unmount
+    swapoff -a
+    umount -R /mnt
+    cryptsetup close cryptroot
+
+    log "Reset finished!"
+}
+
+#/////////////////////////////////////////////////////
+# LOGGING
+#/////////////////////////////////////////////////////
+
+log() {
+
+    touch "$LOG_FILE"
+
+    # Default vaules
+    lvl="INFO"
+    text="$1"
+
+    # Handle if 2. parameter is set
+    if [ "$2" != "" ]; then
+
+        if [ "$1" = "c" ]; then
+            lvl="EXEC"
+        fi
+
+        if [ "$1" = "e" ]; then
+            lvl="FAIL"
+        fi
+
+        # Shift to 2. argument to you $* for all instead of $2
+        shift
+        text="$*"
+    fi
+
+    # Style log output
+    styled_text="$(date "+%Y-%m-%d %H:%M:%S") $SCRIPT_ID-$SCRIPT_VERSION | $lvl | $text"
+
+    # Print to STOUT & LOG_FILE
+    printf '%s\n' "$styled_text" >>"$LOG_FILE"
+    printf '%s\n' "$styled_text"
+}
+
+# !!! DO NOT USE WITH PIPE (|) OR REDIRECT (>>) !!!
+exec_wrap() {
+
+    command_txt="$*"
+    tmp_error="$SCRIPT_DIR/$SCRIPT_ID.error"
+
+    if "$@" >/dev/null 2>"$tmp_error"; then
+        log "c" "$command_txt"
+        rm -f "$tmp_error"
+        return 0
+    else
+        log "e" "$command_txt"
+        cat "$tmp_error" >>"$LOG_FILE"
+        cat "/mnt/$SCRIPT_ID.log" >>"$LOG_FILE"
+        rm -f "$tmp_error"
+        exit 1
+    fi
+}
+
+tui_logs() {
+    touch "$LOG_FILE"
+    tui_init 0 "$(cat "$LOG_FILE")"
+    #whiptail --textbox $TUI_FILE 0 $TUI_WIDTH
+    whiptail --msgbox "$(cat "$TUI_FILE")" 0 "$TUI_WIDTH"
+}
+
+#/////////////////////////////////////////////////////
+# HELPER
+#/////////////////////////////////////////////////////
+
+check_script_config_key() {
+    config_key="$1"
+    config_value="$2"
+    touch "$CONFIG_FILE"
+    if ! grep -qrnw "$CONFIG_FILE" -e "$config_key=*"; then
+        echo "$config_key=\"$config_value\"" >>"$CONFIG_FILE"
+    fi
+}
+
+replace_config_value() {
+    key=$1
+    value=$2
+    check_script_config_key "$key" "$value"
+    sed -i "s#$key=.*#$key=\"$value\"#g" "$CONFIG_FILE"
+}
+
+replace_config_array() {
+    key=$1 && shift
+    value=("$@")
+
+    items_txt='( '
+    for item in "${value[@]}"; do
+        items_txt="$items_txt'$item' "
+    done
+    items_txt="$items_txt"')'
+
+    check_script_config_key "$key" ""
+    sed -i "s#$key=.*#$key=$items_txt#g" "$CONFIG_FILE"
+}
+
+tui_init() {
+    rm -f "$TUI_FILE"
+    echo '
+             ███████╗ ██████╗ ██████╗ ███████╗
+             ██╔════╝██╔════╝██╔═══██╗██╔════╝
+             █████╗  ██║     ██║   ██║███████╗
+             ██╔══╝  ██║     ██║   ██║╚════██║
+             ███████╗╚██████╗╚██████╔╝███████║
+             ╚══════╝ ╚═════╝ ╚═════╝ ╚══════╝
+                                       v.'$SCRIPT_VERSION'
+    ' >"$TUI_FILE"
+    tui_add "$1" "$2"
+}
+
+tui_add() {
+    echo -e "$(echos "$1" "$2")\n" >>"$TUI_FILE"
+}
+
+print_header() {
+    echo '
+    ███████╗ ██████╗ ██████╗ ███████╗
+    ██╔════╝██╔════╝██╔═══██╗██╔════╝
+    █████╗  ██║     ██║   ██║███████╗
+    ██╔══╝  ██║     ██║   ██║╚════██║
+    ███████╗╚██████╗╚██████╔╝███████║
+    ╚══════╝ ╚═════╝ ╚═════╝ ╚══════╝
+                              v.'$SCRIPT_VERSION''
+}
+
+print_title() {
+    echo -e "\n"
+    echo -e ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>"
+    echo -e "> $1"
+    echo -e ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>"
+}
+
+#----------------------------------------
+# Echo a string with leading spaces
+#   $1: number of spaces
+#   $2: string
+#----------------------------------------
+echos() {
+    spaces=""
+    for i in $(seq 1 "$1"); do
+        spaces=" ${spaces}"
+    done
+    echo -e "$spaces""$2"
+}
+
+#----------------------------------------
+# Update whiptail gauge
+#   $1: percent
+#   $2: text
+#----------------------------------------
+gauge_update() {
+    tui_init 0 "$2"
+    echo -e "XXX\n$1\n$(cat "$TUI_FILE")\nXXX"
+}
+
+check_internet() {
+    # curl -Is "http://www.google.com" | head -1 | grep 200 >/dev/null
+    if ! ping archlinux.de -c 1 >/dev/null 2>&1; then
+        tui_init 0 "Error: No Internet Connection!"
+        whiptail --msgbox "$(cat "$TUI_FILE")" 0 "$TUI_WIDTH"
+        exit 1
+    fi
+}
+
+#/////////////////////////////////////////////////////
+# TRAP
+#/////////////////////////////////////////////////////
+
+on_trap() {
+    rm -f "$TUI_FILE"
+}
+
+# Set trap
+trap 'on_trap' 0 1 3 6
+
+#/////////////////////////////////////////////////////
+# EXECUTE
+#/////////////////////////////////////////////////////
+
+main "$@"
