@@ -6,7 +6,7 @@
   <img src="http://ecos.webhop.me:3000/ecos/core/raw/branch/master/web/ecos.png">
   </p>
 
-  <p><b>The userfriendly & dotbased OS for Digital Pirates</b></p>
+  <p><b>The userfriendly & dotbased OS</b></p>
   <p>
     <img src="https://img.shields.io/badge/MAINTAINED-YES-green?style=for-the-badge">
     <img src="https://img.shields.io/badge/LICENSE-MIT-blue?style=for-the-badge">
