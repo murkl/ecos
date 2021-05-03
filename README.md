@@ -26,7 +26,7 @@
 
   <p>
   <img src="https://raw.githubusercontent.com/murkl/ecos/master/web/screenshot.png">
-    <img src="https://raw.githubusercontent.com/murkl/ecos/master/web/screenshot2.png">
+    <img src="https://raw.githubusercontent.com/murkl/ecos/master/web/apps.png">
   </p>
 
 ## Recommendations
