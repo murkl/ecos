@@ -3,7 +3,7 @@
   <p>ARCH LINUX • MICRO • ENCRYPTED • DOTBASED</p>
 
   <p>
-  <img src="http://ecos.webhop.me:3000/ecos/core/raw/branch/master/web/ecos.png">
+  <img src="https://raw.githubusercontent.com/murkl/ecos/master/web/ecos.png">
   </p>
 
   <p><b>The userfriendly & dotbased OS</b></p>
@@ -23,6 +23,10 @@
   - `bash ecos`
 
 # Documentation
+
+  <p>
+  <img src="https://raw.githubusercontent.com/murkl/ecos/master/web/screenshot.png">
+  </p>
 
 ## Recommendations
 
