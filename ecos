@@ -224,7 +224,7 @@ set_env() {
 
     check_env "ECOS_POSTEO_SERVER" 'posteo.de:993'
     check_env "ECOS_POSTEO_EMAIL" 'user@posteo.de'
-    check_env "ECOS_POSTEO_PASSWORD" 'pass user@posteo.de'
+    check_env "ECOS_POSTEO_PASSWORD" ''
     check_env "ECOS_WEATHER_LOCATION" 'Kassel'
 
     check_env "ECOS_DOWNLOAD_MUSIC" '$HOME/Downloads/Music'
