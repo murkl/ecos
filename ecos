@@ -19,6 +19,7 @@ SCRIPT_ID="ecos"
 # URLS
 ECOS_URL="https://raw.githubusercontent.com/murkl/ecos/main"
 ECOS_CORE_URL="$ECOS_URL/ecos"
+ECOS_RES_DIR_URL="$ECOS_URL/web"
 ECOS_DOTS_URL="https://github.com/murkl/dotfiles.git"
 
 ARCH_ISO_URL="https://arch.jensgutermuth.de/iso/2021.04.01/archlinux-2021.04.01-x86_64.iso"
@@ -1398,7 +1399,7 @@ install_plymouth() {
         print_title 'DOWNLOAD WATERMARK'
         watermark_file='/usr/share/plymouth/themes/spinner/watermark.png'
         sudo mv -f "$watermark_file" "$watermark_file".bak
-        curl -L "$ECOS_URL/plymouth.png" -o /tmp/watermark.png
+        curl -L "$ECOS_RES_DIR_URL/plymouth.png" -o /tmp/watermark.png
         sudo cp /tmp/watermark.png "$watermark_file"
 
         #----------------------------------------
