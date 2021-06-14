@@ -1326,7 +1326,7 @@ install_plymouth() {
         # Kernel Module
         #----------------------------------------
         tui_init 16 "Select Graphic Kernel Module"
-        if ! kms_result=$(whiptail --menu --notags "$(cat "$TUI_FILE")\n\n" "$TUI_HEIGHT" "$TUI_WIDTH" 3 "0" " none" "1" " Intel" "2" "  AMD" "3" "Nouveau" 3>&1 1>&2 2>&3); then
+        if ! kms_result=$(whiptail --menu --notags "$(cat "$TUI_FILE")\n\n" "$TUI_HEIGHT" "$TUI_WIDTH" 3 "0" " none" "1" "Intel (i915)" "2" "Intel + Driver" "3" "AMD" "4" "NVIDIA (Nouveau)" 3>&1 1>&2 2>&3); then
             exit 0
         fi
 
@@ -1339,13 +1339,17 @@ install_plymouth() {
         fi
         if [ "$kms_result" = "1" ]; then
             graphic_module='i915'
-            graphic_apps='xf86-video-intel'
+            graphic_apps=''
         fi
         if [ "$kms_result" = "2" ]; then
+            graphic_module='i915'
+            graphic_apps='xf86-video-intel'
+        fi
+        if [ "$kms_result" = "3" ]; then
             graphic_module='amdgpu'
             graphic_apps='xf86-video-amdgpu'
         fi
-        if [ "$kms_result" = "3" ]; then
+        if [ "$kms_result" = "4" ]; then
             graphic_module='nouveau'
             graphic_apps='xf86-video-nouveau'
         fi
