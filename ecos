@@ -1,5 +1,5 @@
 #!/bin/bash
-SCRIPT_VERSION=1.1.7
+SCRIPT_VERSION=1.1.8
 SCRIPT_ID="ecos"
 
 #/////////////////////////////////////////////////////
@@ -1326,7 +1326,7 @@ install_plymouth() {
         # Kernel Module
         #----------------------------------------
         tui_init 16 "Select Graphic Kernel Module"
-        if ! kms_result=$(whiptail --menu --notags "$(cat "$TUI_FILE")\n\n" "$TUI_HEIGHT" "$TUI_WIDTH" 3 "0" " none" "1" "Intel (i915)" "2" "Intel + Driver" "3" "AMD" "4" "NVIDIA (Nouveau)" 3>&1 1>&2 2>&3); then
+        if ! kms_result=$(whiptail --menu --notags "$(cat "$TUI_FILE")\n\n" "$TUI_HEIGHT" "$TUI_WIDTH" 5 "0" "none" "1" "Intel Open Source (i915)" "2" "Intel (xf86-video-intel)" "3" "AMD (xf86-video-amdgpu)" "4" "NVIDIA (xf86-video-nouveau)" 3>&1 1>&2 2>&3); then
             exit 0
         fi
 
