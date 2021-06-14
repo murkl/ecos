@@ -130,6 +130,19 @@ main() {
     fi
 
     # ---------------------------------------
+    # UPDATE SYSTEM
+    # ---------------------------------------
+    if [ "$1" == "--update-system" ]; then
+        print_header
+        print_title 'CHECK ECOS DEPENDENCIES'
+        check_git
+        check_paru
+        print_title 'ECOS CORE UPDATE'
+        update_core_installation
+        exit 0
+    fi
+
+    # ---------------------------------------
     # INSTALL PLYMOUTH
     # ---------------------------------------
     if [ "$1" == "--install-plymouth" ]; then
