@@ -182,7 +182,7 @@ set_lang_en_US() {
 set_lang_de_DE() {
     TIMEZONE='Europe/Berlin'
     LOCALE_LANG='de_DE.UTF-8'
-    LOCALE_GEN=('de_DE.UTF-8 UTF-8' 'de_DE ISO-8859-1' 'de_DE@euro ISO-8859-15')
+    LOCALE_GEN=('de_DE.UTF-8 UTF-8' 'de_DE ISO-8859-1' 'de_DE@euro ISO-8859-15' 'en_US.UTF-8 UTF-8')
     VCONSOLE_KEYMAP='de-latin1-nodeadkeys'
     X11_KEYBOARD_LAYOUT='de'
     X11_KEYBOARD_VARIANT='nodeadkeys'
@@ -1326,20 +1326,28 @@ install_plymouth() {
         # Kernel Module
         #----------------------------------------
         tui_init 16 "Select Graphic Kernel Module"
-        if ! kms_result=$(whiptail --menu --notags "$(cat "$TUI_FILE")\n\n" "$TUI_HEIGHT" "$TUI_WIDTH" 3 "1" " Intel" "2" "  AMD" "3" "Nouveau" 3>&1 1>&2 2>&3); then
+        if ! kms_result=$(whiptail --menu --notags "$(cat "$TUI_FILE")\n\n" "$TUI_HEIGHT" "$TUI_WIDTH" 3 "0" " none" "1" " Intel" "2" "  AMD" "3" "Nouveau" 3>&1 1>&2 2>&3); then
             exit 0
         fi
 
         graphic_module=''
+        graphic_apps=''
 
+        if [ "$kms_result" = "0" ]; then
+            graphic_module=''
+            graphic_apps=''
+        fi
         if [ "$kms_result" = "1" ]; then
             graphic_module='i915'
+            graphic_apps='xf86-video-intel'
         fi
         if [ "$kms_result" = "2" ]; then
             graphic_module='amdgpu'
+            graphic_apps='xf86-video-amdgpu'
         fi
         if [ "$kms_result" = "3" ]; then
             graphic_module='nouveau'
+            graphic_apps='xf86-video-nouveau'
         fi
 
         #----------------------------------------
@@ -1348,7 +1356,7 @@ install_plymouth() {
         print_title 'INSTALL PLYMOUTH'
         check_paru
         wait
-        if ! paru --noconfirm --needed --sudoloop -Syyu plymouth; then
+        if ! paru --noconfirm --needed --sudoloop -Syyu plymouth $graphic_apps; then
             echo "ERROR paru"
             exit 1
         fi
