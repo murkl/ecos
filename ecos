@@ -141,6 +141,9 @@ main() {
 
         print_title 'ECOS CORE UPDATE'
         update_core_installation
+
+        print_title 'ECOS SYSTEM UPDATE'
+        update_system
         exit 0
     fi
 
@@ -1187,6 +1190,51 @@ update_core_installation() {
         exit 1
     fi
     echo -e "ECOS CORE UPDATE SUCCESSFUL"
+}
+
+update_system() {
+    check_internet
+
+    # DOTFILES UPDATE
+    print_title 'ECOS DOTFILES UPDATE'
+    dots="git --git-dir="$HOME/.local/share/dotfiles" --work-tree="$HOME""
+    cd "$HOME" && "$dots" pull
+
+    # PACKAGE UPDATE
+    print_title 'FETCH PACKAGE UPDATES'
+    paru -Syy
+
+    # PACKAGE UPGRADE
+    print_title 'UPGRADE SYSTEM PACKAGES'
+    paru -Qu
+    echo ''
+    read -p "Continue with any Key..."
+    if ! paru -Su --noconfirm; then
+        echo -e "ERROR: paru"
+        exit 1
+    fi
+    wait
+
+    # INIT DOTFILES
+    print_title 'ECOS UPDATE FINISHED'
+    echo ''
+    read -p "Init Dotfiles now? [y/n]: " user_input
+
+    if [ "$user_input" = "y" ]; then
+
+        print_title 'INIT DOTFILES'
+        "$HOME/.init"
+        wait
+        print_title 'INIT FINISHED'
+        echo ""
+        read -p "Press any Key to close..."
+        exit 0
+
+    else
+        echo "Dotfiles Init skipped..."
+        exit 0
+    fi
+
 }
 
 #/////////////////////////////////////////////////////
