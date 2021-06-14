@@ -1208,12 +1208,14 @@ update_system() {
     print_title 'UPGRADE SYSTEM PACKAGES'
     paru -Qu
     echo ''
-    read -p "Continue with any Key..."
-    if ! paru -Su --noconfirm; then
-        echo -e "ERROR: paru"
-        exit 1
+    read -p "Upgrade packages? [y/n]: " user_input
+    if [ "$user_input" = "y" ]; then
+        if ! paru -Su --noconfirm; then
+            echo -e "ERROR: paru"
+            exit 1
+        fi
+        wait
     fi
-    wait
 
     # INIT DOTFILES
     print_title 'ECOS UPDATE FINISHED'
