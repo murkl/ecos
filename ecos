@@ -1215,6 +1215,9 @@ update_system() {
             exit 1
         fi
         wait
+
+    else
+        echo "Skipped..."
     fi
 
     # INIT DOTFILES
