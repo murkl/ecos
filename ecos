@@ -1197,7 +1197,7 @@ update_system() {
 
     # DOTFILES UPDATE
     print_title 'ECOS DOTFILES UPDATE'
-    dots="git --git-dir="$HOME/.local/share/dotfiles" --work-tree="$HOME""
+    dots=$(git --git-dir="$HOME/.local/share/dotfiles" --work-tree="$HOME")
     cd "$HOME" && "$dots" pull
 
     # PACKAGE UPDATE
