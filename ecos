@@ -1231,7 +1231,7 @@ update_system() {
         exit 0
 
     else
-        echo "Dotfiles Init skipped..."
+        echo "Skipped..."
         exit 0
     fi
 
