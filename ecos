@@ -137,6 +137,8 @@ main() {
         print_title 'CHECK ECOS DEPENDENCIES'
         check_git
         check_paru
+        echo ">>> OK"
+
         print_title 'ECOS CORE UPDATE'
         update_core_installation
         exit 0
