@@ -1047,7 +1047,7 @@ check_disk() {
             disk_size=$(lsblk -d -n -o SIZE /dev/$disk_line)
             disk_array+=("/dev/$disk_line")
             disk_array+=(" ($disk_size)")
-        done < <(lsblk -I 8 -d -o KNAME -n)
+        done < <(lsblk -I 8,259 -d -o KNAME -n)
 
         tui_init 24 "Choose Disk"
         if ! DISK=$(whiptail --menu "$(cat "$TUI_FILE")" "$TUI_HEIGHT" "$TUI_WIDTH" "${#disk_array[@]}" "${disk_array[@]}" 3>&1 1>&2 2>&3); then
