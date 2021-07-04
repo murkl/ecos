@@ -1331,11 +1331,17 @@ open_tui_install_ecos() {
     echo -e "DONE"
 
     print_title "CLONE DOTFILES"
+
+    # Prepare
     dots_home="$HOME/.local/share/dotfiles"
     rm -rf "$dots_home"
     mkdir -p "$dots_home"
     cd "$HOME" || exit 1
+
+    # Clone dotfiles
     git clone --bare "$ECOS_DOTS_URL" "$dots_home"
+
+    # Reset dotfiles
     git --git-dir="$dots_home" --work-tree="$HOME" reset --hard
     git --git-dir="$dots_home" --work-tree="$HOME" config --local status.showUntrackedFiles no
 
