@@ -380,7 +380,7 @@ open_tui_init() {
     # Show TUI menu
     #----------------------------------------
     tui_init 0 ""
-    if ! menu_input=$(whiptail --menu --notags "$(cat "$TUI_FILE")\n\n" "$TUI_HEIGHT" "$TUI_WIDTH" 3 "1" "Install ECOS" "2" "Install Driver & Plymouth" "3" "Change Password" 3>&1 1>&2 2>&3); then
+    if ! menu_input=$(whiptail --menu --notags "$(cat "$TUI_FILE")\n\n" "$TUI_HEIGHT" "$TUI_WIDTH" 3 "1" "Init Dotfiles" "2" "Install Driver & Plymouth" "3" "Change Password" 3>&1 1>&2 2>&3); then
         exit 0
     fi
 
@@ -421,7 +421,7 @@ open_tui_ecos() {
     # Show TUI menu
     #----------------------------------------
     tui_init 24 "INSTALLER"
-    if ! menu_input=$(whiptail --menu --notags "$(cat "$TUI_FILE")\n\n" "$TUI_HEIGHT" "$TUI_WIDTH" 3 "1" "Install ECOS" "2" "Install Driver & Plymouth" "3" "Create USB Stick" 3>&1 1>&2 2>&3); then
+    if ! menu_input=$(whiptail --menu --notags "$(cat "$TUI_FILE")\n\n" "$TUI_HEIGHT" "$TUI_WIDTH" 3 "1" "Init Dotfiles" "2" "Install Driver & Plymouth" "3" "Create USB Stick" 3>&1 1>&2 2>&3); then
         exit 0
     fi
 
@@ -1222,24 +1222,9 @@ update_system() {
 
     # INIT DOTFILES
     print_title 'ECOS UPDATE FINISHED'
-    echo ''
-    read -p "Init Dotfiles now? [y/n]: " user_input
-
-    if [ "$user_input" = "y" ]; then
-
-        print_title 'INIT DOTFILES'
-        "$HOME/.init"
-        wait
-        print_title 'INIT FINISHED'
-        echo ""
-        read -p "Press any Key to close..."
-        exit 0
-
-    else
-        echo "Skipped..."
-        exit 0
-    fi
-
+    echo ""
+    read -p "Press any Key to close..."
+    exit 0
 }
 
 #/////////////////////////////////////////////////////
