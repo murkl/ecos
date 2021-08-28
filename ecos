@@ -1,5 +1,5 @@
 #!/bin/bash
-SCRIPT_VERSION=1.2.1
+SCRIPT_VERSION=1.2.2
 SCRIPT_ID="ecos"
 
 #/////////////////////////////////////////////////////
@@ -1198,7 +1198,7 @@ update_system() {
     # DOTFILES UPDATE
     print_title 'ECOS DOTFILES UPDATE'
     dots="git --git-dir="$HOME/.local/share/dotfiles" --work-tree="$HOME""
-    cd "$HOME" 
+    cd "$HOME"
     bash -c "$dots reset --hard"
     bash -c "$dots pull"
 
@@ -1400,11 +1400,11 @@ install_plymouth() {
         fi
         if [ "$kms_result" = "1" ]; then
             graphic_module='i915'
-            graphic_apps=''
+            graphic_apps='lib32-mesa vulkan-intel lib32-vulkan-intel vulkan-tools'
         fi
         if [ "$kms_result" = "2" ]; then
             graphic_module='i915'
-            graphic_apps='xf86-video-intel'
+            graphic_apps='xf86-video-intel lib32-mesa vulkan-intel lib32-vulkan-intel vulkan-tools'
         fi
         if [ "$kms_result" = "3" ]; then
             graphic_module='amdgpu'
