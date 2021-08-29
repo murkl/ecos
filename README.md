@@ -1,4 +1,5 @@
-<h1 align="center">ec•s | core</h1>
+# Documentation<h1 align="center">ec•s | core</h1>
+
 <div align="center">
   <p>ARCH LINUX • MICRO • ENCRYPTED • DOTBASED</p>
 
@@ -22,21 +23,25 @@
   - `curl -L http://ecos.webhop.me > ecos`
   - `bash ecos`
 
-# Documentation
+# Variants
 
-# BSPWM
+Simply insert one of these Dotfiles URL of your favorite variant during the 2. installation step.
+
+## GNOME: https://github.com/murkl/dotfiles-gnome.git
+
+  <p>
+  <img src="https://raw.githubusercontent.com/murkl/ecos/master/web/gnome-01.png">
+    <img src="https://raw.githubusercontent.com/murkl/ecos/master/web/gnome-02.png">
+  </p>
+
+## BSPWM: https://github.com/murkl/dotfiles-bspwm.git
 
   <p>
   <img src="https://raw.githubusercontent.com/murkl/ecos/master/web/bspwm-01.png">
     <img src="https://raw.githubusercontent.com/murkl/ecos/master/web/bspwm-02.png">
   </p>
 
-# GNOME
-
-  <p>
-  <img src="https://raw.githubusercontent.com/murkl/ecos/master/web/gnome-01.png">
-    <img src="https://raw.githubusercontent.com/murkl/ecos/master/web/gnome-02.png">
-  </p>
+# Documentation
 
 ## Recommendations
 
