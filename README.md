@@ -24,9 +24,18 @@
 
 # Documentation
 
+# BSPWM
+
   <p>
-  <img src="https://raw.githubusercontent.com/murkl/ecos/master/web/screenshot.png">
-    <img src="https://raw.githubusercontent.com/murkl/ecos/master/web/apps.png">
+  <img src="https://raw.githubusercontent.com/murkl/ecos/master/web/bspwm-01.png">
+    <img src="https://raw.githubusercontent.com/murkl/ecos/master/web/bspwm-02.png">
+  </p>
+
+# GNOME
+
+  <p>
+  <img src="https://raw.githubusercontent.com/murkl/ecos/master/web/gnome-01.png">
+    <img src="https://raw.githubusercontent.com/murkl/ecos/master/web/gnome-02.png">
   </p>
 
 ## Recommendations
