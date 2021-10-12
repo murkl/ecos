@@ -1289,11 +1289,11 @@ open_tui_install_ecos() {
     fi
 
     # Create dots bin
-    local local_bin="$HOME/.local/bin"
-    local dots_bin="$local_bin/dots"
-    mkdir -p local_bin
+    local dots_bin="$ECOS_BIN/dots"
+    mkdir -p "$ECOS_BIN"
     echo '#!/bin/sh' >"$dots_bin"
     echo 'git --git-dir="$HOME/.local/share/dotfiles" --work-tree="$HOME" "$@"' >>"$dots_bin"
+    chmod +x "$dots_bin"
 
     # Clone dotfiles
     git clone --bare "$ECOS_DOTS_DEFAULT_URL" "$dots_home"
