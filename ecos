@@ -19,8 +19,8 @@ SCRIPT_ID="ecos"
 # URLS
 ECOS_URL="https://raw.githubusercontent.com/murkl/ecos/main"
 ECOS_CORE_URL="$ECOS_URL/ecos"
-ECOS_RES_DIR_URL="$ECOS_URL/web"
-ECOS_DOTS_URL="https://github.com/murkl/dotfiles-gnome.git"
+ECOS_RES_DIR_URL="$ECOS_URL/res"
+ECOS_DOTS_DEFAULT_URL="https://github.com/murkl/dotfiles-gnome.git"
 
 ARCH_ISO_URL="https://www.archlinux.de/download/iso/2021.05.01/archlinux-2021.05.01-x86_64.iso"
 
@@ -1295,11 +1295,11 @@ open_tui_install_ecos() {
     check_internet
 
     tui_init 0 "Dotfiles URL"
-    if ! ECOS_DOTS_URL=$(whiptail --inputbox "$(cat "$TUI_FILE")" "$TUI_HEIGHT" "$TUI_WIDTH" "$ECOS_DOTS_URL" 3>&1 1>&2 2>&3); then
+    if ! ECOS_DOTS_DEFAULT_URL=$(whiptail --inputbox "$(cat "$TUI_FILE")" "$TUI_HEIGHT" "$TUI_WIDTH" "$ECOS_DOTS_DEFAULT_URL" 3>&1 1>&2 2>&3); then
         main
         exit 0
     fi
-    if [ "$ECOS_DOTS_URL" = "" ]; then
+    if [ "$ECOS_DOTS_DEFAULT_URL" = "" ]; then
         tui_init 0 "Dotfiles URL was empty!"
         whiptail --textbox "$TUI_FILE" "$TUI_HEIGHT" "$TUI_WIDTH"
         return
@@ -1328,7 +1328,7 @@ open_tui_install_ecos() {
     cd "$HOME" || exit 1
 
     # Clone dotfiles
-    git clone --bare "$ECOS_DOTS_URL" "$dots_home"
+    git clone --bare "$ECOS_DOTS_DEFAULT_URL" "$dots_home"
 
     # Reset dotfiles
     git --git-dir="$dots_home" --work-tree="$HOME" reset --hard
