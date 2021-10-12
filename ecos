@@ -1,10 +1,13 @@
 #!/bin/bash
-SCRIPT_VERSION=1.3.1
+SCRIPT_VERSION=1.3.2
 SCRIPT_ID="ecos"
 CHANGELOG="
-ECOS 1.3.1
-- Sandbox Architecture (.ecos home dir )
-- Refactoring
+1.3.2
+  + New Update mechanism
+
+1.3.1
+  + Sandbox Architecture (.ecos home dir)
+  + Refactoring
 "
 
 #/////////////////////////////////////////////////////
@@ -126,7 +129,7 @@ main() {
         fi
         if [ "$SCRIPT_VERSION" != "$latest_changelog_version" ]; then
             tui_init 0 ""
-            whiptail --title "Changelog" --msgbox "$CHANGELOG" $TUI_HEIGHT $TUI_WIDTH 3>&1 1>&2 2>&3
+            whiptail --title "Changelog" --msgbox "$(cat "$TUI_FILE")\n\n$CHANGELOG" $TUI_HEIGHT $TUI_WIDTH 3>&1 1>&2 2>&3
             echo "$SCRIPT_VERSION" >"$ECOS_INITIALIZED"
         fi
         exit 0
