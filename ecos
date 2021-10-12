@@ -38,7 +38,8 @@ ARCH_ISO_DEFAULT_URL="https://www.archlinux.de/download/iso/2021.10.01/archlinux
 
 # ECOS
 ECOS_HOME="$HOME/.ecos"
-ECOS_CORE="$ECOS_HOME/$SCRIPT_ID"
+ECOS_BIN="$ECOS_HOME/bin"
+ECOS_CORE="$ECOS_BIN/$SCRIPT_ID"
 
 ECOS_INIT="$ECOS_HOME/init"
 ECOS_INITIALIZED="$ECOS_HOME/.initialized"
@@ -119,11 +120,11 @@ main() {
     # ---------------------------------------
 
     if [ "$1" = "--ecos-autostart" ]; then
-        latest_changelog_version=$(<"$ECOS_INIT")
+        latest_changelog_version=$(<"$ECOS_INITIALIZED")
         if [ "$SCRIPT_VERSION" != "$latest_changelog_version" ]; then
             tui_init 0 ""
             whiptail --title "Changelog" --msgbox "$CHANGELOG" $TUI_HEIGHT $TUI_WIDTH 3>&1 1>&2 2>&3
-            echo "$SCRIPT_VERSION" >$ECOS_INIT
+            echo "$SCRIPT_VERSION" >"$ECOS_INITIALIZED"
         fi
         exit 0
     fi
@@ -942,13 +943,13 @@ install_chroot() {
 
     # Copy ecos to local bin
     ecos_home_install="/home/$USERNAME/.ecos"
-    mkdir -p "$ecos_home_install"
-    cp "$SCRIPT_FILE" "$ecos_home_install/$SCRIPT_ID"
-    chmod +x "$ecos_home_install/$SCRIPT_ID"
+    mkdir -p "$ecos_home_install/bin"
+    cp "$SCRIPT_FILE" "$ecos_home_install/bin/$SCRIPT_ID"
+    chmod +x "$ecos_home_install/bin/$SCRIPT_ID"
 
     # Create .zlogin
     echo '#!/bin/sh' >/home/$USERNAME/.zlogin
-    echo '$HOME/.ecos/'$SCRIPT_ID' --init' >>/home/$USERNAME/.zlogin
+    echo '$HOME/.ecos/bin/'$SCRIPT_ID' --init' >>/home/$USERNAME/.zlogin
     chmod +x /home/$USERNAME/.zlogin
 
     #----------------------------------------
