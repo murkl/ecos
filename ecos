@@ -1,5 +1,5 @@
 #!/bin/bash
-SCRIPT_VERSION=1.2.3
+SCRIPT_VERSION=1.3.0
 SCRIPT_ID="ecos"
 
 #/////////////////////////////////////////////////////
@@ -22,7 +22,7 @@ ECOS_CORE_URL="$ECOS_URL/ecos"
 ECOS_RES_DIR_URL="$ECOS_URL/res"
 ECOS_DOTS_DEFAULT_URL="https://github.com/murkl/dotfiles-gnome.git"
 
-ARCH_ISO_URL="https://www.archlinux.de/download/iso/2021.05.01/archlinux-2021.05.01-x86_64.iso"
+ARCH_ISO_DEFAULT_URL="https://www.archlinux.de/download/iso/2021.10.01/archlinux-2021.10.01-x86_64.iso"
 
 # WORKING DIR
 SCRIPT_DIR="$(cd "$(dirname "$0")" >/dev/null 2>&1 && pwd)"
@@ -38,8 +38,7 @@ TUI_HEIGHT=24
 
 # ECOS
 ECOS_CORE="$HOME/.local/bin/$SCRIPT_ID"
-ECOS_CONFIG_HOME="$HOME/.config/ecos"
-ECOS_CONFIG_FILE="$ECOS_CONFIG_HOME/config"
+
 ECOS_INIT="$HOME/.init"
 ECOS_INITIALIZED="$HOME/.cache/$SCRIPT_ID.initialized"
 ARCH_ISO_FILE="$HOME/.cache/archlinux-x86_64.iso"
@@ -75,14 +74,6 @@ main() {
         exit $?
     fi
 
-    #----------------------------------------
-    # SET ENV
-    #----------------------------------------
-    if [ "$1" = "--set-env" ]; then
-        set_env
-        exit 0
-    fi
-
     # ---------------------------------------
     # RECOVERY
     # ---------------------------------------
@@ -95,7 +86,6 @@ main() {
     # INIT
     # ---------------------------------------
     if [ "$1" == "--init" ]; then
-        set_env
         if [ ! -f "$ECOS_INITIALIZED" ]; then
             open_tui_init
         else
@@ -204,70 +194,6 @@ set_lang_de_DE() {
     VCONSOLE_KEYMAP='de-latin1-nodeadkeys'
     X11_KEYBOARD_LAYOUT='de'
     X11_KEYBOARD_VARIANT='nodeadkeys'
-}
-
-#/////////////////////////////////////////////////////
-# SET ENV
-#/////////////////////////////////////////////////////
-
-check_env() {
-    config_key="$1"
-    config_value="$2"
-    touch "$ECOS_CONFIG_FILE"
-    if ! grep -qrnw "$ECOS_CONFIG_FILE" -e "$config_key=*"; then
-        echo "export $config_key=\"$config_value\"" >>"$ECOS_CONFIG_FILE"
-    fi
-}
-
-set_env() {
-
-    # Create config dir and file
-    mkdir -p "$ECOS_CONFIG_HOME"
-    touch "$ECOS_CONFIG_FILE"
-
-    # Check values
-    check_env "ECOS_CORE" '$HOME/.local/bin/'$SCRIPT_ID''
-    check_env "ECOS_CONFIG_HOME" '$HOME/.config/ecos'
-    check_env "ECOS_CONFIG_FILE" '$ECOS_CONFIG_HOME/config'
-
-    check_env "ECOS_MONITOR" 'HDMI-2'
-    check_env "ECOS_WIRELESS_INTERFACE" 'wlp8s0'
-    check_env "ECOS_BATTERY_INTERFACE" 'BAT1'
-    check_env "ECOS_BATTERY_ADAPTER" 'ACAD'
-
-    check_env "ECOS_BACKUP_SOURCE" '$HOME'
-    check_env "ECOS_BACKUP_DESTINATION" '/mnt/crypt-usb/$USER'
-    check_env "ECOS_BACKUP_SSH_HOST" ''
-    check_env "ECOS_BACKUP_SSH_USER" ''
-    check_env "ECOS_BACKUP_SSH_PASS" ''
-
-    check_env "ECOS_POSTEO_SERVER" 'posteo.de:993'
-    check_env "ECOS_POSTEO_EMAIL" 'user@posteo.de'
-    check_env "ECOS_POSTEO_PASSWORD" ''
-    check_env "ECOS_WEATHER_LOCATION" 'Kassel'
-
-    check_env "ECOS_DOWNLOAD_MUSIC" '$HOME/Downloads/Music'
-    check_env "ECOS_DOWNLOAD_VIDEOS" '$HOME/Downloads/Videos'
-    check_env "ECOS_DOWNLOAD_MOVIES" '$HOME/Downloads/Movies'
-
-    check_env "ECOS_SCREENSHOTS" '$HOME/Desktop/Screenshots'
-
-    # ECOS DEFAULT APPS
-    check_env "ECOS_TERMINAL" 'kitty'
-    check_env "ECOS_TERMINAL_CLASS" 'kitty'
-    check_env "ECOS_EDITOR" 'vscodium'
-    check_env "ECOS_EDITOR_CLASS" 'VSCodium'
-    check_env "ECOS_FILES" 'nemo'
-    check_env "ECOS_FILES_CLASS" 'Nemo'
-    check_env "ECOS_BROWSER" 'qutebrowser'
-    check_env "ECOS_BROWSER_CLASS" 'qutebrowser'
-    check_env "ECOS_EMAIL" 'geary'
-    check_env "ECOS_EMAIL_CLASS" 'Geary'
-    check_env "ECOS_MUSIC" 'kitty -e ncmpcpp'
-    check_env "ECOS_MUSIC_CLASS" ''
-
-    # Load config file
-    source "$ECOS_CONFIG_FILE" >/dev/null 2>&1
 }
 
 #/////////////////////////////////////////////////////
@@ -421,7 +347,7 @@ open_tui_ecos() {
     # Show TUI menu
     #----------------------------------------
     tui_init 24 "INSTALLER"
-    if ! menu_input=$(whiptail --menu --notags "$(cat "$TUI_FILE")\n\n" "$TUI_HEIGHT" "$TUI_WIDTH" 3 "1" "Init Dotfiles" "2" "Install Driver & Plymouth" "3" "Create USB Stick" 3>&1 1>&2 2>&3); then
+    if ! menu_input=$(whiptail --menu --notags "$(cat "$TUI_FILE")\n\n" "$TUI_HEIGHT" "$TUI_WIDTH" 3 "1" "Set Dotfile Repo" "2" "Install Driver & Plymouth" "3" "Create USB Stick" 3>&1 1>&2 2>&3); then
         exit 0
     fi
 
@@ -1224,7 +1150,13 @@ update_system() {
         echo "Skipped..."
     fi
 
-    # INIT DOTFILES
+    # UPDATE INIT FILE
+    print_title 'UPDATING ECOS INIT FILE'
+    if [ -f "$HOME/.init" ]; then
+        bash -c "$HOME/.init --update"
+    fi
+
+    # FINISH
     print_title 'ECOS UPDATE FINISHED'
     echo ""
     read -p "Press any Key to close..."
@@ -1532,10 +1464,10 @@ open_tui_create_usb() {
         exit 0
     fi
     tui_init 0 "Arch ISO URL"
-    if ! ARCH_ISO_URL=$(whiptail --inputbox "$(cat "$TUI_FILE")\n" "$TUI_HEIGHT" "$TUI_WIDTH" "$ARCH_ISO_URL" 3>&1 1>&2 2>&3); then
+    if ! ARCH_ISO_DEFAULT_URL=$(whiptail --inputbox "$(cat "$TUI_FILE")\n" "$TUI_HEIGHT" "$TUI_WIDTH" "$ARCH_ISO_DEFAULT_URL" 3>&1 1>&2 2>&3); then
         exit 0
     fi
-    if [ "$ARCH_ISO_URL" = "" ]; then
+    if [ "$ARCH_ISO_DEFAULT_URL" = "" ]; then
         echo "URL was empty"
         exit 1
     fi
@@ -1543,14 +1475,14 @@ open_tui_create_usb() {
     print_header
     print_title "USB Disk: $usb_disk"
     echo -e '\n'
-    print_title "ARCH URL: $ARCH_ISO_URL"
+    print_title "ARCH URL: $ARCH_ISO_DEFAULT_URL"
 
     # Check and download arch iso
     #--------------------------------------------
     if ! [ -f "$ARCH_ISO_FILE" ]; then
-        print_title "Downloading $ARCH_ISO_FILE from $ARCH_ISO_URL..."
+        print_title "Downloading $ARCH_ISO_FILE from $ARCH_ISO_DEFAULT_URL..."
 
-        if ! curl -L "$ARCH_ISO_URL" -o "$ARCH_ISO_FILE.part"; then
+        if ! curl -L "$ARCH_ISO_DEFAULT_URL" -o "$ARCH_ISO_FILE.part"; then
             echo "ERROR: Downloading ISO"
             exit 1
         fi
