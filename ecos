@@ -16,14 +16,6 @@ SCRIPT_ID="ecos"
 # VARIABLES
 #/////////////////////////////////////////////////////
 
-# URLS
-ECOS_URL="https://raw.githubusercontent.com/murkl/ecos/main"
-ECOS_CORE_URL="$ECOS_URL/ecos"
-ECOS_RES_DIR_URL="$ECOS_URL/res"
-ECOS_DOTS_DEFAULT_URL="https://github.com/murkl/dotfiles-gnome.git"
-
-ARCH_ISO_DEFAULT_URL="https://www.archlinux.de/download/iso/2021.10.01/archlinux-2021.10.01-x86_64.iso"
-
 # WORKING DIR
 SCRIPT_DIR="$(cd "$(dirname "$0")" >/dev/null 2>&1 && pwd)"
 SCRIPT_FILE="$SCRIPT_DIR/$(basename "$0")"
@@ -32,16 +24,24 @@ CONFIG_FILE="$SCRIPT_DIR/$SCRIPT_ID.conf"
 LOG_FILE="$SCRIPT_DIR/$SCRIPT_ID.log"
 TUI_FILE="$SCRIPT_DIR/$SCRIPT_ID.tui"
 
+# URLS
+ECOS_URL="https://raw.githubusercontent.com/murkl/ecos/main"
+ECOS_CORE_URL="$ECOS_URL/ecos"
+ECOS_RES_DIR_URL="$ECOS_URL/res"
+ECOS_DOTS_DEFAULT_URL="https://github.com/murkl/dotfiles-gnome.git"
+ARCH_ISO_DEFAULT_URL="https://www.archlinux.de/download/iso/2021.10.01/archlinux-2021.10.01-x86_64.iso"
+
+# ECOS
+ECOS_HOME="$HOME/.ecos"
+ECOS_CORE="$ECOS_HOME/$SCRIPT_ID"
+
+ECOS_INIT="$ECOS_HOME/init"
+ECOS_INITIALIZED="$ECOS_HOME/.initialized"
+ARCH_ISO_FILE="$HOME/.cache/archlinux-x86_64.iso"
+
 # TUI
 TUI_WIDTH=64
 TUI_HEIGHT=24
-
-# ECOS
-ECOS_CORE="$HOME/.local/bin/$SCRIPT_ID"
-
-ECOS_INIT="$HOME/.init"
-ECOS_INITIALIZED="$HOME/.cache/$SCRIPT_ID.initialized"
-ARCH_ISO_FILE="$HOME/.cache/archlinux-x86_64.iso"
 
 # CONFIG VALUES
 USERNAME=''
