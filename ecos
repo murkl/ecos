@@ -1130,9 +1130,7 @@ update_system() {
 
     # PACKAGE UPDATE
     print_title 'FETCH PACKAGE UPDATES'
-
-    # UPDATE DATABASE
-    #paru -Syy
+    paru -Syy
 
     # PACKAGE UPGRADE
     print_title 'UPGRADE SYSTEM PACKAGES'
@@ -1140,7 +1138,7 @@ update_system() {
     echo ''
     read -p "Upgrade packages? [y/n]: " user_input
     if [ "$user_input" = "y" ]; then
-        if ! paru -Syyu --noconfirm; then
+        if ! paru -Su --noconfirm; then
             echo -e "ERROR: paru"
             exit 1
         fi
