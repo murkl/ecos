@@ -1,7 +1,10 @@
 #!/bin/bash
-SCRIPT_VERSION=1.3.2
+SCRIPT_VERSION=1.3.3
 SCRIPT_ID="ecos"
 CHANGELOG="
+1.3.3
+  + Binary: dots
+
 1.3.2
   + New Update mechanism
 
