@@ -1126,7 +1126,7 @@ tui_check_script_config() {
 
 update_core_installation() {
     check_internet
-    mkdir -p "$HOME/.local/bin"
+    mkdir -p "$ECOS_BIN"
     if ! curl -s -L "$ECOS_CORE_URL" >"$ECOS_CORE"; then
         echo "ERROR: ECOS CORE DOWNLOAD"
         exit 1
