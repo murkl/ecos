@@ -1312,7 +1312,7 @@ open_tui_install_ecos() {
 
     # Call init script
     echo -e "EXECUTE $ECOS_INIT"
-    chmod +x "$ECOS_INIT" && "$ECOS_INIT --install"
+    chmod +x "$ECOS_INIT" && bash -c "$ECOS_INIT --install"
 
     # Silent Boot
     echo '# Disable the last login message on startup with this file' >"$HOME/.hushlogin"
