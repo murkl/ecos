@@ -1,5 +1,5 @@
 #!/bin/bash
-SCRIPT_VERSION=1.2.2
+SCRIPT_VERSION=1.2.3
 SCRIPT_ID="ecos"
 
 #/////////////////////////////////////////////////////
