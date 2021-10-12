@@ -1259,6 +1259,11 @@ open_tui_install_ecos() {
     mkdir -p "$dots_home"
     cd "$HOME" || exit 1
 
+    # Removing existing init
+    if [ -f "$ECOS_INIT" ]; then
+        bash -c "$ECOS_INIT --remove"
+    fi
+
     # Clone dotfiles
     git clone --bare "$ECOS_DOTS_DEFAULT_URL" "$dots_home"
 
