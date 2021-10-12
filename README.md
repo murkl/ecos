@@ -1,10 +1,10 @@
-# Documentation<h1 align="center">ec•s | core</h1>
+<h1 align="center">ECOS Core Installer</h1>
 
 <div align="center">
   <p>ARCH LINUX • MICRO • ENCRYPTED • DOTBASED</p>
 
   <p>
-  <img src="https://raw.githubusercontent.com/murkl/ecos/master/web/ecos.png">
+  <img src="https://raw.githubusercontent.com/murkl/ecos/master/web/ecos.png" />
   </p>
 
   <p><b>The userfriendly & dotbased OS</b></p>

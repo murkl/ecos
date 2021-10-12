@@ -1204,7 +1204,9 @@ update_system() {
 
     # PACKAGE UPDATE
     print_title 'FETCH PACKAGE UPDATES'
-    paru -Syy
+
+    # UPDATE DATABASE
+    #paru -Syy
 
     # PACKAGE UPGRADE
     print_title 'UPGRADE SYSTEM PACKAGES'
