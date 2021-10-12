@@ -14,6 +14,13 @@
   </p>
 </div>
 
+# Prerequisites
+
+- Disable Secure Boot
+- Disable Legacy Support
+- Set Boot Mode to UEFI (Legacy BIOS supported)
+- Connect to Internet via cable (recommended)
+
 # Installation
 
 - Create bootable USB Stick
@@ -23,33 +30,9 @@
   - `curl -L http://ecos.webhop.me > ecos`
   - `bash ecos`
 
-# Variants
-
-Simply insert one of these Dotfiles URL of your favorite variant during the 2. installation step.
-
-## GNOME: https://github.com/murkl/dotfiles-gnome.git
-
-  <p>
-  <img src="https://raw.githubusercontent.com/murkl/ecos/master/web/gnome-01.png">
-    <img src="https://raw.githubusercontent.com/murkl/ecos/master/web/gnome-02.png">
-  </p>
-
-## BSPWM: https://github.com/murkl/dotfiles-bspwm.git
-
-  <p>
-  <img src="https://raw.githubusercontent.com/murkl/ecos/master/web/bspwm-01.png">
-    <img src="https://raw.githubusercontent.com/murkl/ecos/master/web/bspwm-02.png">
-  </p>
-
 # Documentation
 
-## Recommendations
-
-- 1000 MB RAM (mind. 512 MB)
-- Disable Secure Boot
-- Disable Legacy Support
-- Set Boot Mode to UEFI (Legacy BIOS supported)
-- Connect to Internet via cable
+ECOS is a minimal installation script for Arch Linux. This script will install a minimal installation of arch linux including encryption (LUKS). It is seperated in two installation steps.
 
 ## Core Installation
 
@@ -69,7 +52,21 @@ git paru
 
 **Note:** _The ECOS Dotfiles Installation routine will ask you for your Dotfiles URL and will execute the personal `~/.init` file inside your Dotfiles Repository_
 
-## Configuration
+### GNOME Variant
 
-- Show WLAN Interface: `ip link`
-- Show Battery Info: `ls -1 /sys/class/power_supply/`
+<b>Repository:</b> https://github.com/murkl/dotfiles-gnome.git
+
+  <p align="center">
+
+  <img width="75%" src="https://raw.githubusercontent.com/murkl/ecos/master/web/gnome-01.png">
+    <img width="75%" src="https://raw.githubusercontent.com/murkl/ecos/master/web/gnome-02.png">
+  </p>
+
+## BSPWM Variant
+
+<b>Repository:</b> https://github.com/murkl/dotfiles-bspwm.git
+
+  <p align="center">
+  <img width="75%" src="https://raw.githubusercontent.com/murkl/ecos/master/web/bspwm-01.png">
+    <img width="75%" src="https://raw.githubusercontent.com/murkl/ecos/master/web/bspwm-02.png">
+  </p>
