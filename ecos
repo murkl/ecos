@@ -4,17 +4,13 @@
 # META
 #/////////////////////////////////////////////////////
 
-SCRIPT_VERSION=1.3.3
+SCRIPT_VERSION=1.5.0
 SCRIPT_ID="ecos"
 CHANGELOG="
-1.3.3
-  + Binary: dots
-
-1.3.2
+1.5.0
   + New Update mechanism
-
-1.3.1
   + Sandbox Architecture (.ecos home dir)
+  + Binary: dots
   + Refactoring
 "
 
