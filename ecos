@@ -112,16 +112,6 @@ main() {
     # UPDATE ECOS
     # ---------------------------------------
     if [ "$1" == "--update" ]; then
-        print_header
-        print_title 'CHECK ECOS DEPENDENCIES'
-        check_git
-        check_paru
-        echo ">>> OK"
-
-        print_title 'ECOS CORE UPDATE'
-        update_core_installation
-
-        print_title 'ECOS SYSTEM UPDATE'
         update_system
         exit 0
     fi
@@ -1125,12 +1115,22 @@ update_core_installation() {
 }
 
 update_system() {
+
+    print_header
     check_internet
+
+    print_title 'CHECK ECOS DEPENDENCIES'
+    check_git
+    check_paru
+    echo ">>> OK"
+
+    print_title 'ECOS CORE UPDATE'
+    update_core_installation
 
     # DOTFILES UPDATE
     print_title 'ECOS DOTFILES UPDATE'
-    #dots="git --git-dir="$HOME/.local/share/dotfiles" --work-tree="$HOME""
     cd "$HOME"
+    #dots="git --git-dir="$HOME/.local/share/dotfiles" --work-tree="$HOME""
     bash -c "dots reset --hard"
     bash -c "dots pull"
 
