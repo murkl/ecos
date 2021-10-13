@@ -122,7 +122,23 @@ main() {
     # ECOS AUTOSTART
     # ---------------------------------------
 
-    if [ "$1" = "--ecos-autostart" ]; then
+    if [ "$1" = "--run" ]; then
+
+        # ECOS
+        export ECOS_CORE="$ECOS_HOME/bin/ecos"
+
+        # PATH
+        export PATH="$PATH:$HOME/.local/bin"
+        export PATH="$PATH:$ECOS_HOME/bin"
+
+        exit 0
+    fi
+
+    # ---------------------------------------
+    # ECOS CHANGELOG
+    # ---------------------------------------
+
+    if [ "$1" = "--changelog" ]; then
         latest_changelog_version=""
         if [ -f "$ECOS_INITIALIZED" ]; then
             latest_changelog_version=$(<"$ECOS_INITIALIZED")
