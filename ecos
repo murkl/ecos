@@ -1,7 +1,10 @@
 #!/bin/bash
-SCRIPT_VERSION=1.3.2
+SCRIPT_VERSION=1.3.3
 SCRIPT_ID="ecos"
 CHANGELOG="
+1.3.3
+  + Binary: dots
+
 1.3.2
   + New Update mechanism
 
@@ -145,7 +148,7 @@ main() {
         fi
         if [ "$SCRIPT_VERSION" != "$latest_changelog_version" ]; then
             tui_init 0 ""
-            whiptail --title "Changelog" --msgbox "$(cat "$TUI_FILE")\n\n$CHANGELOG" $TUI_HEIGHT $TUI_WIDTH 3>&1 1>&2 2>&3
+            whiptail --title "Changelog" --scrolltext --msgbox "$(cat "$TUI_FILE")\n\n$CHANGELOG" $TUI_HEIGHT $TUI_WIDTH 3>&1 1>&2 2>&3
             echo "$SCRIPT_VERSION" >"$ECOS_INITIALIZED"
         fi
         exit 0
@@ -1305,11 +1308,11 @@ open_tui_install_ecos() {
     fi
 
     # Create dots bin
-    local local_bin="$HOME/.local/bin"
-    local dots_bin="$local_bin/dots"
-    mkdir -p local_bin
+    local dots_bin="$ECOS_BIN/dots"
+    mkdir -p "$ECOS_BIN"
     echo '#!/bin/sh' >"$dots_bin"
     echo 'git --git-dir="$HOME/.local/share/dotfiles" --work-tree="$HOME" "$@"' >>"$dots_bin"
+    chmod +x "$dots_bin"
 
     # Clone dotfiles
     git clone --bare "$ECOS_DOTS_DEFAULT_URL" "$dots_home"
