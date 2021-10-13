@@ -93,22 +93,6 @@ main() {
     fi
 
     # ---------------------------------------
-    # ECOS RUN
-    # ---------------------------------------
-    if [ "$1" = "--run" ]; then
-
-        # ECOS
-        export ECOS_CORE="$ECOS_HOME/bin/ecos"
-
-        # PATH
-        export PATH="$PATH:$HOME/.local/bin"
-        export PATH="$PATH:$ECOS_HOME/bin"
-
-        source "$ECOS_HOME/profile"
-        exit 0
-    fi
-
-    # ---------------------------------------
     # UPDATE ECOS
     # ---------------------------------------
     if [ "$1" == "--update" ]; then
