@@ -122,9 +122,8 @@ main() {
     fi
 
     # ---------------------------------------
-    # ECOS AUTOSTART
+    # ECOS RUN
     # ---------------------------------------
-
     if [ "$1" = "--run" ]; then
 
         # ECOS
@@ -133,16 +132,12 @@ main() {
         # PATH
         export PATH="$PATH:$HOME/.local/bin"
         export PATH="$PATH:$ECOS_HOME/bin"
-
-echo "sasd"
-
         exit 0
     fi
 
     # ---------------------------------------
     # ECOS CHANGELOG
     # ---------------------------------------
-
     if [ "$1" = "--changelog" ]; then
         latest_changelog_version=""
         if [ -f "$ECOS_INITIALIZED" ]; then
