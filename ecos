@@ -103,17 +103,10 @@ main() {
     # ECOS CHANGELOG
     # ---------------------------------------
     if [ "$1" = "--changelog" ]; then
-        mkdir -p "$ECOS_CACHE"
-        latest_changelog_version="0"
-        if [ -f "$ECOS_INITIALIZED" ]; then
-            latest_changelog_version=$(<"$ECOS_INITIALIZED")
-        fi
-        if [ "$SCRIPT_VERSION" != "$latest_changelog_version" ]; then
+        if [ -f "$ECOS_SHOW_CHANGELOG" ]; then
             tui_init 0 ""
             whiptail --title "Changelog" --scrolltext --msgbox "$(cat "$TUI_FILE")\n\n$CHANGELOG" $TUI_HEIGHT $TUI_WIDTH 3>&1 1>&2 2>&3
-            if [ -f "$ECOS_SHOW_CHANGELOG" ]; then
-                rm -f "$ECOS_SHOW_CHANGELOG"
-            fi
+            rm -f "$ECOS_SHOW_CHANGELOG"
         fi
         exit 0
     fi
