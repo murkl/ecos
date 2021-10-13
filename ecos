@@ -4,9 +4,12 @@
 # META
 #/////////////////////////////////////////////////////
 
-SCRIPT_VERSION=1.5.0
+SCRIPT_VERSION=1.5.1
 SCRIPT_ID="ecos"
 CHANGELOG="
+1.5.1
+  + New Manager + App Icon
+
 1.5.0
   + New Update mechanism
   + Sandbox Architecture (.ecos home dir)
@@ -40,6 +43,7 @@ ECOS_CACHE="$HOME/.cache/ecos"
 ECOS_CORE="$ECOS_BIN/$SCRIPT_ID"
 ECOS_INIT="$ECOS_HOME/init"
 ECOS_INITIALIZED="$ECOS_CACHE/initialized"
+ECOS_DESKTOP_FILE="$HOME/.local/share/applications/$SCRIPT_ID.desktop"
 ECOS_SHOW_CHANGELOG="$ECOS_CACHE/show_changelog"
 ARCH_ISO_FILE="$HOME/.cache/archlinux-x86_64.iso"
 
@@ -47,7 +51,7 @@ ARCH_ISO_FILE="$HOME/.cache/archlinux-x86_64.iso"
 TUI_WIDTH=64
 TUI_HEIGHT=24
 
-# CONFIG VALUES
+#  CONFIG VALUES (CORE INSTALLATION)
 USERNAME=''
 HOSTNAME=''
 WORKSTATION=''
@@ -108,6 +112,16 @@ main() {
             whiptail --title "Changelog" --scrolltext --msgbox "$(cat "$TUI_FILE")\n\n$CHANGELOG" $TUI_HEIGHT $TUI_WIDTH 3>&1 1>&2 2>&3
             rm -f "$ECOS_SHOW_CHANGELOG"
         fi
+        exit 0
+    fi
+
+    # ---------------------------------------
+    # MANAGER
+    # ---------------------------------------
+    if [ "$1" = "--manager" ]; then
+        # TODO: zenity menu
+        mkdir -p "$ECOS_CACHE"
+        open_tui_ecos
         exit 0
     fi
 
@@ -1151,6 +1165,17 @@ update_system() {
             bash -c "$ECOS_INIT --update"
         fi
     fi
+    # UPDATE DESKTOP FILE
+    print_title 'UPDATING ECOS DESKTOP FILE'
+    {
+        echo "[Desktop Entry]"
+        echo "Name=ECOS"
+        echo "Icon=ecos"
+        echo 'Exec=gnome-terminal -- bash -c $HOME/.ecos/bin/ecos --manager'
+        echo "Type=Application"
+    } >"$ECOS_DESKTOP_FILE"
+    chmod +x "$ECOS_DESKTOP_FILE"
+    echo ">>> OK"
 
     # FINISH
     print_title 'ECOS UPDATE FINISHED'
