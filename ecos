@@ -134,6 +134,8 @@ main() {
         export PATH="$PATH:$HOME/.local/bin"
         export PATH="$PATH:$ECOS_HOME/bin"
 
+echo "sasd"
+
         exit 0
     fi
 
