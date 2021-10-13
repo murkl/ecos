@@ -82,6 +82,7 @@ main() {
     # INIT
     # ---------------------------------------
     if [ "$1" == "--init" ]; then
+        mkdir -p "$ECOS_CACHE"
         if [ ! -f "$ECOS_INITIALIZED" ]; then
             open_tui_init
         else
@@ -93,6 +94,7 @@ main() {
     # UPDATE ECOS
     # ---------------------------------------
     if [ "$1" == "--update" ]; then
+        mkdir -p "$ECOS_CACHE"
         update_system
         exit 0
     fi
@@ -101,6 +103,7 @@ main() {
     # ECOS CHANGELOG
     # ---------------------------------------
     if [ "$1" = "--changelog" ]; then
+        mkdir -p "$ECOS_CACHE"
         latest_changelog_version=""
         if [ -f "$ECOS_INITIALIZED" ]; then
             latest_changelog_version=$(<"$ECOS_INITIALIZED")
@@ -126,6 +129,7 @@ main() {
     # ECOS
     # ---------------------------------------
     if [ "$1" = "--ecos" ]; then
+        mkdir -p "$ECOS_CACHE"
         open_tui_ecos
         exit 0
     fi
