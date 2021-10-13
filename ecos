@@ -40,7 +40,7 @@ ECOS_CACHE="$HOME/.cache/ecos"
 ECOS_CORE="$ECOS_BIN/$SCRIPT_ID"
 ECOS_INIT="$ECOS_HOME/init"
 ECOS_INITIALIZED="$ECOS_CACHE/initialized"
-ECOS_FORCE_INIT="$ECOS_CACHE/force_init"
+ECOS_SHOW_CHANGELOG="$ECOS_CACHE/show_changelog"
 ARCH_ISO_FILE="$HOME/.cache/archlinux-x86_64.iso"
 
 # TUI
@@ -104,15 +104,16 @@ main() {
     # ---------------------------------------
     if [ "$1" = "--changelog" ]; then
         mkdir -p "$ECOS_CACHE"
-        latest_changelog_version=""
+        latest_changelog_version="0"
         if [ -f "$ECOS_INITIALIZED" ]; then
             latest_changelog_version=$(<"$ECOS_INITIALIZED")
         fi
         if [ "$SCRIPT_VERSION" != "$latest_changelog_version" ]; then
             tui_init 0 ""
             whiptail --title "Changelog" --scrolltext --msgbox "$(cat "$TUI_FILE")\n\n$CHANGELOG" $TUI_HEIGHT $TUI_WIDTH 3>&1 1>&2 2>&3
-            echo "$SCRIPT_VERSION" >"$ECOS_INITIALIZED"
-            echo "$SCRIPT_VERSION" >"$ECOS_FORCE_INIT"
+            if [ -f "$ECOS_SHOW_CHANGELOG" ]; then
+                rm -f "$ECOS_SHOW_CHANGELOG"
+            fi
         fi
         exit 0
     fi
@@ -1143,9 +1144,15 @@ update_system() {
     # UPDATE INIT FILE
     print_title 'UPDATING ECOS INIT FILE'
     if [ -f "$ECOS_INIT" ]; then
-        if [ -f "$ECOS_FORCE_INIT" ]; then
+        latest_changelog_version=""
+        if [ -f "$ECOS_INITIALIZED" ]; then
+            latest_changelog_version=$(<"$ECOS_INITIALIZED")
+        fi
+        if [ "$SCRIPT_VERSION" != "$latest_changelog_version" ]; then
             echo -e "Force Init..."
             bash -c "$ECOS_INIT --install"
+            echo "$SCRIPT_VERSION" >"$ECOS_INITIALIZED"
+            touch "$ECOS_SHOW_CHANGELOG"
         else
             echo -e "Update Init..."
             bash -c "$ECOS_INIT --update"
