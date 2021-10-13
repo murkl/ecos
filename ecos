@@ -132,6 +132,8 @@ main() {
         # PATH
         export PATH="$PATH:$HOME/.local/bin"
         export PATH="$PATH:$ECOS_HOME/bin"
+
+        source "$ECOS_HOME/profile"
         exit 0
     fi
 
