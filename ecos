@@ -36,10 +36,11 @@ ARCH_ISO_DEFAULT_URL="https://www.archlinux.de/download/iso/2021.10.01/archlinux
 # ECOS
 ECOS_HOME="$HOME/.ecos"
 ECOS_BIN="$ECOS_HOME/bin"
+ECOS_CACHE="$HOME/.cache/ecos"
 ECOS_CORE="$ECOS_BIN/$SCRIPT_ID"
-
 ECOS_INIT="$ECOS_HOME/init"
-ECOS_INITIALIZED="$ECOS_HOME/.initialized"
+ECOS_INITIALIZED="$ECOS_CACHE/initialized"
+ECOS_FORCE_INIT="$ECOS_CACHE/force_init"
 ARCH_ISO_FILE="$HOME/.cache/archlinux-x86_64.iso"
 
 # TUI
@@ -108,6 +109,7 @@ main() {
             tui_init 0 ""
             whiptail --title "Changelog" --scrolltext --msgbox "$(cat "$TUI_FILE")\n\n$CHANGELOG" $TUI_HEIGHT $TUI_WIDTH 3>&1 1>&2 2>&3
             echo "$SCRIPT_VERSION" >"$ECOS_INITIALIZED"
+            echo "$SCRIPT_VERSION" >"$ECOS_FORCE_INIT"
         fi
         exit 0
     fi
@@ -1137,7 +1139,13 @@ update_system() {
     # UPDATE INIT FILE
     print_title 'UPDATING ECOS INIT FILE'
     if [ -f "$ECOS_INIT" ]; then
-        bash -c "$ECOS_INIT --update"
+        if [ -f "$ECOS_FORCE_INIT" ]; then
+            echo -e "Force Init..."
+            bash -c "$ECOS_INIT --install"
+        else
+            echo -e "Update Init..."
+            bash -c "$ECOS_INIT --update"
+        fi
     fi
 
     # FINISH
