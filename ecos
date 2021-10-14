@@ -340,8 +340,8 @@ open_manager() {
     #----------------------------------------
     # Show TUI menu
     #----------------------------------------
-    tui_init 24 "MANAGER"
-    if ! menu_input=$(whiptail --menu --notags "$(cat "$TUI_FILE")\n\n" "$TUI_HEIGHT" "$TUI_WIDTH" 4 "0" "Update ECOS" "1" "Install Dotfiles" "2" "Install Driver & Plymouth" "3" "Create USB Stick" 3>&1 1>&2 2>&3); then
+    tui_init 26 "MANAGER"
+    if ! menu_input=$(whiptail --menu --notags "$(cat "$TUI_FILE")\n" "$TUI_HEIGHT" "$TUI_WIDTH" 4 "0" "Update ECOS" "1" "Install Dotfiles" "2" "Install Driver & Plymouth" "3" "Create USB Stick" 3>&1 1>&2 2>&3); then
         exit 0
     fi
 
