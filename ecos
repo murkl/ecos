@@ -133,7 +133,7 @@ main() {
     if [ "$1" = "--manager" ]; then
         # TODO: zenity menu
         mkdir -p "$ECOS_CACHE"
-        open_tui_ecos
+        open_manager
         exit 0
     fi
 
@@ -326,6 +326,54 @@ open_tui_init() {
         passwd
         read -p "Press <ENTER> to continue..."
         open_tui_init
+        exit 0
+    fi
+
+}
+
+#/////////////////////////////////////////////////////
+# TUI MANAGER
+#/////////////////////////////////////////////////////
+
+open_manager() {
+
+    #----------------------------------------
+    # Show TUI menu
+    #----------------------------------------
+    tui_init 24 "MANAGER"
+    if ! menu_input=$(whiptail --menu --notags "$(cat "$TUI_FILE")\n\n" "$TUI_HEIGHT" "$TUI_WIDTH" 4 "0" "Update ECOS" "1" "Install Dotfiles" "2" "Install Driver & Plymouth" "3" "Create USB Stick" 3>&1 1>&2 2>&3); then
+        exit 0
+    fi
+
+    #----------------------------------------
+    # Update ECOS
+    #----------------------------------------
+    if [ "$menu_input" = "0" ]; then
+        update_core_installation
+        exit 0
+    fi
+
+    #----------------------------------------
+    # Install ECOS
+    #----------------------------------------
+    if [ "$menu_input" = "1" ]; then
+        open_tui_install_ecos
+        exit 0
+    fi
+
+    #----------------------------------------
+    # Install Plymouth
+    #----------------------------------------
+    if [ "$menu_input" = "2" ]; then
+        install_plymouth
+        exit 0
+    fi
+
+    #----------------------------------------
+    # Create USB Stick
+    #----------------------------------------
+    if [ "$menu_input" = "3" ]; then
+        open_tui_create_usb
         exit 0
     fi
 
