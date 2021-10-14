@@ -4,9 +4,12 @@
 # META
 #/////////////////////////////////////////////////////
 
-SCRIPT_VERSION=1.5.1
+SCRIPT_VERSION=1.5.2
 SCRIPT_ID="ecos"
 CHANGELOG="
+1.5.2
+  + Bugfixes
+  
 1.5.1
   + New Manager + App Icon
 
