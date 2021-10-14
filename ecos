@@ -349,7 +349,7 @@ open_tui_ecos() {
     # Update ECOS
     #----------------------------------------
     if [ "$menu_input" = "0" ]; then
-        update_system
+        update_core_installation
         exit 0
     fi
 
