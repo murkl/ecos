@@ -1323,7 +1323,8 @@ open_tui_install_ecos() {
 
     # Create initialized state file
     print_title "DOTFILES INITIALIZED"
-    touch "$ECOS_INITIALIZED"
+    echo "$SCRIPT_VERSION" >"$ECOS_INITIALIZED"
+    touch "$ECOS_SHOW_CHANGELOG"
     echo -e "DONE"
 
     print_title "ECOS INSTALLATION FINISHED"
