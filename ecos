@@ -102,6 +102,15 @@ main() {
     # ---------------------------------------
     if [ "$1" == "--update" ]; then
         mkdir -p "$ECOS_CACHE"
+        update_core_installation
+        exit 0
+    fi
+
+    # ---------------------------------------
+    # UPDATE SYSTEM
+    # ---------------------------------------
+    if [ "$1" == "--update-system" ]; then
+        mkdir -p "$ECOS_CACHE"
         update_system
         exit 0
     fi
@@ -1108,7 +1117,8 @@ update_core_installation() {
         echo "ERROR: ECOS CORE NOT FOUND"
         exit 1
     fi
-    echo -e "ECOS CORE UPDATE SUCCESSFUL"
+    "$ECOS_CORE" --update-system
+    exit 0
 }
 
 update_system() {
@@ -1120,9 +1130,6 @@ update_system() {
     check_git
     check_paru
     echo ">>> OK"
-
-    print_title 'ECOS CORE UPDATE'
-    update_core_installation
 
     # DOTFILES UPDATE
     print_title 'ECOS DOTFILES UPDATE'
