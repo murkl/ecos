@@ -1117,6 +1117,7 @@ update_core_installation() {
     check_internet
     mkdir -p "$ECOS_BIN"
     mkdir -p "$ECOS_CACHE/update"
+    print_title "UPDATE ECOS CORE"
     local tmp_ecos="$ECOS_CACHE/update/ecos"
     if ! curl -s -L "$ECOS_CORE_URL" >"$tmp_ecos"; then
         echo "ERROR: ECOS CORE DOWNLOAD"
@@ -1132,6 +1133,7 @@ update_core_installation() {
         echo "ERROR: ECOS CORE NOT FOUND"
         exit 1
     fi
+
     "$ECOS_CORE" --update
     exit 0
 }
