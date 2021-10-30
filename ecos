@@ -4,9 +4,12 @@
 # META
 #/////////////////////////////////////////////////////
 
-SCRIPT_VERSION=1.5.2
+SCRIPT_VERSION=1.5.3
 SCRIPT_ID="ecos"
 CHANGELOG="
+1.5.3
+  + Fix: Plymouth Installation
+
 1.5.2
   + Bugfixes
   
