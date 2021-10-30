@@ -1449,11 +1449,16 @@ install_plymouth() {
 
     # nvidia-390xx
     if [ "$kms_result" = "4" ]; then
+
+        # Nouveau Driver
         #graphic_module='nouveau'
-        #graphic_apps='xf86-video-nouveau'
+        #graphic_apps='mesa mesa-demos xf86-video-nouveau lib32-mesa bumblebee'
+
+        # NVIDIA Driver
         graphic_module=''
         graphic_apps=''
-        nvidia_apps='mesa nvidia-390xx nvidia-390xx-dkms nvidia-390xx-settings opencl-nvidia-390xx lib32-opencl-nvidia-390xx lib32-nvidia-390xx-utils bumblebee bbswitch primus lib32-virtualgl'
+        #nvidia_apps='mesa nvidia-390xx nvidia-390xx-dkms nvidia-390xx-settings opencl-nvidia-390xx lib32-opencl-nvidia-390xx lib32-nvidia-390xx-utils bumblebee bbswitch primus lib32-virtualgl'
+        nvidia_apps='mesa mesa-demos bumblebee nvidia-390xx lib32-virtualgl opencl-nvidia-390xx lib32-nvidia-390xx-utils lib32-opencl-nvidia-390xx'
         if [ -f /etc/X11/xorg.conf ]; then
             sudo mv /etc/X11/xorg.conf /etc/X11/xorg.conf.bak
         fi
