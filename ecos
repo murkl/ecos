@@ -1147,12 +1147,6 @@ update_core_installation() {
 
 update_system() {
 
-    mv "$ECOS_INIT" "$ECOS_INIT.bak"
-    echo "cp "$ECOS_INIT" "$ECOS_INIT.bak""
-    bash -c "dots reset --hard"
-
-    exit
-
     print_header
     check_internet
 
@@ -1164,11 +1158,10 @@ update_system() {
     # DOTFILES UPDATE
     print_title 'ECOS DOTFILES UPDATE'
     cd "$HOME"
-    # Reset dotfiles
+
+    # RESET LOCAL FILES
     #dots="git --git-dir="$HOME/.local/share/dotfiles" --work-tree="$HOME""
     mv "$ECOS_INIT" "$ECOS_INIT.bak"
-    echo "cp "$ECOS_INIT" "$ECOS_INIT.bak""
-    exit
     bash -c "dots reset --hard"
     bash -c "dots pull"
 
