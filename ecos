@@ -39,7 +39,6 @@ TUI_FILE="$SCRIPT_DIR/$SCRIPT_ID.tui"
 # URLS
 ECOS_URL="https://raw.githubusercontent.com/murkl/ecos/main"
 ECOS_CORE_URL="$ECOS_URL/ecos"
-ECOS_RES_DIR_URL="$ECOS_URL/res"
 ECOS_DOTS_DEFAULT_URL="https://github.com/murkl/dotfiles-gnome.git"
 ARCH_ISO_DEFAULT_URL="https://www.archlinux.de/download/iso/2021.10.01/archlinux-2021.10.01-x86_64.iso"
 
@@ -1543,9 +1542,9 @@ install_plymouth() {
         # Download Watermark
         #----------------------------------------
         print_title 'DOWNLOAD WATERMARK'
-        watermark_file='/usr/share/plymouth/themes/spinner/watermark.png'
+        local watermark_file='/usr/share/plymouth/themes/spinner/watermark.png'
         sudo mv -f "$watermark_file" "$watermark_file".bak
-        curl -L "$ECOS_RES_DIR_URL/plymouth.png" -o /tmp/watermark.png
+        curl -L "$ECOS_URL/tweaks/plymouth/plymouth.png" -o /tmp/watermark.png
         sudo cp /tmp/watermark.png "$watermark_file"
 
         #----------------------------------------

@@ -4,7 +4,7 @@
   <p>ARCH LINUX • MICRO • ENCRYPTED • DOTBASED</p>
 
   <p>
-  <img src="https://raw.githubusercontent.com/murkl/ecos/master/web/ecos.png" />
+  <img src="https://raw.githubusercontent.com/murkl/ecos/master/screenshots/ecos.png" />
   </p>
 
   <p><b>The userfriendly & dotbased OS</b></p>
@@ -58,8 +58,8 @@ git paru
 
   <p align="center">
 
-  <img width="75%" src="https://raw.githubusercontent.com/murkl/ecos/master/web/gnome-01.png">
-    <img width="75%" src="https://raw.githubusercontent.com/murkl/ecos/master/web/gnome-02.png">
+  <img width="75%" src="https://raw.githubusercontent.com/murkl/ecos/master/screenshots/gnome-01.png">
+    <img width="75%" src="https://raw.githubusercontent.com/murkl/ecos/master/screenshots/gnome-02.png">
   </p>
 
 ## BSPWM Variant
@@ -67,6 +67,6 @@ git paru
 <b>Repository:</b> https://github.com/murkl/dotfiles-bspwm.git
 
   <p align="center">
-  <img width="75%" src="https://raw.githubusercontent.com/murkl/ecos/master/web/bspwm-01.png">
-    <img width="75%" src="https://raw.githubusercontent.com/murkl/ecos/master/web/bspwm-02.png">
+  <img width="75%" src="https://raw.githubusercontent.com/murkl/ecos/master/screenshots/bspwm-01.png">
+    <img width="75%" src="https://raw.githubusercontent.com/murkl/ecos/master/screenshots/bspwm-02.png">
   </p>
