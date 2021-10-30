@@ -1,5 +1,5 @@
 #!/bin/bash
-WATERMARK_URL="https://raw.githubusercontent.com/murkl/ecos/main/tweaks/plymouth/plymouth.png"
+local TWEAK_RES="$1"
 
 install() {
 
@@ -31,7 +31,7 @@ install() {
     echo 'CONFIGURE MKINITCPIO'
     # Intel graphic support (other: https://wiki.archlinux.org/index.php/Kernel_mode_setting#Early_KMS_start)
     local mkinit_conf='/etc/mkinitcpio.conf'
-    sudo cp "$mkinit_conf" "$mkinit_conf".bak
+    sudo cp "$mkinit_conf" "$mkinit_conf".before-plymouth
     if ! sudo sed -i "s/keymap encrypt filesystems/keymap plymouth plymouth-encrypt filesystems/g" "$mkinit_conf"; then
         echo "ERROR"
         exit 1
@@ -66,7 +66,7 @@ install() {
     echo 'DOWNLOAD WATERMARK'
     local watermark_file='/usr/share/plymouth/themes/spinner/watermark.png'
     sudo mv -f "$watermark_file" "$watermark_file".bak
-    curl -L "$WATERMARK_URL" -o /tmp/watermark.png
+    curl -L "$TWEAK_RES/plymouth.png" -o /tmp/watermark.png
     sudo cp /tmp/watermark.png "$watermark_file"
 
     #----------------------------------------

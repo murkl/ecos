@@ -38,6 +38,7 @@ TUI_FILE="$SCRIPT_DIR/$SCRIPT_ID.tui"
 
 # URLS
 ECOS_URL="https://raw.githubusercontent.com/murkl/ecos/main"
+ECOS_TWEAKS_URL="$ECOS_URL/tweaks"
 ECOS_CORE_URL="$ECOS_URL/ecos"
 ECOS_DOTS_DEFAULT_URL="https://github.com/murkl/dotfiles-gnome.git"
 ARCH_ISO_DEFAULT_URL="https://www.archlinux.de/download/iso/2021.10.01/archlinux-2021.10.01-x86_64.iso"
@@ -105,15 +106,6 @@ main() {
     # ---------------------------------------
     if [ "$1" == "--update" ]; then
         mkdir -p "$ECOS_CACHE"
-        update_core_installation
-        exit 0
-    fi
-
-    # ---------------------------------------
-    # UPDATE SYSTEM
-    # ---------------------------------------
-    if [ "$1" == "--update-system" ]; then
-        mkdir -p "$ECOS_CACHE"
         update_system
         exit 0
     fi
@@ -148,24 +140,15 @@ main() {
         exit 0
     fi
 
-    # ---------------------------------------
-    # ECOS
-    # ---------------------------------------
-    if [ "$1" = "--ecos" ]; then
-        mkdir -p "$ECOS_CACHE"
-        open_tui_ecos
-        exit 0
-    fi
-
     #----------------------------------------
-    # CORE TUI | BASE TUI
+    # CORE TUI | MANAGER TUI
     #----------------------------------------
     if [ "$1" = "" ]; then
         # Check if started from live iso
         if [ "$(cat /proc/sys/kernel/hostname)" = "archiso" ]; then
             open_tui_core
         else
-            open_tui_ecos
+            open_manager
         fi
     fi
 }
@@ -315,10 +298,10 @@ open_tui_init() {
     fi
 
     #----------------------------------------
-    # Install Plymouth
+    # Install Tweaks
     #----------------------------------------
     if [ "$menu_input" = "2" ]; then
-        install_plymouth
+        install_tweaks
         exit 0
     fi
 
@@ -344,7 +327,7 @@ open_manager() {
     # Show TUI menu
     #----------------------------------------
     tui_init 26 "MANAGER"
-    if ! menu_input=$(whiptail --menu --notags "$(cat "$TUI_FILE")\n" "$TUI_HEIGHT" "$TUI_WIDTH" 4 "0" "Update ECOS" "1" "Install Dotfiles" "2" "Install Driver & Plymouth" "3" "Create USB Stick" 3>&1 1>&2 2>&3); then
+    if ! menu_input=$(whiptail --menu --notags "$(cat "$TUI_FILE")\n" "$TUI_HEIGHT" "$TUI_WIDTH" 4 "0" "Update ECOS" "1" "Install Dotfiles" "2" "Install Tweaks" "3" "Create USB Stick" 3>&1 1>&2 2>&3); then
         exit 0
     fi
 
@@ -365,58 +348,10 @@ open_manager() {
     fi
 
     #----------------------------------------
-    # Install Plymouth
+    # Install Tweaks
     #----------------------------------------
     if [ "$menu_input" = "2" ]; then
-        install_plymouth
-        exit 0
-    fi
-
-    #----------------------------------------
-    # Create USB Stick
-    #----------------------------------------
-    if [ "$menu_input" = "3" ]; then
-        open_tui_create_usb
-        exit 0
-    fi
-
-}
-
-#/////////////////////////////////////////////////////
-# TUI ECOS
-#/////////////////////////////////////////////////////
-
-open_tui_ecos() {
-
-    #----------------------------------------
-    # Show TUI menu
-    #----------------------------------------
-    tui_init 24 "INSTALLER"
-    if ! menu_input=$(whiptail --menu --notags "$(cat "$TUI_FILE")\n\n" "$TUI_HEIGHT" "$TUI_WIDTH" 4 "0" "Update ECOS" "1" "Install Dotfiles" "2" "Install Driver & Plymouth" "3" "Create USB Stick" 3>&1 1>&2 2>&3); then
-        exit 0
-    fi
-
-    #----------------------------------------
-    # Update ECOS
-    #----------------------------------------
-    if [ "$menu_input" = "0" ]; then
-        update_core_installation
-        exit 0
-    fi
-
-    #----------------------------------------
-    # Install ECOS
-    #----------------------------------------
-    if [ "$menu_input" = "1" ]; then
-        open_tui_install_ecos
-        exit 0
-    fi
-
-    #----------------------------------------
-    # Install Plymouth
-    #----------------------------------------
-    if [ "$menu_input" = "2" ]; then
-        install_plymouth
+        install_tweaks
         exit 0
     fi
 
@@ -1176,7 +1111,7 @@ update_core_installation() {
         echo "ERROR: ECOS CORE NOT FOUND"
         exit 1
     fi
-    "$ECOS_CORE" --update-system
+    "$ECOS_CORE" --update
     exit 0
 }
 
@@ -1403,167 +1338,21 @@ open_tui_install_ecos() {
 }
 
 #/////////////////////////////////////////////////////
-# INSTALL PLYMOUTH
+# INSTALL TWEAKS
 #/////////////////////////////////////////////////////
 
-install_plymouth() {
+install_tweaks() {
+
+    local tweak_id="$1"
+    local tweak_res_url="$ECOS_TWEAKS_URL/$tweak_id"
 
     print_header
-    print_title 'PLYMOUTH INSTALLATION'
-
-    if ! efivar -l >/dev/null; then
-        echo "BIOS detected. Plymouth only available on UEFI!\n\n"
-        read -p "Press <ENTER> to continue..."
-        main
-        exit 0
-    fi
+    print_title 'TWEAKS INSTALLATION'
 
     #----------------------------------------
-    # Kernel Module
+    # List Tweaks
     #----------------------------------------
-    tui_init 16 "Select Graphic Kernel Module"
-    if ! kms_result=$(whiptail --menu --notags "$(cat "$TUI_FILE")\n\n" "$TUI_HEIGHT" "$TUI_WIDTH" 5 "0" "none" "1" "Intel Open Source (i915)" "2" "Intel (xf86-video-intel)" "3" "AMD (xf86-video-amdgpu)" "4" "NVIDIA (nvidia-390xx)" 3>&1 1>&2 2>&3); then
-        exit 0
-    fi
-
-    local graphic_module=''
-    local graphic_apps=''
-
-    if [ "$kms_result" = "0" ]; then
-        graphic_module=''
-        graphic_apps=''
-    fi
-    if [ "$kms_result" = "1" ]; then
-        graphic_module='i915'
-        graphic_apps='lib32-mesa vulkan-intel lib32-vulkan-intel vulkan-tools'
-    fi
-    if [ "$kms_result" = "2" ]; then
-        graphic_module='i915'
-        graphic_apps='xf86-video-intel lib32-mesa vulkan-intel lib32-vulkan-intel vulkan-tools'
-    fi
-    if [ "$kms_result" = "3" ]; then
-        graphic_module='amdgpu'
-        graphic_apps='xf86-video-amdgpu'
-    fi
-
-    # nvidia-390xx
-    if [ "$kms_result" = "4" ]; then
-
-        # Nouveau Driver
-        #graphic_module='nouveau'
-        #graphic_apps='mesa mesa-demos xf86-video-nouveau lib32-mesa bumblebee'
-
-        # NVIDIA Driver
-        graphic_module=''
-        graphic_apps=''
-        #nvidia_apps='mesa nvidia-390xx nvidia-390xx-dkms nvidia-390xx-settings opencl-nvidia-390xx lib32-opencl-nvidia-390xx lib32-nvidia-390xx-utils bumblebee bbswitch primus lib32-virtualgl'
-        nvidia_apps='mesa mesa-demos bumblebee nvidia-390xx lib32-virtualgl opencl-nvidia-390xx lib32-nvidia-390xx-utils lib32-opencl-nvidia-390xx'
-        if [ -f /etc/X11/xorg.conf ]; then
-            sudo mv /etc/X11/xorg.conf /etc/X11/xorg.conf.bak
-        fi
-
-        # Remove packages
-        if pacman -Qi plymouth >/dev/null; then
-            paru --noconfirm --sudoloop -Rs plymouth
-        fi
-        if pacman -Qi xf86-video-nouveau >/dev/null; then
-            paru --noconfirm --sudoloop -Rs xf86-video-nouveau
-        fi
-
-        # Install packages
-        if ! paru --noconfirm --needed --sudoloop -Syyu $nvidia_apps; then
-            echo "ERROR paru"
-            exit 1
-        fi
-
-        sudo gpasswd -a $USER bumblebee
-        sudo systemctl enable bumblebeed.service
-    fi
-
-    if pacman -Qi plymouth >/dev/null; then
-        echo -e "Plymouth already installed. Skipping...\n\n"
-        read -p "Press <ENTER> to continue..."
-        main
-        exit 0
-    else
-
-        #----------------------------------------
-        # Install Plymouth
-        #----------------------------------------
-        print_title 'INSTALL PLYMOUTH'
-        check_paru
-        wait
-        if ! paru --noconfirm --needed --sudoloop -Syyu plymouth $graphic_apps; then
-            echo "ERROR paru"
-            exit 1
-        fi
-        echo -e 'OK'
-
-        #----------------------------------------
-        # Configure mkinitcpio
-        #----------------------------------------
-        print_title 'CONFIGURE MKINITCPIO'
-        # Intel graphic support (other: https://wiki.archlinux.org/index.php/Kernel_mode_setting#Early_KMS_start)
-        mkinit_conf='/etc/mkinitcpio.conf'
-        sudo cp "$mkinit_conf" "$mkinit_conf".bak
-        if ! sudo sed -i "s/MODULES=()/MODULES=($graphic_module)/g" "$mkinit_conf"; then
-            echo "ERROR"
-            exit 1
-        fi
-        if ! sudo sed -i "s/keymap encrypt filesystems/keymap plymouth plymouth-encrypt filesystems/g" "$mkinit_conf"; then
-            echo "ERROR"
-            exit 1
-        fi
-        echo -e 'OK'
-
-        #----------------------------------------
-        # Configure Spinner
-        #----------------------------------------
-        print_title 'CONFIGURE SPINNER'
-        spinner_conf='/usr/share/plymouth/themes/spinner/spinner.plymouth'
-        sudo cp -f "$spinner_conf" "$spinner_conf".bak
-
-        replace_spinner_conf_value() {
-            #sed -i "s#$1=.*#$1=$2#g" "$spinner_conf"
-            if ! sudo sed -i "s#$1=.*#$1=$2#g" "$spinner_conf"; then
-                echo "ERROR"
-                exit 1
-            fi
-        }
-
-        replace_spinner_conf_value "DialogVerticalAlignment" ".680"
-        replace_spinner_conf_value "TitleVerticalAlignment" ".680"
-        replace_spinner_conf_value "BackgroundStartColor" "0x2E3440"
-        replace_spinner_conf_value "BackgroundEndColor" "0x2E3440"
-
-        echo -e 'OK'
-
-        #----------------------------------------
-        # Download Watermark
-        #----------------------------------------
-        print_title 'DOWNLOAD WATERMARK'
-        local watermark_file='/usr/share/plymouth/themes/spinner/watermark.png'
-        sudo mv -f "$watermark_file" "$watermark_file".bak
-        curl -L "$ECOS_URL/tweaks/plymouth/plymouth.png" -o /tmp/watermark.png
-        sudo cp /tmp/watermark.png "$watermark_file"
-
-        #----------------------------------------
-        # Rebuild
-        #----------------------------------------
-        print_title 'REBUILD'
-        if ! sudo mkinitcpio -p linux; then
-            # On error
-            print_title 'ERROR'
-            echo "Error installing plymouth: rolling back..."
-            sudo mv -f "$mkinit_conf".bak "$mkinit_conf"
-            sudo mv -f "$spinner_conf".bak "$spinner_conf"
-            sudo mv -f "$watermark_file".bak "$watermark_file"
-            sudo mkinitcpio -p linux
-        else
-            print_title 'PLYMOUTH SUCCESFUL INSTALLED'
-            echo "Please Reboot..."
-        fi
-    fi
+    echo "TODO: Development..."
 }
 
 #/////////////////////////////////////////////////////

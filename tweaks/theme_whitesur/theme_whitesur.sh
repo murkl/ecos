@@ -21,7 +21,7 @@ update() {
     git reset --hard
     git pull
 
-    #     $THEME_GIT_DIR/install.sh --color light --icon simple --nautilus-style glassy --monterey --size 280 --background default --highdefinition --theme default --normalshowapps --panel-opacity 30
+    # $THEME_GIT_DIR/install.sh --color light --icon simple --nautilus-style glassy --monterey --size 280 --background default --highdefinition --theme default --normalshowapps --panel-opacity 30
     sudo $THEME_GIT_DIR/install.sh --silent-mode --icon simple --nautilus-style glassy --size 280 --background blank --theme default --normalshowapps
     sudo $THEME_GIT_DIR/tweaks.sh --silent-mode --firefox
 
