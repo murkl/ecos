@@ -1,6 +1,6 @@
 #!/bin/bash
-local TWEAK_RES="$1"
-local APPS='xf86-video-intel lib32-mesa vulkan-intel lib32-vulkan-intel vulkan-tools'
+TWEAK_RES="$2"
+APPS='xf86-video-intel lib32-mesa vulkan-intel lib32-vulkan-intel vulkan-tools'
 
 install() {
 

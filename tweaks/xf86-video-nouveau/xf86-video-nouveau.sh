@@ -1,6 +1,6 @@
 #!/bin/bash
-local TWEAK_RES="$1"
-local APPS='mesa-demos xf86-video-nouveau lib32-mesa'
+TWEAK_RES="$2"
+APPS='mesa-demos xf86-video-nouveau lib32-mesa'
 
 install() {
 

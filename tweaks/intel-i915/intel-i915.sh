@@ -1,6 +1,6 @@
 #!/bin/bash
-local TWEAK_RES="$1"
-local APPS='lib32-mesa vulkan-intel lib32-vulkan-intel vulkan-tools'
+TWEAK_RES="$2"
+APPS='lib32-mesa vulkan-intel lib32-vulkan-intel vulkan-tools'
 
 install() {
 

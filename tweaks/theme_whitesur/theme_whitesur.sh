@@ -1,7 +1,8 @@
 #!/bin/bash
-local THEME_GIT_URL="https://github.com/vinceliuice/WhiteSur-gtk-theme.git"
-local THEME_GIT_DIR="$ECOS_HOME/repos/theme_whitesur"
-local THEME_INSTALL_DIR="$HOME/.themes/WhiteSur-light/"
+TWEAK_RES="$2"
+THEME_GIT_URL="https://github.com/vinceliuice/WhiteSur-gtk-theme.git"
+THEME_GIT_DIR="$ECOS_HOME/repos/theme_whitesur"
+THEME_INSTALL_DIR="$HOME/.themes/WhiteSur-light/"
 
 install() {
     rm -rf "$THEME_GIT_DIR"

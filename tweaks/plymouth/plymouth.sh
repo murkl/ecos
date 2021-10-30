@@ -1,5 +1,5 @@
 #!/bin/bash
-local TWEAK_RES="$1"
+TWEAK_RES="$2"
 
 install() {
 

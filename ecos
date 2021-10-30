@@ -1387,7 +1387,7 @@ execute_tweak() {
             return 1
         fi
         chmod +x "$tweaks_tmp_dir/$tweak_id.sh"
-        bash -c "$tweaks_tmp_dir/$tweak_id.sh $tweak_action"
+        bash -c "$tweaks_tmp_dir/$tweak_id.sh $tweak_action $tweak_res_url"
     else
         echo "Error: TWEAK_ACTION=$tweak_action not supported"
     fi

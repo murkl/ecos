@@ -1,4 +1,5 @@
 #!/bin/bash
+TWEAK_RES="$2"
 
 install() {
 

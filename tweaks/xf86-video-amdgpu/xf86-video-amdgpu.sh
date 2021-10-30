@@ -1,6 +1,6 @@
 #!/bin/bash
-local TWEAK_RES="$1"
-local APPS='xf86-video-amdgpu'
+TWEAK_RES="$2"
+APPS='xf86-video-amdgpu'
 
 install() {
 
