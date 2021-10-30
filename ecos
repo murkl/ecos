@@ -1406,7 +1406,9 @@ install_plymouth() {
     fi
 
     if pacman -Qi plymouth >/dev/null; then
-        echo "Plymouth already installed. Skipping..."
+        echo -e "\nPlymouth already installed. Skipping...\n\n"
+        read -p "Press <ENTER> to continue..."
+        return
     else
 
         #----------------------------------------
