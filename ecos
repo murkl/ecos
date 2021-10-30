@@ -1363,6 +1363,9 @@ execute_tweak() {
     local tweak_id="$2"
     local tweak_res_url="$ECOS_TWEAKS_URL/$tweak_id"
 
+    check_git
+    check_paru
+
     print_header
     print_title 'EXECUTE TWEAK'
 
@@ -1370,11 +1373,11 @@ execute_tweak() {
     # Execute Tweak
     #----------------------------------------
     if [ "$tweak_action" = "install" ] || [ "$tweak_action" = "remove" ] || [ "$tweak_action" = "update" ]; then
-        echo "Executing Tweak: $tweak_id"
+        echo "Executing Tweak: $tweak_id ($tweak_action)"
         local tweaks_tmp_dir="$ECOS_CACHE/tweaks/$tweak_id"
         mkdir -p "$tweaks_tmp_dir"
         if ! curl -L --silent "$tweak_res_url/$tweak_id.sh" -o "$tweaks_tmp_dir/$tweak_id.sh"; then
-            echo "Download error"
+            echo "Download error: $tweak_res_url/$tweak_id.sh"
             return 1
         fi
         if ! [ -f "$tweaks_tmp_dir/$tweak_id.sh" ]; then
