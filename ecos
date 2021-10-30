@@ -1330,6 +1330,7 @@ open_tui_install_ecos() {
     git clone --bare "$ECOS_DOTS_DEFAULT_URL" "$dots_home"
 
     # Reset dotfiles
+    mv "$ECOS_INIT" "$ECOS_INIT".bak
     git --git-dir="$dots_home" --work-tree="$HOME" reset --hard
     git --git-dir="$dots_home" --work-tree="$HOME" config --local status.showUntrackedFiles no
 
