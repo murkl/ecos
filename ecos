@@ -1419,45 +1419,69 @@ install_plymouth() {
         exit 0
     fi
 
+    #----------------------------------------
+    # Kernel Module
+    #----------------------------------------
+    tui_init 16 "Select Graphic Kernel Module"
+    if ! kms_result=$(whiptail --menu --notags "$(cat "$TUI_FILE")\n\n" "$TUI_HEIGHT" "$TUI_WIDTH" 5 "0" "none" "1" "Intel Open Source (i915)" "2" "Intel (xf86-video-intel)" "3" "AMD (xf86-video-amdgpu)" "4" "NVIDIA (nvidia-390xx)" 3>&1 1>&2 2>&3); then
+        exit 0
+    fi
+
+    local graphic_module=''
+    local graphic_apps=''
+
+    if [ "$kms_result" = "0" ]; then
+        graphic_module=''
+        graphic_apps=''
+    fi
+    if [ "$kms_result" = "1" ]; then
+        graphic_module='i915'
+        graphic_apps='lib32-mesa vulkan-intel lib32-vulkan-intel vulkan-tools'
+    fi
+    if [ "$kms_result" = "2" ]; then
+        graphic_module='i915'
+        graphic_apps='xf86-video-intel lib32-mesa vulkan-intel lib32-vulkan-intel vulkan-tools'
+    fi
+    if [ "$kms_result" = "3" ]; then
+        graphic_module='amdgpu'
+        graphic_apps='xf86-video-amdgpu'
+    fi
+
+    # nvidia-390xx
+    if [ "$kms_result" = "4" ]; then
+        #graphic_module='nouveau'
+        #graphic_apps='xf86-video-nouveau'
+        graphic_module=''
+        graphic_apps=''
+        nvidia_apps='mesa nvidia-390xx nvidia-390xx-dkms nvidia-390xx-settings opencl-nvidia-390xx lib32-opencl-nvidia-390xx lib32-nvidia-390xx-utils bumblebee bbswitch primus lib32-virtualgl'
+        if [ -f /etc/X11/xorg.conf ]; then
+            sudo mv /etc/X11/xorg.conf /etc/X11/xorg.conf.bak
+        fi
+
+        # Remove packages
+        if pacman -Qi plymouth >/dev/null; then
+            paru --noconfirm --sudoloop -Rs plymouth
+        fi
+        if pacman -Qi xf86-video-nouveau >/dev/null; then
+            paru --noconfirm --sudoloop -Rs xf86-video-nouveau
+        fi
+
+        # Install packages
+        if ! paru --noconfirm --needed --sudoloop -Syyu $nvidia_apps; then
+            echo "ERROR paru"
+            exit 1
+        fi
+
+        sudo gpasswd -a $USER bumblebee
+        sudo systemctl enable bumblebeed.service
+    fi
+
     if pacman -Qi plymouth >/dev/null; then
         echo -e "Plymouth already installed. Skipping...\n\n"
         read -p "Press <ENTER> to continue..."
         main
         exit 0
     else
-        #----------------------------------------
-        # Kernel Module
-        #----------------------------------------
-        tui_init 16 "Select Graphic Kernel Module"
-        if ! kms_result=$(whiptail --menu --notags "$(cat "$TUI_FILE")\n\n" "$TUI_HEIGHT" "$TUI_WIDTH" 5 "0" "none" "1" "Intel Open Source (i915)" "2" "Intel (xf86-video-intel)" "3" "AMD (xf86-video-amdgpu)" "4" "NVIDIA (nvidia-390xx)" 3>&1 1>&2 2>&3); then
-            exit 0
-        fi
-
-        graphic_module=''
-        graphic_apps=''
-
-        if [ "$kms_result" = "0" ]; then
-            graphic_module=''
-            graphic_apps=''
-        fi
-        if [ "$kms_result" = "1" ]; then
-            graphic_module='i915'
-            graphic_apps='lib32-mesa vulkan-intel lib32-vulkan-intel vulkan-tools'
-        fi
-        if [ "$kms_result" = "2" ]; then
-            graphic_module='i915'
-            graphic_apps='xf86-video-intel lib32-mesa vulkan-intel lib32-vulkan-intel vulkan-tools'
-        fi
-        if [ "$kms_result" = "3" ]; then
-            graphic_module='amdgpu'
-            graphic_apps='xf86-video-amdgpu'
-        fi
-        if [ "$kms_result" = "4" ]; then
-            #graphic_module='nouveau'
-            #graphic_apps='xf86-video-nouveau'
-            graphic_module=''
-            graphic_apps='mesa nvidia-390xx nvidia-390xx-dkms nvidia-390xx-settings opencl-nvidia-390xx lib32-opencl-nvidia-390xx lib32-nvidia-390xx-utils bumblebee bbswitch primus lib32-virtualgl'
-        fi
 
         #----------------------------------------
         # Install Plymouth
