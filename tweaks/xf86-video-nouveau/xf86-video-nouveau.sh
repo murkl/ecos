@@ -1,5 +1,5 @@
 #!/bin/bash
-TWEAK_RES="$2"
+TWEAK_RES_URL="$2"
 APPS='mesa-demos xf86-video-nouveau lib32-mesa'
 
 install() {
