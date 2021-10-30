@@ -145,7 +145,7 @@ main() {
     if [ "$1" = "--changelog" ]; then
         if [ -f "$ECOS_SHOW_CHANGELOG" ]; then
             tui_init 0 ""
-            whiptail --title "Changelog" --scrolltext --msgbox "$(cat "$TUI_FILE")\n\n$CHANGELOG" $TUI_HEIGHT $TUI_WIDTH 3>&1 1>&2 2>&3
+            whiptail --title "Changelog" --scrolltext --msgbox "$(cat "$TUI_FILE")\n\n$CHANGELOG" $TUI_HEIGHT 80 3>&1 1>&2 2>&3
             rm -f "$ECOS_SHOW_CHANGELOG"
         fi
         exit 0
