@@ -1177,7 +1177,7 @@ update_core_installation() {
         echo "ERROR: ECOS CORE NOT FOUND"
         exit 1
     fi
-    #"$ECOS_CORE" --update-system
+    "$ECOS_CORE" --update-system
     exit 0
 }
 
