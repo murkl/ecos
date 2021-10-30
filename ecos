@@ -4,7 +4,7 @@
 # META
 #/////////////////////////////////////////////////////
 
-SCRIPT_VERSION=2.0.1-beta
+SCRIPT_VERSION=2.0.2-beta
 SCRIPT_ID="ecos"
 CHANGELOG="
 2.0.0-beta
