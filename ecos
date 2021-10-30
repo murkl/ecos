@@ -42,6 +42,7 @@ TUI_FILE="$SCRIPT_DIR/$SCRIPT_ID.tui"
 
 # URLS
 ECOS_URL="https://raw.githubusercontent.com/murkl/ecos/main"
+ECOS_GIT_URL="git@github.com:murkl/ecos.git"
 ECOS_TWEAKS_URL="$ECOS_URL/tweaks"
 ECOS_CORE_URL="$ECOS_URL/ecos"
 ECOS_DOTS_DEFAULT_URL="https://github.com/murkl/dotfiles-gnome.git"
@@ -106,6 +107,17 @@ main() {
         fi
     fi
 
+    if [ "$1" = "--tweak-list" ]; then
+        local ecos_repo="$ECOS_CACHE/ecos-repo"
+        if ! [ -d "$ecos_repo" ]; then
+            git clone "$ECOS_GIT_URL" "$ecos_repo"
+        fi
+        cd "$ecos_repo" | exit 1
+        git pull
+        tweak_dir_list=$(find "$ecos_repo/tweaks" -maxdepth 1 -printf "%f")
+        echo $tweak_dir_list
+        exit 1
+    fi
     # ---------------------------------------
     # EXECUTE TWEAK
     # ---------------------------------------
