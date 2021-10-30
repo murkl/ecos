@@ -114,8 +114,28 @@ main() {
         fi
         cd "$ecos_repo" | exit 1
         git pull
-        tweak_dir_list=$(find "$ecos_repo/tweaks" -maxdepth 1 -printf "%f")
-        echo $tweak_dir_list
+
+        #----------------------------------------
+        # TUI TWEAKS
+        #----------------------------------------
+        tweaks_tui() {
+            local value="$@"
+
+            tui_init 0 ""
+            if ! local menu_input=($(whiptail --checklist --notags "$(cat "$TUI_FILE")\n\n" "$TUI_HEIGHT" "$TUI_WIDTH" 10 ${value[@]} 3>&1 1>&2 2>&3)); then
+                exit 0
+            fi
+
+            for i in "${menu_input[@]}"; do
+                # Remove qutes
+                local tweak_id=$(echo "$i" | tr -d '"')
+                echo "INSTALL TWEAK: $tweak_id"
+                execute_tweak install $tweak_id
+            done
+        }
+
+        tweak_dir_list=$(find "$ecos_repo/tweaks" -maxdepth 1 -printf '%f %f off\n' | sort -r | rev | cut -f 2- -d '.' | rev)
+        tweaks_tui $tweak_dir_list
         exit 1
     fi
     # ---------------------------------------
