@@ -54,6 +54,7 @@ ECOS_CACHE="$HOME/.cache/ecos"
 ECOS_CORE="$ECOS_BIN/$SCRIPT_ID"
 ECOS_INIT="$ECOS_HOME/init"
 ECOS_INITIALIZED="$ECOS_CACHE/initialized"
+TWEAKS_LOCAL_DIR="$ECOS_HOME/tweaks"
 ECOS_DESKTOP_FILE="$HOME/.local/share/applications/$SCRIPT_ID.desktop"
 ECOS_SHOW_CHANGELOG="$ECOS_CACHE/show_changelog"
 ARCH_ISO_FILE="$HOME/.cache/archlinux-x86_64.iso"
@@ -1378,23 +1379,24 @@ execute_tweak() {
     #----------------------------------------
     if [ "$tweak_action" = "install" ] || [ "$tweak_action" = "remove" ] || [ "$tweak_action" = "update" ]; then
         echo "Executing Tweak: $tweak_id ($tweak_action)"
-        local tweaks_tmp_dir="$ECOS_CACHE/tweaks/$tweak_id"
-        mkdir -p "$tweaks_tmp_dir"
-        if ! curl -L --silent "$tweak_res_url/$tweak_id.sh" -o "$tweaks_tmp_dir/$tweak_id.sh"; then
-            echo "Download error: $tweak_res_url/$tweak_id.sh"
+        local tweak_dir="$TWEAKS_LOCAL_DIR/$tweak_id"
+        local tweak_sh="$tweak_dir/$tweak_id"
+        mkdir -p "$tweak_dir"
+        if ! curl -L --silent "$tweak_sh" -o "$tweak_sh"; then
+            echo "Download error: $tweak_sh"
             return 1
         fi
-        if ! [ -f "$tweaks_tmp_dir/$tweak_id.sh" ]; then
-            echo "Error: $tweak_res_url/$tweak_id.sh not found"
+        if ! [ -f "$tweak_sh" ]; then
+            echo "Error: $tweak_sh not found"
             return 1
         fi
-        local tweak_content=$(<"$tweaks_tmp_dir/$tweak_id.sh")
+        local tweak_content=$(<"$tweak_sh")
         if [ "$tweak_content" = "404: Not Found" ]; then
             echo "Error: $tweak_id not exists"
             return 1
         fi
-        chmod +x "$tweaks_tmp_dir/$tweak_id.sh"
-        bash -c "$tweaks_tmp_dir/$tweak_id.sh $tweak_action $tweak_res_url"
+        chmod +x "$tweak_sh"
+        bash -c "$tweak_sh $tweak_action $tweak_res_url"
     else
         echo "Error: TWEAK_ACTION=$tweak_action not supported"
     fi
