@@ -1147,6 +1147,12 @@ update_core_installation() {
 
 update_system() {
 
+    mv "$ECOS_INIT" "$ECOS_INIT.bak"
+    echo "cp "$ECOS_INIT" "$ECOS_INIT.bak""
+    bash -c "dots reset --hard"
+
+    exit
+
     print_header
     check_internet
 
@@ -1158,7 +1164,11 @@ update_system() {
     # DOTFILES UPDATE
     print_title 'ECOS DOTFILES UPDATE'
     cd "$HOME"
+    # Reset dotfiles
     #dots="git --git-dir="$HOME/.local/share/dotfiles" --work-tree="$HOME""
+    mv "$ECOS_INIT" "$ECOS_INIT.bak"
+    echo "cp "$ECOS_INIT" "$ECOS_INIT.bak""
+    exit
     bash -c "dots reset --hard"
     bash -c "dots pull"
 
@@ -1330,7 +1340,7 @@ open_tui_install_ecos() {
     git clone --bare "$ECOS_DOTS_DEFAULT_URL" "$dots_home"
 
     # Reset dotfiles
-    mv "$ECOS_INIT" "$ECOS_INIT".bak
+    cp -f "$ECOS_INIT" "$ECOS_INIT.bak"
     git --git-dir="$dots_home" --work-tree="$HOME" reset --hard
     git --git-dir="$dots_home" --work-tree="$HOME" config --local status.showUntrackedFiles no
 
