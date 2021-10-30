@@ -1371,18 +1371,15 @@ execute_tweak() {
     check_git
     check_paru
 
-    print_header
-    print_title 'EXECUTE TWEAK'
-
     #----------------------------------------
     # Execute Tweak
     #----------------------------------------
     if [ "$tweak_action" = "install" ] || [ "$tweak_action" = "remove" ] || [ "$tweak_action" = "update" ]; then
-        echo "Executing Tweak: $tweak_id ($tweak_action)"
+        print_title "Executing Tweak: $tweak_id ($tweak_action)"
         local tweak_dir="$TWEAKS_LOCAL_DIR/$tweak_id"
         local tweak_sh="$tweak_dir/$tweak_id"
         mkdir -p "$tweak_dir"
-        if ! curl -L --silent "$tweak_sh" -o "$tweak_sh"; then
+        if ! curl -L --silent "$tweak_res_url/$tweak_id.sh" -o "$tweak_sh"; then
             echo "Download error: $tweak_sh"
             return 1
         fi
