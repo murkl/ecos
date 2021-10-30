@@ -8,6 +8,7 @@ SCRIPT_VERSION=1.5.3
 SCRIPT_ID="ecos"
 CHANGELOG="
 1.5.3
+  + Update mechanism refactored
   + Fix: Plymouth Installation
 
 1.5.2
@@ -1160,15 +1161,23 @@ tui_check_script_config() {
 update_core_installation() {
     check_internet
     mkdir -p "$ECOS_BIN"
-    if ! curl -s -L "$ECOS_CORE_URL" >"$ECOS_CORE"; then
+    mkdir -p "$ECOS_CACHE/update"
+    local tmp_ecos="$ECOS_CACHE/update/ecos"
+    if ! curl -s -L "$ECOS_CORE_URL" >"$tmp_ecos"; then
         echo "ERROR: ECOS CORE DOWNLOAD"
         exit 1
+    fi
+    if [ ! -f "$tmp_ecos" ]; then
+        echo "ERROR: ECOS UPDATE FILE NOT FOUND"
+        exit 1
+    else
+        mv "$tmp_ecos" "$ECOS_CORE"
     fi
     if ! chmod +x "$ECOS_CORE"; then
         echo "ERROR: ECOS CORE NOT FOUND"
         exit 1
     fi
-    "$ECOS_CORE" --update-system
+    #"$ECOS_CORE" --update-system
     exit 0
 }
 
