@@ -108,35 +108,7 @@ main() {
     fi
 
     if [ "$1" = "--tweak-list" ]; then
-        local ecos_repo="$ECOS_CACHE/ecos-repo"
-        if ! [ -d "$ecos_repo" ]; then
-            git clone "$ECOS_GIT_URL" "$ecos_repo"
-        fi
-        cd "$ecos_repo" | exit 1
-        git pull
-
-        #----------------------------------------
-        # TUI TWEAKS
-        #----------------------------------------
-        tweaks_tui() {
-            local value="$@"
-
-            tui_init 0 ""
-            if ! local menu_input=($(whiptail --checklist --notags "$(cat "$TUI_FILE")\n\n" "$TUI_HEIGHT" "$TUI_WIDTH" 10 ${value[@]} 3>&1 1>&2 2>&3)); then
-                exit 0
-            fi
-
-            for i in "${menu_input[@]}"; do
-                # Remove qutes
-                local tweak_id=$(echo "$i" | tr -d '"')
-                echo "INSTALL TWEAK: $tweak_id"
-                execute_tweak install $tweak_id
-            done
-        }
-
-        tweak_dir_list=$(find "$ecos_repo/tweaks" -maxdepth 1 -printf '%f %f off\n' | sort -r | rev | cut -f 2- -d '.' | rev)
-        tweaks_tui $tweak_dir_list
-        exit 1
+        show_tweaks_tui
     fi
     # ---------------------------------------
     # EXECUTE TWEAK
@@ -354,7 +326,7 @@ open_tui_init() {
     # Execute Tweak
     #----------------------------------------
     if [ "$menu_input" = "2" ]; then
-        execute_tweak
+        show_tweaks_tui
         exit 0
     fi
 
@@ -404,7 +376,7 @@ open_manager() {
     # Execute Tweak
     #----------------------------------------
     if [ "$menu_input" = "2" ]; then
-        execute_tweak
+        show_tweaks_tui
         exit 0
     fi
 
@@ -1395,6 +1367,38 @@ open_tui_install_ecos() {
 # EXECUTE TWEAKS
 #/////////////////////////////////////////////////////
 
+show_tweaks_tui() {
+    local ecos_repo="$ECOS_CACHE/ecos-repo"
+    if ! [ -d "$ecos_repo" ]; then
+        git clone "$ECOS_GIT_URL" "$ecos_repo"
+    fi
+    cd "$ecos_repo" | exit 1
+    git pull
+
+    #----------------------------------------
+    # TUI TWEAKS
+    #----------------------------------------
+    tweaks_tui() {
+        local value="$@"
+
+        tui_init 0 ""
+        if ! local menu_input=($(whiptail --checklist --notags "$(cat "$TUI_FILE")\n\n" "$TUI_HEIGHT" "$TUI_WIDTH" 10 ${value[@]} 3>&1 1>&2 2>&3)); then
+            exit 0
+        fi
+
+        for i in "${menu_input[@]}"; do
+            # Remove qutes
+            local tweak_id=$(echo "$i" | tr -d '"')
+            echo "INSTALL TWEAK: $tweak_id"
+            execute_tweak install $tweak_id
+        done
+    }
+
+    tweak_dir_list=$(find "$ecos_repo/tweaks" -maxdepth 1 -printf '%f %f off\n' | sort -r | rev | cut -f 2- -d '.' | rev)
+    tweaks_tui $tweak_dir_list
+    exit 1
+
+}
 execute_tweak() {
 
     local tweak_action="$1"
