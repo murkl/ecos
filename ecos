@@ -1429,7 +1429,7 @@ install_plymouth() {
         # Kernel Module
         #----------------------------------------
         tui_init 16 "Select Graphic Kernel Module"
-        if ! kms_result=$(whiptail --menu --notags "$(cat "$TUI_FILE")\n\n" "$TUI_HEIGHT" "$TUI_WIDTH" 5 "0" "none" "1" "Intel Open Source (i915)" "2" "Intel (xf86-video-intel)" "3" "AMD (xf86-video-amdgpu)" "4" "NVIDIA (xf86-video-nouveau)" 3>&1 1>&2 2>&3); then
+        if ! kms_result=$(whiptail --menu --notags "$(cat "$TUI_FILE")\n\n" "$TUI_HEIGHT" "$TUI_WIDTH" 5 "0" "none" "1" "Intel Open Source (i915)" "2" "Intel (xf86-video-intel)" "3" "AMD (xf86-video-amdgpu)" "4" "NVIDIA (nvidia-390xx)" 3>&1 1>&2 2>&3); then
             exit 0
         fi
 
@@ -1453,8 +1453,10 @@ install_plymouth() {
             graphic_apps='xf86-video-amdgpu'
         fi
         if [ "$kms_result" = "4" ]; then
-            graphic_module='nouveau'
-            graphic_apps='xf86-video-nouveau'
+            #graphic_module='nouveau'
+            #graphic_apps='xf86-video-nouveau'
+            graphic_module=''
+            graphic_apps='mesa nvidia-390xx nvidia-390xx-dkms nvidia-390xx-settings opencl-nvidia-390xx lib32-opencl-nvidia-390xx lib32-nvidia-390xx-utils bumblebee bbswitch primus lib32-virtualgl'
         fi
 
         #----------------------------------------
