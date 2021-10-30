@@ -92,7 +92,7 @@ main() {
     # ---------------------------------------
     # INIT
     # ---------------------------------------
-    if [ "$1" == "--init" ]; then
+    if [ "$1" = "--init" ]; then
         mkdir -p "$ECOS_CACHE"
         if [ ! -f "$ECOS_INITIALIZED" ]; then
             open_tui_init
@@ -102,9 +102,25 @@ main() {
     fi
 
     # ---------------------------------------
+    # EXECUTE TWEAK
+    # ---------------------------------------
+    if [ "$1" = "--tweak" ]; then
+        if [ "$2" = "" ]; then
+            echo -e "Error: TWEAK_ACTION is empty.\nExecute with:\n$ECOS_BIN --tweak TWEAK_ACTION TWEAK_ID"
+            exit 1
+        fi
+        if [ "$3" = "" ]; then
+            echo -e "Error: Tweak ID is empty.\nExecute with:\n$ECOS_BIN --tweak TWEAK_ACTION TWEAK_ID"
+            exit 1
+        fi
+        mkdir -p "$ECOS_CACHE"
+        execute_tweak "$2" "$3"
+    fi
+
+    # ---------------------------------------
     # UPDATE ECOS
     # ---------------------------------------
-    if [ "$1" == "--update" ]; then
+    if [ "$1" = "--update" ]; then
         mkdir -p "$ECOS_CACHE"
         update_system
         exit 0
@@ -298,10 +314,10 @@ open_tui_init() {
     fi
 
     #----------------------------------------
-    # Install Tweaks
+    # Execute Tweak
     #----------------------------------------
     if [ "$menu_input" = "2" ]; then
-        install_tweaks
+        execute_tweak
         exit 0
     fi
 
@@ -348,10 +364,10 @@ open_manager() {
     fi
 
     #----------------------------------------
-    # Install Tweaks
+    # Execute Tweak
     #----------------------------------------
     if [ "$menu_input" = "2" ]; then
-        install_tweaks
+        execute_tweak
         exit 0
     fi
 
@@ -1338,21 +1354,43 @@ open_tui_install_ecos() {
 }
 
 #/////////////////////////////////////////////////////
-# INSTALL TWEAKS
+# EXECUTE TWEAKS
 #/////////////////////////////////////////////////////
 
-install_tweaks() {
+execute_tweak() {
 
-    local tweak_id="$1"
+    local tweak_action="$1"
+    local tweak_id="$2"
     local tweak_res_url="$ECOS_TWEAKS_URL/$tweak_id"
 
     print_header
-    print_title 'TWEAKS INSTALLATION'
+    print_title 'EXECUTE TWEAK'
 
     #----------------------------------------
-    # List Tweaks
+    # Execute Tweak
     #----------------------------------------
-    echo "TODO: Development..."
+    if [ "$tweak_action" = "install" ] || [ "$tweak_action" = "remove" ] || [ "$tweak_action" = "update" ]; then
+        echo "Executing Tweak: $tweak_id"
+        local tweaks_tmp_dir="$ECOS_CACHE/tweaks/$tweak_id"
+        mkdir -p "$tweaks_tmp_dir"
+        if ! curl -L --silent "$tweak_res_url/$tweak_id.sh" -o "$tweaks_tmp_dir/$tweak_id.sh"; then
+            echo "Download error"
+            return 1
+        fi
+        if ! [ -f "$tweaks_tmp_dir/$tweak_id.sh" ]; then
+            echo "Error: $tweak_res_url/$tweak_id.sh not found"
+            return 1
+        fi
+        local tweak_content=$(<"$tweaks_tmp_dir/$tweak_id.sh")
+        if [ "$tweak_content" = "404: Not Found" ]; then
+            echo "Error: $tweak_id not exists"
+            return 1
+        fi
+        chmod +x "$tweaks_tmp_dir/$tweak_id.sh"
+        bash -c "$tweaks_tmp_dir/$tweak_id.sh $tweak_action"
+    else
+        echo "Error: TWEAK_ACTION=$tweak_action not supported"
+    fi
 }
 
 #/////////////////////////////////////////////////////
