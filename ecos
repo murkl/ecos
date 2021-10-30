@@ -1421,7 +1421,7 @@ execute_tweak() {
     if [ "$tweak_action" = "install" ] || [ "$tweak_action" = "remove" ] || [ "$tweak_action" = "update" ]; then
         print_title "TWEAK | $tweak_action: $tweak_id"
         local tweak_dir="$TWEAKS_LOCAL_DIR/$tweak_id"
-        local tweak_sh="$tweak_dir/$tweak_id"
+        local tweak_sh="$tweak_dir/$tweak_id.sh"
         mkdir -p "$tweak_dir"
         if ! curl -L --silent "$tweak_res_url/$tweak_id.sh" -o "$tweak_sh"; then
             echo "Download error: $tweak_sh"
