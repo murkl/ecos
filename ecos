@@ -119,15 +119,15 @@ main() {
     # ---------------------------------------
     if [ "$1" = "--tweak" ]; then
         if [ "$2" = "" ]; then
-            echo -e "Error: TWEAK_ACTION is empty.\nExecute with:\n$ECOS_BIN --tweak TWEAK_ACTION TWEAK_ID"
+            echo -e "Error: TWEAK_ACTION is empty.\nExecute with:\n$ECOS_BIN --tweak TWEAK_ID TWEAK_ACTION"
             exit 1
         fi
         if [ "$3" = "" ]; then
-            echo -e "Error: Tweak ID is empty.\nExecute with:\n$ECOS_BIN --tweak TWEAK_ACTION TWEAK_ID"
+            echo -e "Error: Tweak ID is empty.\nExecute with:\n$ECOS_BIN --tweak TWEAK_ID TWEAK_ACTION"
             exit 1
         fi
         mkdir -p "$ECOS_CACHE"
-        execute_tweak "$2" "$3"
+        execute_tweak "$3" "$2"
     fi
 
     # ---------------------------------------
@@ -1408,13 +1408,16 @@ show_tweaks_tui() {
         fi
 
         echo "TWEAK FOUND: $tweak_id"
-        whiptail_tweaks_list+=("$tweak_id $tweak_id $tweak_status")
+        local tweak_id_title="$tweak_id ${tweak_id}_${tweak_status})"
+        whiptail_tweaks_list+=("$tweak_id_title")
     done
 
     echo ${whiptail_tweaks_list[@]}
 
     tui_init 0 ""
-    local menu_input=$(whiptail --checklist --notags "$(cat "$TUI_FILE")\n\n" "$TUI_HEIGHT" "$TUI_WIDTH" 10 ${whiptail_tweaks_list[@]} 3>&1 1>&2 2>&3)
+
+    local menu_input=$(whiptail --menu --notags "$(cat "$TUI_FILE")\n\nTWEAK ID: $tweak_id" "$TUI_HEIGHT" "$TUI_WIDTH" 10 ${whiptail_tweaks_list[@]} 3>&1 1>&2 2>&3)
+    #local menu_input=$(whiptail --checklist --notags "$(cat "$TUI_FILE")\n\n" "$TUI_HEIGHT" "$TUI_WIDTH" 10 ${whiptail_tweaks_list[@]} 3>&1 1>&2 2>&3)
     if [ "$menu_input" = "" ]; then
         main
         exit 0
@@ -1425,19 +1428,36 @@ show_tweaks_tui() {
 
     for i in "${selected_array[@]}"; do
         echo "execute $i"
-        execute_tweak "install" "$i"
+        execute_tweak "$i"
     done
     exit
 
 }
 execute_tweak() {
 
-    local tweak_action="$1"
-    local tweak_id="$2"
+    local tweak_id="$1"
+    local tweak_action="$2"
     local tweak_res_url="$ECOS_TWEAKS_URL/$tweak_id"
 
     check_git
     check_paru
+
+    if [ "$tweak_action" = "" ]; then
+        tui_init 0 ""
+
+        if ! local menu_input=$(whiptail --menu --notags "$(cat "$TUI_FILE")\n\nTWEAK ID: $tweak_id" "$TUI_HEIGHT" "$TUI_WIDTH" 3 "install" "Install" "update" "Update" "remove" "Remove" 3>&1 1>&2 2>&3); then
+            exit 0
+        fi
+        if [ "$menu_input" = "install" ]; then
+            tweak_action="install"
+        fi
+        if [ "$menu_input" = "update" ]; then
+            tweak_action="update"
+        fi
+        if [ "$menu_input" = "remove" ]; then
+            tweak_action="remove"
+        fi
+    fi
 
     #----------------------------------------
     # Execute Tweak
@@ -1461,7 +1481,9 @@ execute_tweak() {
             return 1
         fi
         chmod +x "$tweak_sh"
-        bash -c "$tweak_sh $tweak_action $tweak_res_url"
+        #bash -c "$tweak_sh $tweak_action $tweak_res_url"
+        echo "$tweak_sh $tweak_action $tweak_res_url"
+        exit
     else
         echo "Error: TWEAK_ACTION=$tweak_action not supported"
     fi
