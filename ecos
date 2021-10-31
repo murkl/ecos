@@ -4,7 +4,7 @@
 # META
 #/////////////////////////////////////////////////////
 
-SCRIPT_VERSION=2.0.2-beta
+SCRIPT_VERSION=2.0.3-beta
 SCRIPT_ID="ecos"
 CHANGELOG="
 2.0.0-beta
@@ -1388,25 +1388,45 @@ show_tweaks_tui() {
     #----------------------------------------
     # TUI TWEAKS
     #----------------------------------------
-    tweaks_tui() {
-        local value="$@"
-        tui_init 0 ""
-        local menu_input=($(whiptail --checklist --notags "$(cat "$TUI_FILE")\n\n" "$TUI_HEIGHT" "$TUI_WIDTH" 10 ${value[@]} 3>&1 1>&2 2>&3))
-        if [ "$menu_input" = "" ]; then
-            main
-            exit 0
+
+    local tweak_dir_list=($(find "$ecos_repo/tweaks" -maxdepth 1 -printf '%f\n'))
+    local whiptail_tweaks_list=()
+    for i in "${tweak_dir_list[@]}"; do
+        local tweak_id="$i"
+        local tweak_dir="$TWEAKS_LOCAL_DIR/$tweak_id"
+        local tweak_sh="$tweak_dir/$tweak_id.sh"
+
+        # Check sh file
+        if ! [ -f "$ecos_repo/tweaks/$tweak_id/$tweak_id.sh" ]; then
+            continue
         fi
 
-        for i in "${menu_input[@]}"; do
-            # Remove qutes
-            local tweak_id=$(echo "$i" | tr -d '"')
-            execute_tweak install $tweak_id
-            wait
-        done
-    }
+        # Check if installed
+        local tweak_status='off'
+        if [ -f "$TWEAKS_LOCAL_DIR/$tweak_id/$tweak_id.sh" ]; then
+            local tweak_status='on'
+        fi
 
-    tweak_dir_list=$(find "$ecos_repo/tweaks" -maxdepth 1 -printf '%f %f off\n' | sort -r | rev | cut -f 2- -d '.' | rev)
-    tweaks_tui $tweak_dir_list
+        echo "TWEAK FOUND: $tweak_id"
+        whiptail_tweaks_list+=("$tweak_id $tweak_id $tweak_status")
+    done
+
+    echo ${whiptail_tweaks_list[@]}
+
+    tui_init 0 ""
+    local menu_input=$(whiptail --checklist --notags "$(cat "$TUI_FILE")\n\n" "$TUI_HEIGHT" "$TUI_WIDTH" 10 ${whiptail_tweaks_list[@]} 3>&1 1>&2 2>&3)
+    if [ "$menu_input" = "" ]; then
+        main
+        exit 0
+    fi
+
+    local selected_array=($(echo "$menu_input" | tr -d '"'))
+    echo "MENU INPUT: ${selected_array[@]}"
+
+    for i in "${selected_array[@]}"; do
+        echo "execute $i"
+        execute_tweak "install" "$i"
+    done
     exit
 
 }
