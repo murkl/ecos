@@ -5,7 +5,7 @@ APPS='lib32-mesa vulkan-intel lib32-vulkan-intel vulkan-tools'
 install() {
 
     # Installing packages
-    if ! paru --noconfirm --needed --sudoloop -Syyu plymouth mesa $APPS; then
+    if ! paru --noconfirm --needed --sudoloop -Syyu mesa $APPS; then
         echo "Error installing $APPS"
         return 1
     fi

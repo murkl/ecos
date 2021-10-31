@@ -5,7 +5,7 @@ APPS='mesa-demos xf86-video-nouveau lib32-mesa'
 install() {
 
     # Installing packages
-    if ! paru --noconfirm --needed --sudoloop -Syyu plymouth mesa $APPS; then
+    if ! paru --noconfirm --needed --sudoloop -Syyu mesa $APPS; then
         echo "Error installing $APPS"
         return 1
     fi
@@ -17,6 +17,7 @@ install() {
         echo "Error edit $mkinit_conf"
         return 1
     fi
+    sudo mkinitcpio -p linux
 }
 
 remove() {

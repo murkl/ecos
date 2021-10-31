@@ -7,7 +7,7 @@
 SCRIPT_VERSION=2.0.4
 SCRIPT_ID="ecos"
 CHANGELOG="
-2.0.3-beta
+2.0.4
   + Tweaks
   + Refactoring
 
@@ -105,13 +105,6 @@ main() {
         else
             exit 0
         fi
-    fi
-
-    # ---------------------------------------
-    # TWEAK LIST
-    # ---------------------------------------
-    if [ "$1" = "--tweak-list" ]; then
-        show_tweaks_tui
     fi
 
     # ---------------------------------------
