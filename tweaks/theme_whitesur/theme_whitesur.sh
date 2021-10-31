@@ -2,7 +2,7 @@
 TWEAK_RES_URL="$2"
 THEME_GIT_URL="https://github.com/vinceliuice/WhiteSur-gtk-theme.git"
 THEME_GIT_DIR="$ECOS_HOME/repos/theme_whitesur"
-THEME_INSTALL_DIR="$HOME/.themes/WhiteSur-light"
+THEME_INSTALL_DIR="/usr/share/themes/WhiteSur-light"
 
 install() {
     rm -rf "$THEME_GIT_DIR"
@@ -42,9 +42,9 @@ update() {
     # https://fahdshariff.blogspot.com/2012/12/sed-mutli-line-replacement-between-two.html
     local THEME_CSS_FILE="$THEME_INSTALL_DIR/gnome-shell/gnome-shell.css"
 
-    sed -ni "/$STATUS_START/{p;:a;N;/$STATUS_END/!ba;s/.*\n/$STATUS_CONTENT\n/};p" "$THEME_CSS_FILE"
-    sed -ni "/$STATUS_PADDING_START/{p;:a;N;/$STATUS_PADDING_END/!ba;s/.*\n/$STATUS_PADDING_CONTENT\n/};p" "$THEME_CSS_FILE"
-    sed -ni "/$APP_START/{p;:a;N;/$APP_END/!ba;s/.*\n/$APP_CONTENT\n/};p" "$THEME_CSS_FILE"
+    sudo sed -ni "/$STATUS_START/{p;:a;N;/$STATUS_END/!ba;s/.*\n/$STATUS_CONTENT\n/};p" "$THEME_CSS_FILE"
+    sudo sed -ni "/$STATUS_PADDING_START/{p;:a;N;/$STATUS_PADDING_END/!ba;s/.*\n/$STATUS_PADDING_CONTENT\n/};p" "$THEME_CSS_FILE"
+    sudo sed -ni "/$APP_START/{p;:a;N;/$APP_END/!ba;s/.*\n/$APP_CONTENT\n/};p" "$THEME_CSS_FILE"
 }
 
 if [ "$1" = "install" ]; then install "$@"; fi
