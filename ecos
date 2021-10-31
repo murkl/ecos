@@ -307,7 +307,7 @@ open_tui_init() {
     # Show TUI menu
     #----------------------------------------
     tui_init 0 ""
-    if ! menu_input=$(whiptail --menu --notags "$(cat "$TUI_FILE")\n\n" "$TUI_HEIGHT" "$TUI_WIDTH" 3 "1" "Install Dotfiles" "2" "Install Driver & Plymouth" "3" "Change Password" 3>&1 1>&2 2>&3); then
+    if ! menu_input=$(whiptail --menu --notags "$(cat "$TUI_FILE")\n\n" "$TUI_HEIGHT" "$TUI_WIDTH" 2 "1" "Install Dotfiles" "2" "Change Password" 3>&1 1>&2 2>&3); then
         exit 0
     fi
 
@@ -320,17 +320,9 @@ open_tui_init() {
     fi
 
     #----------------------------------------
-    # Execute Tweak
-    #----------------------------------------
-    if [ "$menu_input" = "2" ]; then
-        show_tweaks_tui
-        exit 0
-    fi
-
-    #----------------------------------------
     # Change Password
     #----------------------------------------
-    if [ "$menu_input" = "3" ]; then
+    if [ "$menu_input" = "2" ]; then
         passwd
         read -p "Press <ENTER> to continue..."
         open_tui_init
