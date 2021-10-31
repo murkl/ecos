@@ -1428,8 +1428,8 @@ show_tweaks_tui() {
     # SELECT ACTION
     #----------------------------------------
 
-    tui_init 26 "TWEAKS"
-    local tweaks_info="                           ${#tweaks_array_enabled[@]}/${#tweaks_array_all[@]}"
+    tui_init 28 "TWEAKS"
+    local tweaks_info="                             ${#tweaks_array_enabled[@]}/${#tweaks_array_all[@]}"
     local tweak_action_input=$(whiptail --menu --notags "$(cat "$TUI_FILE")\n\n$tweaks_info" "$TUI_HEIGHT" "$TUI_WIDTH" 3 "install" "Install" "update" "Update" "remove" "Remove" 3>&1 1>&2 2>&3)
     if [ "$tweak_action_input" = "" ]; then
         main
