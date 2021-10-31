@@ -2,7 +2,7 @@
 TWEAK_RES_URL="$2"
 THEME_GIT_URL="https://github.com/vinceliuice/WhiteSur-gtk-theme.git"
 THEME_GIT_DIR="$ECOS_HOME/repos/theme_whitesur"
-THEME_INSTALL_DIR="$HOME/.themes/WhiteSur-light/"
+THEME_INSTALL_DIR="$HOME/.themes/WhiteSur-light"
 
 install() {
     rm -rf "$THEME_GIT_DIR"
@@ -13,7 +13,6 @@ install() {
 
 remove() {
     rm -rf "$THEME_GIT_DIR"
-    rm -rf "$THEME_INSTALL_DIR"
 }
 
 update() {
