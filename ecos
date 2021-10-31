@@ -1378,7 +1378,7 @@ show_tweaks_tui() {
         print_title "Cloning Tweaks"
         git clone "$ECOS_GIT_URL" "$ecos_repo"
     fi
-    
+
     print_title "Updating Tweaks..."
     cd "$ecos_repo" | exit 1
     git pull
