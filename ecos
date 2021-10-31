@@ -1521,8 +1521,15 @@ execute_tweak() {
             echo "Error: $tweak_id not exists"
             return 1
         fi
+
+        # Execute tweak
         chmod +x "$tweak_sh"
         bash -c "$tweak_sh $tweak_action $tweak_res_url"
+
+        # Remove tweak sh
+        if [ "$tweak_action" = "remove" ]; then
+            rm -r "$tweak_dir"
+        fi
     else
         echo "Error: TWEAK_ACTION=$tweak_action not supported"
     fi
