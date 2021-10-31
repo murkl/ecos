@@ -261,7 +261,7 @@ open_tui_recovery() {
     #----------------------------------------
     # Mount
     #----------------------------------------
-    mnt_recovery='/mnt/recovery'
+    local mnt_recovery='/mnt/recovery'
     print_title "MOUNT TO $mnt_recovery"
     mkdir -p "$mnt_recovery"
     mount /dev/mapper/cryptroot "$mnt_recovery"
@@ -307,7 +307,7 @@ open_tui_init() {
     # Show TUI menu
     #----------------------------------------
     tui_init 0 ""
-    if ! menu_input=$(whiptail --menu --notags "$(cat "$TUI_FILE")\n\n" "$TUI_HEIGHT" "$TUI_WIDTH" 2 "1" "Install Dotfiles" "2" "Change Password" 3>&1 1>&2 2>&3); then
+    if ! menu_input=$(whiptail --menu --notags "$(cat "$TUI_FILE")\n\n" "$TUI_HEIGHT" "$TUI_WIDTH" 3 "1" "Install Dotfiles" "2" "Change Password" "3" "Exit" 3>&1 1>&2 2>&3); then
         exit 0
     fi
 
@@ -329,6 +329,14 @@ open_tui_init() {
         exit 0
     fi
 
+    #----------------------------------------
+    # Manual Install
+    #----------------------------------------
+    if [ "$menu_input" = "3" ]; then
+        echo "Install your System manually..."
+        exit 0
+    fi
+
 }
 
 #/////////////////////////////////////////////////////
@@ -341,7 +349,7 @@ open_manager() {
     # Show TUI menu
     #----------------------------------------
     tui_init 26 "MANAGER"
-    if ! menu_input=$(whiptail --menu --notags "$(cat "$TUI_FILE")\n" "$TUI_HEIGHT" "$TUI_WIDTH" 4 "0" "Update ECOS" "1" "Install Dotfiles" "2" "Install Tweaks" "3" "Create USB Stick" 3>&1 1>&2 2>&3); then
+    if ! menu_input=$(whiptail --menu --notags "$(cat "$TUI_FILE")\n" "$TUI_HEIGHT" "$TUI_WIDTH" 4 "0" "Update ECOS" "1" "Tweaks" "2" "Init Dotfiles" "3" "Create USB Stick" 3>&1 1>&2 2>&3); then
         exit 0
     fi
 
@@ -350,22 +358,23 @@ open_manager() {
     #----------------------------------------
     if [ "$menu_input" = "0" ]; then
         update_core_installation
+        "$ECOS_CORE" --update
         exit 0
     fi
 
     #----------------------------------------
-    # Install ECOS
+    # Tweaks
     #----------------------------------------
     if [ "$menu_input" = "1" ]; then
-        open_tui_install_ecos
+        show_tweaks_tui
         exit 0
     fi
 
     #----------------------------------------
-    # Execute Tweak
+    # Init ECOS
     #----------------------------------------
     if [ "$menu_input" = "2" ]; then
-        show_tweaks_tui
+        open_tui_install_ecos
         exit 0
     fi
 
@@ -472,7 +481,7 @@ tui_install_core() {
 
 install_core() {
 
-    password_encryption="$1"
+    local password_encryption="$1"
 
     #----------------------------------------
     # Source config
@@ -484,7 +493,7 @@ install_core() {
     #----------------------------------------
     # Check UEFI boot
     #----------------------------------------
-    uefi_mode=true
+    local uefi_mode=true
     if efivar -l >/dev/null; then
         log "UEFI detected"
     else
@@ -532,6 +541,7 @@ install_core() {
     gauge_update 10 "Encrypt $DISK"
 
     # Set encrypt command
+    local crypt_cmd=''
     if [ "$uefi_mode" = "true" ]; then
         crypt_cmd="cryptsetup -c aes-xts-plain -s 512 luksFormat $ROOT_PARTITION"
     else
@@ -589,7 +599,7 @@ install_core() {
     # Generate /etc/fstab
     #----------------------------------------
     gauge_update 52 "Generate /etc/fstab"
-    log_txt="genfstab -U /mnt >>/mnt/etc/fstab"
+    local log_txt="genfstab -U /mnt >>/mnt/etc/fstab"
     if ! genfstab -U /mnt >>/mnt/etc/fstab; then
         log "e" "$log_txt"
         exit 1
@@ -648,8 +658,8 @@ install_core() {
 
 install_chroot() {
 
-    uefi_mode="$1"
-    password_encryption="$2"
+    local uefi_mode="$1"
+    local password_encryption="$2"
 
     #----------------------------------------
     # Source config
@@ -659,7 +669,7 @@ install_chroot() {
     #----------------------------------------
     # Essential packages
     #----------------------------------------
-    gauge_txt="Install Essential Packages (may take a while)..."
+    local gauge_txt="Install Essential Packages (may take a while)..."
 
     gauge_update 56 "$gauge_txt"
     exec_wrap pacman -Syy
@@ -770,7 +780,7 @@ install_chroot() {
         # Bootloader: GRUB (for legacy BIOS)
 
         # Create a keyfile to prevent enter the encryption password twice
-        crypt_key="/crypto_keyfile.bin"
+        local crypt_key="/crypto_keyfile.bin"
 
         exec_wrap dd bs=512 count=4 if=/dev/random of="$crypt_key" iflag=fullblock
         exec_wrap chmod 600 "$crypt_key"
@@ -778,7 +788,7 @@ install_chroot() {
         # When initramfs' permissions are set to 644 (by default), then all users will be able to dump the keyfile
         exec_wrap chmod 600 /boot/initramfs-linux*
 
-        crypt_cmd="cryptsetup luksAddKey $ROOT_PARTITION $crypt_key"
+        local crypt_cmd="cryptsetup luksAddKey $ROOT_PARTITION $crypt_key"
         if ! echo -n "$password_encryption" | $crypt_cmd -d - >/dev/null; then
             log "e" "$crypt_cmd"
             exit 1
@@ -924,7 +934,7 @@ install_chroot() {
     gauge_update 98 "Local bin"
 
     # Copy ecos to local bin
-    ecos_home_install="/home/$USERNAME/.ecos"
+    local ecos_home_install="/home/$USERNAME/.ecos"
     mkdir -p "$ecos_home_install/bin"
     cp "$SCRIPT_FILE" "$ecos_home_install/bin/$SCRIPT_ID"
     chmod +x "$ecos_home_install/bin/$SCRIPT_ID"
@@ -970,7 +980,7 @@ check_disk() {
 
     if [ "$1" = "--force" ] || [ "$DISK" = "" ] || [ "$BOOT_PARTITION" = "" ] || [ "$ROOT_PARTITION" = "" ]; then
 
-        disk_array=()
+        local disk_array=()
         while read disk_line; do
             disk_size=$(lsblk -d -n -o SIZE /dev/$disk_line)
             disk_array+=("/dev/$disk_line")
@@ -1125,9 +1135,6 @@ update_core_installation() {
         echo "ERROR: ECOS CORE NOT FOUND"
         exit 1
     fi
-
-    "$ECOS_CORE" --update
-    exit 0
 }
 
 update_system() {
@@ -1237,7 +1244,7 @@ check_paru() {
         echo "Installing AUR Helper Paru (may take a while)..."
 
         # Prepare
-        paru_build_tmp="$HOME/Downloads/paru"
+        local paru_build_tmp="$HOME/Downloads/paru"
         rm -rf "$paru_build_tmp"
         mkdir -p "$paru_build_tmp"
 
@@ -1284,23 +1291,7 @@ open_tui_install_ecos() {
     print_header
 
     print_title "INSTALL ECOS CORE"
-    mkdir -p "$ECOS_BIN"
-    mkdir -p "$ECOS_CACHE/update"
-    local tmp_ecos="$ECOS_CACHE/update/ecos"
-    if ! curl -s -L "$ECOS_CORE_URL" >"$tmp_ecos"; then
-        echo "ERROR: ECOS CORE DOWNLOAD"
-        exit 1
-    fi
-    if [ ! -f "$tmp_ecos" ]; then
-        echo "ERROR: ECOS UPDATE FILE NOT FOUND"
-        exit 1
-    else
-        mv "$tmp_ecos" "$ECOS_CORE"
-    fi
-    if ! chmod +x "$ECOS_CORE"; then
-        echo "ERROR: ECOS CORE NOT FOUND"
-        exit 1
-    fi
+    update_core_installation
 
     print_title "CHECK GIT"
     check_git
@@ -1313,7 +1304,7 @@ open_tui_install_ecos() {
     print_title "CLONE DOTFILES"
 
     # Prepare
-    dots_home="$HOME/.local/share/dotfiles"
+    local dots_home="$HOME/.local/share/dotfiles"
     rm -rf "$dots_home"
     mkdir -p "$dots_home"
     cd "$HOME" || exit 1
@@ -1669,8 +1660,8 @@ log() {
     touch "$LOG_FILE"
 
     # Default vaules
-    lvl="INFO"
-    text="$1"
+    local lvl="INFO"
+    local text="$1"
 
     # Handle if 2. parameter is set
     if [ "$2" != "" ]; then
@@ -1689,7 +1680,7 @@ log() {
     fi
 
     # Style log output
-    styled_text="$(date "+%Y-%m-%d %H:%M:%S") $SCRIPT_ID-$SCRIPT_VERSION | $lvl | $text"
+    local styled_text="$(date "+%Y-%m-%d %H:%M:%S") $SCRIPT_ID-$SCRIPT_VERSION | $lvl | $text"
 
     # Print to STOUT & LOG_FILE
     printf '%s\n' "$styled_text" >>"$LOG_FILE"
@@ -1699,8 +1690,8 @@ log() {
 # !!! DO NOT USE WITH PIPE (|) OR REDIRECT (>>) !!!
 exec_wrap() {
 
-    command_txt="$*"
-    tmp_error="$SCRIPT_DIR/$SCRIPT_ID.error"
+    local command_txt="$*"
+    local tmp_error="$SCRIPT_DIR/$SCRIPT_ID.error"
 
     if "$@" >/dev/null 2>"$tmp_error"; then
         log "c" "$command_txt"
@@ -1727,8 +1718,8 @@ tui_logs() {
 #/////////////////////////////////////////////////////
 
 check_script_config_key() {
-    config_key="$1"
-    config_value="$2"
+    local config_key="$1"
+    local config_value="$2"
     touch "$CONFIG_FILE"
     if ! grep -qrnw "$CONFIG_FILE" -e "$config_key=*"; then
         echo "$config_key=\"$config_value\"" >>"$CONFIG_FILE"
@@ -1736,17 +1727,17 @@ check_script_config_key() {
 }
 
 replace_config_value() {
-    key=$1
-    value=$2
+    local key=$1
+    local value=$2
     check_script_config_key "$key" "$value"
     sed -i "s#$key=.*#$key=\"$value\"#g" "$CONFIG_FILE"
 }
 
 replace_config_array() {
-    key=$1 && shift
-    value=("$@")
+    local key=$1 && shift
+    local value=("$@")
 
-    items_txt='( '
+    local items_txt='( '
     for item in "${value[@]}"; do
         items_txt="$items_txt'$item' "
     done
@@ -1798,7 +1789,7 @@ print_title() {
 #   $2: string
 #----------------------------------------
 echos() {
-    spaces=""
+    local spaces=""
     for i in $(seq 1 "$1"); do
         spaces=" ${spaces}"
     done
