@@ -125,10 +125,17 @@ main() {
     fi
 
     # ---------------------------------------
+    # UPDATE CORE
+    # ---------------------------------------
+    if [ "$1" = "--update-core" ]; then
+        update_core_installation
+        exit 0
+    fi
+
+    # ---------------------------------------
     # UPDATE ECOS
     # ---------------------------------------
     if [ "$1" = "--update" ]; then
-        mkdir -p "$ECOS_CACHE"
         update_system
         exit 0
     fi
@@ -149,8 +156,6 @@ main() {
     # MANAGER
     # ---------------------------------------
     if [ "$1" = "--manager" ]; then
-        # TODO: zenity menu
-        mkdir -p "$ECOS_CACHE"
         open_manager
         exit 0
     fi
