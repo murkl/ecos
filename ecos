@@ -1369,6 +1369,9 @@ open_tui_install_ecos() {
 
 show_tweaks_tui() {
 
+    check_git
+    check_paru
+
     #----------------------------------------
     # UPDATE TWEAKS REPO
     #----------------------------------------
@@ -1484,12 +1487,8 @@ execute_tweak() {
     local tweak_action="$2"
     local tweak_res_url="$ECOS_TWEAKS_URL/$tweak_id"
 
-    check_git
-    check_paru
-
     if [ "$tweak_action" = "" ]; then
         tui_init 0 ""
-
         if ! local menu_input=$(whiptail --menu --notags "$(cat "$TUI_FILE")\n\nTWEAK ID: $tweak_id" "$TUI_HEIGHT" "$TUI_WIDTH" 3 "install" "Install" "update" "Update" "remove" "Remove" 3>&1 1>&2 2>&3); then
             exit 0
         fi
