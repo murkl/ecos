@@ -12,6 +12,7 @@ install() {
 }
 
 remove() {
+    sudo $THEME_GIT_DIR/install.sh --remove
     rm -rf "$THEME_GIT_DIR"
 }
 
