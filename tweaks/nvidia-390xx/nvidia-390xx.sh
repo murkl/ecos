@@ -1,5 +1,6 @@
 #!/bin/bash
 TWEAK_RES_URL="$2"
+TWEAK_APPS='mesa-demos bumblebee nvidia-390xx lib32-virtualgl opencl-nvidia-390xx lib32-nvidia-390xx-utils lib32-opencl-nvidia-390xx'
 
 install() {
 
@@ -13,10 +14,9 @@ install() {
     fi
 
     # Install packages
-    #local nvidia_apps='mesa nvidia-390xx nvidia-390xx-dkms nvidia-390xx-settings opencl-nvidia-390xx lib32-opencl-nvidia-390xx lib32-nvidia-390xx-utils bumblebee bbswitch primus lib32-virtualgl'
-    local nvidia_apps='mesa mesa-demos bumblebee nvidia-390xx lib32-virtualgl opencl-nvidia-390xx lib32-nvidia-390xx-utils lib32-opencl-nvidia-390xx'
-    if ! paru --noconfirm --needed --sudoloop -Syyu $nvidia_apps; then
-        echo "Error installing $nvidia_apps"
+    # mesa nvidia-390xx nvidia-390xx-dkms nvidia-390xx-settings opencl-nvidia-390xx lib32-opencl-nvidia-390xx lib32-nvidia-390xx-utils bumblebee bbswitch primus lib32-virtualgl
+    if ! paru --noconfirm --needed --sudoloop -Syyu mesa $TWEAK_APPS; then
+        echo "Error installing $TWEAK_APPS"
         return 1
     fi
 
@@ -28,11 +28,11 @@ install() {
 }
 
 remove() {
-    echo "remove"
+    paru --noconfirm --sudoloop -Rsn $TWEAK_APPS
 }
 
 update() {
-    echo "update"
+    echo "Nothing to update"
 }
 
 if [ "$1" = "install" ]; then install "$@"; fi

@@ -1467,13 +1467,11 @@ show_tweaks_tui() {
     fi
 
     local selected_array=($(echo "$menu_input" | tr -d '"'))
-    echo "MENU INPUT: ${selected_array[@]}"
+    echo "SELECTED TWEAKS: ${selected_array[@]}"
 
     for i in "${selected_array[@]}"; do
-        echo "execute $i"
         execute_tweak "$i" "$tweak_action_input"
     done
-    exit
 
 }
 execute_tweak() {

@@ -21,7 +21,7 @@ install() {
 }
 
 remove() {
-    paru -Rsn $APPS
+    paru --noconfirm --sudoloop -Rsn $APPS
 }
 
 update() {
