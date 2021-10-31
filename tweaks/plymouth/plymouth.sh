@@ -88,7 +88,7 @@ install() {
 }
 
 remove() {
-    paru -Rsn plymouth
+    paru --noconfirm --sudoloop -Rs plymouth
 }
 
 update() {

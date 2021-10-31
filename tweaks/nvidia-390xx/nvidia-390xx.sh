@@ -11,9 +11,6 @@ install() {
     if pacman -Qi xf86-video-nouveau >/dev/null; then
         paru --noconfirm --sudoloop -Rs xf86-video-nouveau
     fi
-    if pacman -Qi plymouth >/dev/null; then
-        paru --noconfirm --sudoloop -Rs plymouth
-    fi
 
     # Install packages
     #local nvidia_apps='mesa nvidia-390xx nvidia-390xx-dkms nvidia-390xx-settings opencl-nvidia-390xx lib32-opencl-nvidia-390xx lib32-nvidia-390xx-utils bumblebee bbswitch primus lib32-virtualgl'
