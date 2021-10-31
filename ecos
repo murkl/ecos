@@ -55,6 +55,7 @@ ECOS_CACHE="$HOME/.cache/ecos"
 ECOS_CORE="$ECOS_BIN/$SCRIPT_ID"
 ECOS_INIT="$ECOS_HOME/init"
 ECOS_INITIALIZED="$ECOS_CACHE/initialized"
+ECOS_LOCAL_DOTFILES="$HOME/.local/share/dotfiles"
 TWEAKS_LOCAL_DIR="$ECOS_HOME/tweaks"
 ECOS_DESKTOP_FILE="$HOME/.local/share/applications/$SCRIPT_ID.desktop"
 ECOS_SHOW_CHANGELOG="$ECOS_CACHE/show_changelog"
@@ -1118,8 +1119,15 @@ tui_check_script_config() {
 
 update_core_installation() {
     check_internet
+
+    # Make dirs
+    mkdir -p "$ECOS_HOME"
+    mkdir -p "$ECOS_CACHE"
     mkdir -p "$ECOS_BIN"
+    mkdir -p "$TWEAKS_LOCAL_DIR"
+    mkdir -p "$HOME/.local/share/applications"
     mkdir -p "$ECOS_CACHE/update"
+
     local tmp_ecos="$ECOS_CACHE/update/ecos"
     if ! curl -s -L "$ECOS_CORE_URL" >"$tmp_ecos"; then
         echo "ERROR: ECOS CORE DOWNLOAD"
@@ -1152,7 +1160,6 @@ update_system() {
     cd "$HOME"
 
     # RESET LOCAL FILES
-    #dots="git --git-dir="$HOME/.local/share/dotfiles" --work-tree="$HOME""
     mv "$ECOS_INIT" "$ECOS_INIT.bak"
     bash -c "dots reset --hard"
     bash -c "dots pull"
@@ -1196,6 +1203,7 @@ update_system() {
     fi
     # UPDATE DESKTOP FILE
     print_title 'UPDATING ECOS DESKTOP FILE'
+    mkdir -p "$HOME/.local/share/applications/"
     {
         echo "[Desktop Entry]"
         echo "Name=ECOS"
@@ -1302,11 +1310,8 @@ open_tui_install_ecos() {
     echo -e "DONE"
 
     print_title "CLONE DOTFILES"
-
-    # Prepare
-    local dots_home="$HOME/.local/share/dotfiles"
-    rm -rf "$dots_home"
-    mkdir -p "$dots_home"
+    rm -rf "$ECOS_LOCAL_DOTFILES"
+    mkdir -p "$ECOS_LOCAL_DOTFILES"
     cd "$HOME" || exit 1
 
     # Removing existing init
@@ -1322,12 +1327,12 @@ open_tui_install_ecos() {
     chmod +x "$dots_bin"
 
     # Clone dotfiles
-    git clone --bare "$ECOS_DOTS_DEFAULT_URL" "$dots_home"
+    git clone --bare "$ECOS_DOTS_DEFAULT_URL" "$ECOS_LOCAL_DOTFILES"
 
     # Reset dotfiles
     mv "$ECOS_INIT" "$ECOS_INIT.bak"
-    git --git-dir="$dots_home" --work-tree="$HOME" reset --hard
-    git --git-dir="$dots_home" --work-tree="$HOME" config --local status.showUntrackedFiles no
+    git --git-dir="$ECOS_LOCAL_DOTFILES" --work-tree="$HOME" reset --hard
+    git --git-dir="$ECOS_LOCAL_DOTFILES" --work-tree="$HOME" config --local status.showUntrackedFiles no
 
     echo -e "DONE"
 
