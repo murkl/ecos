@@ -8,7 +8,6 @@ install() {
 
 remove() {
     paru -Rsn synology-drive
-    rm -rf $HOME/.SynologyDrive/
 }
 
 update() {
