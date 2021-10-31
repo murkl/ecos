@@ -1378,8 +1378,9 @@ show_tweaks_tui() {
         print_title "Cloning Tweaks"
         git clone "$ECOS_GIT_URL" "$ecos_repo"
     fi
-    cd "$ecos_repo" | exit 1
+    
     print_title "Updating Tweaks..."
+    cd "$ecos_repo" | exit 1
     git pull
 
     #----------------------------------------
@@ -1470,9 +1471,13 @@ show_tweaks_tui() {
 
     for i in "${selected_array[@]}"; do
         execute_tweak "$i" "$tweak_action_input"
+        wait
     done
 
+    # Return to tui
+    show_tweaks_tui
 }
+
 execute_tweak() {
 
     local tweak_id="$1"
