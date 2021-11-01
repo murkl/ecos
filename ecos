@@ -1393,8 +1393,8 @@ show_tweaks_tui() {
     fi
 
     print_title "Updating Tweaks..."
-    cd "$ecos_repo" | exit 1
-    git pull
+    git --git-dir="$ecos_repo/.git" fetch --all
+    git --git-dir="$ecos_repo/.git" reset --hard origin/master
 
     #----------------------------------------
     # PREPARE DATA
