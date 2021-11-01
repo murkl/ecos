@@ -1166,8 +1166,7 @@ update_system() {
 
     # RESET LOCAL FILES
     mv "$ECOS_INIT" "$ECOS_INIT.bak"
-    bash -c "dots reset --hard"
-    bash -c "dots pull"
+    bash -c "dots fetch --all && dots reset --hard HEAD"
 
     # PACKAGE UPDATE
     print_title 'FETCH PACKAGE UPDATES'
@@ -1336,7 +1335,7 @@ open_tui_install_ecos() {
 
     # Reset dotfiles
     mv "$ECOS_INIT" "$ECOS_INIT.bak"
-    git --git-dir="$ECOS_LOCAL_DOTFILES" --work-tree="$HOME" reset --hard
+    git --git-dir="$ECOS_LOCAL_DOTFILES" --work-tree="$HOME" reset --hard origin/HEAD
     git --git-dir="$ECOS_LOCAL_DOTFILES" --work-tree="$HOME" config --local status.showUntrackedFiles no
 
     echo -e "DONE"
@@ -1393,8 +1392,9 @@ show_tweaks_tui() {
     fi
 
     print_title "Updating Tweaks..."
-    git --git-dir="$ecos_repo/.git" fetch --all
-    git --git-dir="$ecos_repo/.git" reset --hard origin/master
+    cd "$ecos_repo" || exit 1
+    git fetch --all
+    git reset --hard origin/HEAD
 
     #----------------------------------------
     # PREPARE DATA
