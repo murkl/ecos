@@ -11,7 +11,7 @@ remove() {
 }
 
 update() {
-    local drive_icons_dir="$HOME/.SynologyDrive/SynologyDrive.app/images/tray/win-linux-black"
+    local drive_icons_dir="$HOME/.SynologyDrive/SynologyDrive.app/images/tray/normal"
     curl -L "$TWEAK_RES_URL/syncing.png" -o "$drive_icons_dir/syncing.png"
     curl -L "$TWEAK_RES_URL/uptodate.png" -o "$drive_icons_dir/uptodate.png"
     curl -L "$TWEAK_RES_URL/normal.png" -o "$drive_icons_dir/normal.png"
