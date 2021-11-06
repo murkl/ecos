@@ -1435,22 +1435,6 @@ ecos_exec_tweak() {
     local tweak_cache_dir="$ECOS_CACHE/tweaks/$tweak_id"
     local tweak_sh="$tweak_res_dir/$tweak_id.sh"
 
-    if [ "$tweak_action" = "" ]; then
-        tui_init 0 ""
-        if ! local menu_input=$(whiptail --menu --notags "$(cat "$SCRIPT_TUI_FILE")\n\nTWEAK ID: $tweak_id" "$SCRIPT_TUI_HEIGHT" "$SCRIPT_TUI_WIDTH" 3 "install" "Install" "update" "Update" "remove" "Remove" 3>&1 1>&2 2>&3); then
-            exit 0
-        fi
-        if [ "$menu_input" = "install" ]; then
-            tweak_action="install"
-        fi
-        if [ "$menu_input" = "update" ]; then
-            tweak_action="update"
-        fi
-        if [ "$menu_input" = "remove" ]; then
-            tweak_action="remove"
-        fi
-    fi
-
     #----------------------------------------
     # Execute Tweak
     #----------------------------------------
@@ -1461,7 +1445,7 @@ ecos_exec_tweak() {
             return 1
         fi
 
-        # Create tweak dirs
+        # Create tweak cache dir
         mkdir -p "$tweak_cache_dir"
 
         # Execute tweak
@@ -1469,13 +1453,13 @@ ecos_exec_tweak() {
         bash -c "ECOS_HOME=$ECOS_HOME $tweak_sh $tweak_action $tweak_res_dir $tweak_cache_dir"
 
         # Install
-        if [ "$tweak_action" = "install" ]; then
+        if [ "$tweak_action" = "install" ] || [ "$tweak_action" = "update" ]; then
             echo "$(date "+%Y-%m-%d-%H:%M:%S")" >"$tweak_cache_dir/$tweak_id.tweak"
         fi
 
         # Remove
         if [ "$tweak_action" = "remove" ]; then
-            rm "$tweak_cache_dir/$tweak_id.tweak"
+            rm -r "$tweak_cache_dir"
         fi
     else
         echo "Error: TWEAK_ACTION=$tweak_action not supported"
