@@ -1,5 +1,4 @@
 #!/bin/bash
-TWEAK_RES_URL="$2"
 APPS='lib32-mesa vulkan-intel lib32-vulkan-intel vulkan-tools'
 
 install() {

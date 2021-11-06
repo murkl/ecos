@@ -1,5 +1,4 @@
 #!/bin/bash
-TWEAK_RES_URL="$2"
 APPS='xf86-video-amdgpu'
 
 install() {

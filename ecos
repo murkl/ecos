@@ -48,20 +48,21 @@ ECOS_GIT_URL="git@github.com:murkl/ecos.git"
 ECOS_TWEAKS_URL="$ECOS_URL/tweaks"
 ECOS_CORE_URL="$ECOS_URL/ecos"
 ECOS_DOTS_DEFAULT_URL="https://github.com/murkl/dotfiles-gnome.git"
-ECOS_ARCH_ISO_DEFAULT_URL="https://www.archlinux.de/download/iso/2021.10.01/archlinux-2021.10.01-x86_64.iso"
+ECOS_ARCH_ISO_DEFAULT_URL="https://www.archlinux.de/download/iso/2021.11.01/archlinux-2021.11.01-x86_64.iso"
 
 # ECOS
 ECOS_HOME="$HOME/.ecos"
-ECOS_BIN="$ECOS_HOME/bin"
-ECOS_CACHE="$HOME/.cache/ecos"
-ECOS_CORE="$ECOS_BIN/$SCRIPT_ID"
+ECOS_BIN_DIR="$ECOS_HOME/bin"
+ECOS_CORE="$ECOS_BIN_DIR/$SCRIPT_ID"
+ECOS_CACHE="$ECOS_HOME/cache"
 ECOS_INIT="$ECOS_HOME/init"
 ECOS_INITIALIZED="$ECOS_CACHE/initialized"
-ECOS_LOCAL_DOTFILES="$HOME/.local/share/dotfiles"
+ECOS_LOCAL_DOTFILES="$ECOS_HOME/dotfiles"
 ECOS_TWEAKS_LOCAL_DIR="$ECOS_HOME/tweaks"
-ECOS_DESKTOP_FILE="$HOME/.local/share/applications/$SCRIPT_ID.desktop"
+ECOS_LOCAL_REPOS_DIR="$ECOS_CACHE/repos"
 ECOS_SHOW_CHANGELOG="$ECOS_CACHE/show_changelog"
 ECOS_ARCH_ISO_FILE="$ECOS_CACHE/archlinux-x86_64.iso"
+ECOS_DESKTOP_FILE="$HOME/.local/share/applications/$SCRIPT_ID.desktop"
 
 #/////////////////////////////////////////////////////
 # CORE VARIABLES
@@ -140,11 +141,11 @@ main() {
     # ---------------------------------------
     if [ "$1" = "--tweak" ]; then
         if [ "$2" = "" ]; then
-            echo -e "Error: TWEAK_ACTION is empty.\nExecute with:\n$ECOS_BIN --tweak TWEAK_ID TWEAK_ACTION"
+            echo -e "Error: TWEAK_ACTION is empty.\nExecute with:\n$ECOS_CORE --tweak TWEAK_ID TWEAK_ACTION"
             exit 1
         fi
         if [ "$3" = "" ]; then
-            echo -e "Error: Tweak ID is empty.\nExecute with:\n$ECOS_BIN --tweak TWEAK_ID TWEAK_ACTION"
+            echo -e "Error: Tweak ID is empty.\nExecute with:\n$ECOS_CORE --tweak TWEAK_ID TWEAK_ACTION"
             exit 1
         fi
         mkdir -p "$ECOS_CACHE"
@@ -1263,10 +1264,10 @@ ecos_tui_install_ecos() {
     fi
 
     # Create dots bin
-    local dots_bin="$ECOS_BIN/dots"
-    mkdir -p "$ECOS_BIN"
+    local dots_bin="$ECOS_BIN_DIR/dots"
+    mkdir -p "$ECOS_BIN_DIR"
     echo '#!/bin/sh' >"$dots_bin"
-    echo 'git --git-dir="$HOME/.local/share/dotfiles" --work-tree="$HOME" "$@"' >>"$dots_bin"
+    echo 'git --git-dir="$ECOS_LOCAL_DOTFILES" --work-tree="$HOME" "$@"' >>"$dots_bin"
     chmod +x "$dots_bin"
 
     # Clone dotfiles
@@ -1319,8 +1320,7 @@ ecos_tui_menu_tweaks() {
     #----------------------------------------
     # UPDATE TWEAKS REPO
     #----------------------------------------
-
-    local ecos_repo="$ECOS_CACHE/ecos-repo"
+    local ecos_repo="$ECOS_LOCAL_REPOS_DIR/ecos"
     if ! [ -d "$ecos_repo" ]; then
         print_title "Cloning Tweaks"
         git clone "$ECOS_GIT_URL" "$ecos_repo"
@@ -1430,7 +1430,9 @@ ecos_exec_tweak() {
 
     local tweak_id="$1"
     local tweak_action="$2"
-    local tweak_res_url="$ECOS_TWEAKS_URL/$tweak_id"
+    local tweak_res_dir="$$ECOS_LOCAL_REPOS_DIR/ecos/tweaks/$tweak_id"
+    local tweak_cache_dir="$ECOS_CACHE/$tweak_id"
+    local tweak_sh="$tweak_res_dir/$tweak_id.sh"
 
     if [ "$tweak_action" = "" ]; then
         tui_init 0 ""
@@ -1453,30 +1455,26 @@ ecos_exec_tweak() {
     #----------------------------------------
     if [ "$tweak_action" = "install" ] || [ "$tweak_action" = "remove" ] || [ "$tweak_action" = "update" ]; then
         print_title "TWEAK | $tweak_action: $tweak_id"
-        local tweak_dir="$ECOS_TWEAKS_LOCAL_DIR/$tweak_id"
-        local tweak_sh="$tweak_dir/$tweak_id.sh"
-        mkdir -p "$tweak_dir"
-        if ! curl -L --silent "$tweak_res_url/$tweak_id.sh" -o "$tweak_sh"; then
-            echo "Download error: $tweak_sh"
-            return 1
-        fi
         if ! [ -f "$tweak_sh" ]; then
-            echo "Error: $tweak_sh not found"
+            echo "Error: $tweak_id not exists ($tweak_sh)"
             return 1
         fi
-        local tweak_content=$(<"$tweak_sh")
-        if [ "$tweak_content" = "404: Not Found" ]; then
-            echo "Error: $tweak_id not exists"
-            return 1
-        fi
+
+        # Create tweak dirs
+        mkdir -p "$tweak_cache_dir"
 
         # Execute tweak
         chmod +x "$tweak_sh"
-        bash -c "ECOS_HOME=$ECOS_HOME $tweak_sh $tweak_action $tweak_res_url"
+        bash -c "ECOS_HOME=$ECOS_HOME $tweak_sh $tweak_action $tweak_res_dir $tweak_cache_dir"
 
-        # Remove tweak sh
+        # Install
         if [ "$tweak_action" = "remove" ]; then
-            rm -r "$tweak_dir"
+            echo "$(date "+%Y-%m-%d-%H:%M:%S")" >"$ECOS_CACHE/$tweak_id.installed"
+        fi
+
+        # Remove
+        if [ "$tweak_action" = "remove" ]; then
+            rm "$ECOS_CACHE/$tweak_id.installed"
         fi
     else
         echo "Error: TWEAK_ACTION=$tweak_action not supported"
@@ -1484,17 +1482,18 @@ ecos_exec_tweak() {
 }
 
 ecos_update_core() {
+
     check_internet
 
     # Make dirs
     mkdir -p "$ECOS_HOME"
     mkdir -p "$ECOS_CACHE"
-    mkdir -p "$ECOS_BIN"
+    mkdir -p "$ECOS_BIN_DIR"
+    mkdir -p "$ECOS_LOCAL_REPOS_DIR"
     mkdir -p "$ECOS_TWEAKS_LOCAL_DIR"
     mkdir -p "$HOME/.local/share/applications"
-    mkdir -p "$ECOS_CACHE/update"
 
-    local tmp_ecos="$ECOS_CACHE/update/ecos"
+    local tmp_ecos="$ECOS_CACHE/ecos-new"
     if ! curl -s -L "$ECOS_CORE_URL" >"$tmp_ecos"; then
         echo "ERROR: ECOS CORE DOWNLOAD"
         exit 1

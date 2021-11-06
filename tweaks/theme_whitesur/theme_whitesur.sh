@@ -1,30 +1,30 @@
 #!/bin/bash
-TWEAK_RES_URL="$2"
+TWEAK_RES_DIR="$2"
+TWEAK_CACHE_DIR="$3"
 THEME_GIT_URL="https://github.com/vinceliuice/WhiteSur-gtk-theme.git"
-THEME_GIT_DIR="$ECOS_HOME/repos/theme_whitesur"
 THEME_INSTALL_DIR="/usr/share/themes/WhiteSur-light"
 
 install() {
-    rm -rf "$THEME_GIT_DIR"
-    mkdir -p "$THEME_GIT_DIR"
-    git clone "$THEME_GIT_URL" "$THEME_GIT_DIR"
+    rm -rf "$TWEAK_CACHE_DIR"
+    mkdir -p "$TWEAK_CACHE_DIR"
+    git clone "$THEME_GIT_URL" "$TWEAK_CACHE_DIR"
     update
 }
 
 remove() {
-    sudo $THEME_GIT_DIR/install.sh --remove
-    rm -rf "$THEME_GIT_DIR"
+    sudo $TWEAK_CACHE_DIR/install.sh --remove
+    rm -rf "$TWEAK_CACHE_DIR"
 }
 
 update() {
-    cd "$THEME_GIT_DIR" || return 1
+    cd "$TWEAK_CACHE_DIR" || return 1
 
     git reset --hard
     git pull
 
-    # $THEME_GIT_DIR/install.sh --color light --icon simple --nautilus-style glassy --monterey --size 280 --background default --highdefinition --theme default --normalshowapps --panel-opacity 30
-    sudo $THEME_GIT_DIR/install.sh --silent-mode --icon simple --nautilus-style glassy --size 280 --background blank --theme default --normalshowapps
-    sudo $THEME_GIT_DIR/tweaks.sh --silent-mode --firefox
+    # $TWEAK_CACHE_DIR/install.sh --color light --icon simple --nautilus-style glassy --monterey --size 280 --background default --highdefinition --theme default --normalshowapps --panel-opacity 30
+    sudo $TWEAK_CACHE_DIR/install.sh --silent-mode --icon simple --nautilus-style glassy --size 280 --background blank --theme default --normalshowapps
+    sudo $TWEAK_CACHE_DIR/tweaks.sh --silent-mode --firefox
 
     # Disable App Icon
     local APP_START='#panel .panel-button .app-menu-icon {'

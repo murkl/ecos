@@ -1,5 +1,4 @@
 #!/bin/bash
-TWEAK_RES_URL="$2"
 TWEAK_APPS='mesa-demos bumblebee nvidia-390xx lib32-virtualgl opencl-nvidia-390xx lib32-nvidia-390xx-utils lib32-opencl-nvidia-390xx'
 
 install() {

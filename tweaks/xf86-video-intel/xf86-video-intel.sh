@@ -1,5 +1,4 @@
 #!/bin/bash
-TWEAK_RES_URL="$2"
 APPS='xf86-video-intel lib32-mesa vulkan-intel lib32-vulkan-intel vulkan-tools'
 
 install() {

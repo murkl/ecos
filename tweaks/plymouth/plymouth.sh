@@ -1,5 +1,5 @@
 #!/bin/bash
-TWEAK_RES_URL="$2"
+TWEAK_RES_DIR="$2"
 
 install() {
 
@@ -66,8 +66,7 @@ install() {
     echo 'DOWNLOAD WATERMARK'
     local watermark_file='/usr/share/plymouth/themes/spinner/watermark.png'
     sudo mv -f "$watermark_file" "$watermark_file".bak
-    curl -L "$TWEAK_RES_URL/plymouth.png" -o /tmp/watermark.png
-    sudo cp /tmp/watermark.png "$watermark_file"
+    sudo cp "$TWEAK_RES_DIR/plymouth.png" "$watermark_file"
 
     #----------------------------------------
     # Rebuild
