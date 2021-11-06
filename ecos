@@ -1246,7 +1246,8 @@ ecos_tui_install_ecos() {
     git clone --bare "$ECOS_DOTS_DEFAULT_URL" "$ECOS_LOCAL_DOTFILES"
 
     # Reset dotfiles
-    git --git-dir="$ECOS_LOCAL_DOTFILES" --work-tree="$HOME" reset --hard origin/HEAD
+    git --git-dir="$ECOS_LOCAL_DOTFILES" --work-tree="$HOME" fetch --all
+    git --git-dir="$ECOS_LOCAL_DOTFILES" --work-tree="$HOME" reset --hard HEAD
     git --git-dir="$ECOS_LOCAL_DOTFILES" --work-tree="$HOME" config --local status.showUntrackedFiles no
 
     echo -e "DONE"
