@@ -26,6 +26,8 @@ update() {
 
     # $THEME_REPO_DIR/install.sh --color light --icon simple --nautilus-style glassy --monterey --size 280 --background default --highdefinition --theme default --normalshowapps --panel-opacity 30
     sudo $THEME_REPO_DIR/install.sh --silent-mode --icon simple --nautilus-style glassy --size 280 --background blank --theme default --normalshowapps
+
+    # Firefox must have been started once:
     sudo $THEME_REPO_DIR/tweaks.sh --silent-mode --firefox
 
     # Disable App Icon
