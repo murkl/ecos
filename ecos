@@ -1239,7 +1239,7 @@ ecos_tui_install_ecos() {
     local dots_bin="$ECOS_BIN_DIR/dots"
     mkdir -p "$ECOS_BIN_DIR"
     echo '#!/bin/sh' >"$dots_bin"
-    echo 'git --git-dir="$ECOS_LOCAL_DOTFILES" --work-tree="$HOME" "$@"' >>"$dots_bin"
+    echo 'git --git-dir="'$ECOS_LOCAL_DOTFILES'" --work-tree="$HOME" "$@"' >>"$dots_bin"
     chmod +x "$dots_bin"
 
     # Clone dotfiles
