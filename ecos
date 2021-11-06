@@ -140,16 +140,8 @@ main() {
     # EXECUTE TWEAK
     # ---------------------------------------
     if [ "$1" = "--tweak" ]; then
-        if [ "$2" = "" ]; then
-            echo -e "Error: TWEAK_ACTION is empty.\nExecute with:\n$ECOS_CORE --tweak TWEAK_ID TWEAK_ACTION"
-            exit 1
-        fi
-        if [ "$3" = "" ]; then
-            echo -e "Error: Tweak ID is empty.\nExecute with:\n$ECOS_CORE --tweak TWEAK_ID TWEAK_ACTION"
-            exit 1
-        fi
-        mkdir -p "$ECOS_CACHE"
-        ecos_exec_tweak "$3" "$2"
+        ecos_exec_tweak "$2" "$3"
+        exit
     fi
 
     # ---------------------------------------
@@ -1434,6 +1426,16 @@ ecos_exec_tweak() {
     local tweak_res_dir="$ECOS_LOCAL_REPOS_DIR/ecos/tweaks/$tweak_id"
     local tweak_cache_dir="$ECOS_CACHE/tweaks/$tweak_id"
     local tweak_sh="$tweak_res_dir/$tweak_id.sh"
+
+    if [ "$tweak_id" = "" ]; then
+        echo -e "Error: Tweak ID is empty.\nExecute with:\n$ECOS_CORE --tweak TWEAK_ID TWEAK_ACTION"
+        exit 1
+    fi
+
+    if [ "$tweak_action" = "" ]; then
+        echo -e "Error: TWEAK_ACTION is empty.\nExecute with:\n$ECOS_CORE --tweak TWEAK_ID TWEAK_ACTION"
+        exit 1
+    fi
 
     #----------------------------------------
     # Execute Tweak
