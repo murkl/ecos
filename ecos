@@ -1198,7 +1198,7 @@ ecos_check_paru() {
 ecos_tui_install_ecos() {
 
     check_internet
-    
+
     # Create dirs
     mkdir -p "$ECOS_CACHE"
 
@@ -1278,6 +1278,19 @@ ecos_tui_install_ecos() {
     print_title "DOTFILES INITIALIZED"
     echo "$SCRIPT_VERSION" >"$ECOS_INITIALIZED"
     touch "$ECOS_SHOW_CHANGELOG"
+    echo -e "DONE"
+
+    # Create Desktop file
+    print_title 'CREATE ECOS DESKTOP FILE'
+    mkdir -p "$HOME/.local/share/applications/"
+    {
+        echo "[Desktop Entry]"
+        echo "Name=ECOS"
+        echo "Icon=ecos"
+        echo 'Exec=gnome-terminal -- bash -c $HOME/.ecos/bin/ecos'
+        echo "Type=Application"
+    } >"$ECOS_DESKTOP_FILE"
+    chmod +x "$ECOS_DESKTOP_FILE"
     echo -e "DONE"
 
     print_title "ECOS INSTALLATION FINISHED"
@@ -1560,19 +1573,6 @@ ecos_update_system() {
     # UPDATE TWEAKS
     print_title 'UPDATING ECOS TWEAKS'
     ecos_update_tweaks
-
-    # UPDATE DESKTOP FILE
-    print_title 'UPDATING ECOS DESKTOP FILE'
-    mkdir -p "$HOME/.local/share/applications/"
-    {
-        echo "[Desktop Entry]"
-        echo "Name=ECOS"
-        echo "Icon=ecos"
-        echo 'Exec=gnome-terminal -- bash -c $HOME/.ecos/bin/ecos --manager'
-        echo "Type=Application"
-    } >"$ECOS_DESKTOP_FILE"
-    chmod +x "$ECOS_DESKTOP_FILE"
-    echo ">>> OK"
 
     # FINISH
     print_title 'ECOS UPDATE FINISHED'
