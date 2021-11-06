@@ -1309,11 +1309,16 @@ ecos_tui_menu_tweaks() {
     ecos_check_git
     ecos_check_paru
 
+    local ecos_repo="$ECOS_LOCAL_REPOS_DIR/ecos"
+    local ecos_tweaks="$ecos_repo/tweaks"
+    local tweaks_array_all=()
+    local tweaks_array_enabled=()
+    local tweaks_array_disabled=()
+    local tweak_dir_list=()
+
     #----------------------------------------
     # UPDATE TWEAKS REPO
     #----------------------------------------
-    local ecos_repo="$ECOS_LOCAL_REPOS_DIR/ecos"
-    local ecos_tweaks="$ecos_repo/tweaks"
     if ! [ -d "$ecos_repo" ]; then
         print_title "Cloning Tweaks"
         git clone "$ECOS_GIT_URL" "$ecos_repo"
@@ -1325,14 +1330,8 @@ ecos_tui_menu_tweaks() {
     git reset --hard origin/HEAD
 
     #----------------------------------------
-    # PREPARE DATA
+    # READ TWEAK LIST
     #----------------------------------------
-
-    local tweaks_array_all=()
-    local tweaks_array_enabled=()
-    local tweaks_array_disabled=()
-    local tweak_dir_list=()
-
     readarray -d '' tweak_dir_list < <(find "$ecos_tweaks" -mindepth 1 -maxdepth 1 -type d -print0)
 
     for i in "${tweak_dir_list[@]}"; do
@@ -1363,9 +1362,8 @@ ecos_tui_menu_tweaks() {
     echo "DISABLED: ${tweaks_array_disabled[@]}"
 
     #----------------------------------------
-    # SELECT ACTION
+    # TUI SELECT TWEAK ACTION
     #----------------------------------------
-
     tui_init 28 "TWEAKS"
     local tweaks_info="                             ${#tweaks_array_enabled[@]}/${#tweaks_array_all[@]}"
     local tweak_action_input=$(whiptail --menu --notags "$(cat "$SCRIPT_TUI_FILE")\n\n$tweaks_info" "$SCRIPT_TUI_HEIGHT" "$SCRIPT_TUI_WIDTH" 3 "install" "Install" "update" "Update" "remove" "Remove" 3>&1 1>&2 2>&3)
@@ -1391,15 +1389,17 @@ ecos_tui_menu_tweaks() {
     fi
 
     #----------------------------------------
-    # WHIPTAIL ARRAY
+    # CREATE WHIPTAIL ARRAY
     #----------------------------------------
-
     local whiptail_tweaks_array=()
     for i in "${selected_tweaks_array[@]}"; do
         local tweak_id="$i"
         whiptail_tweaks_array+=("${tweak_id} ${tweak_id} ${tweak_status}")
     done
 
+    #----------------------------------------
+    # TUI TWEAK LIST
+    #----------------------------------------
     tui_init 0 ""
     local menu_input=$(whiptail --checklist --notags "$(cat "$SCRIPT_TUI_FILE")\n\n" "$SCRIPT_TUI_HEIGHT" "$SCRIPT_TUI_WIDTH" 10 ${whiptail_tweaks_array[@]} 3>&1 1>&2 2>&3)
     if [ "$menu_input" = "" ]; then
@@ -1410,6 +1410,9 @@ ecos_tui_menu_tweaks() {
     local selected_array=($(echo "$menu_input" | tr -d '"'))
     echo "SELECTED TWEAKS: ${selected_array[@]}"
 
+    #----------------------------------------
+    # EXECUTE TWEAK LIST
+    #----------------------------------------
     for i in "${selected_array[@]}"; do
         ecos_exec_tweak "$i" "$tweak_action_input"
         wait
@@ -1427,6 +1430,9 @@ ecos_exec_tweak() {
     local tweak_cache_dir="$ECOS_CACHE/tweaks/$tweak_id"
     local tweak_sh="$tweak_res_dir/$tweak_id.sh"
 
+    #----------------------------------------
+    # Check
+    #----------------------------------------
     if [ "$tweak_id" = "" ]; then
         echo -e "Error: Tweak ID is empty.\nExecute with:\n$ECOS_CORE --tweak TWEAK_ID TWEAK_ACTION"
         exit 1
@@ -1454,7 +1460,7 @@ ecos_exec_tweak() {
         chmod +x "$tweak_sh"
         bash -c "ECOS_HOME=$ECOS_HOME $tweak_sh $tweak_action $tweak_res_dir $tweak_cache_dir"
 
-        # Install
+        # Install or update
         if [ "$tweak_action" = "install" ] || [ "$tweak_action" = "update" ]; then
             echo "$(date "+%Y-%m-%d-%H:%M:%S")" >"$tweak_cache_dir/$tweak_id.tweak"
         fi
