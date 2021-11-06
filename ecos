@@ -42,7 +42,7 @@ ECOS_INIT="$ECOS_HOME/init"
 ECOS_LOCAL_DOTFILES="$ECOS_HOME/dotfiles"
 ECOS_CACHE="$ECOS_HOME/cache"
 ECOS_INITIALIZED="$ECOS_CACHE/initialized"
-ECOS_CACHE_REPO_ECOS="$ECOS_CACHE/repos/ecos"
+ECOS_CACHE_REPO_ECOS="$ECOS_CACHE/repo"
 ECOS_CACHE_TWEAKS="$ECOS_CACHE/tweaks"
 ECOS_SHOW_CHANGELOG="$ECOS_CACHE/show_changelog"
 ECOS_ARCH_ISO_FILE="$ECOS_CACHE/archlinux-x86_64.iso"
@@ -112,7 +112,6 @@ main() {
     # INIT
     # ---------------------------------------
     if [ "$1" = "--init" ]; then
-        mkdir -p "$ECOS_CACHE"
         if [ ! -f "$ECOS_INITIALIZED" ]; then
             tui_menu_init
         else
@@ -1199,6 +1198,9 @@ ecos_check_paru() {
 ecos_tui_install_ecos() {
 
     check_internet
+    
+    # Create dirs
+    mkdir -p "$ECOS_CACHE"
 
     tui_init 0 "Dotfiles URL"
     if ! ECOS_DOTS_DEFAULT_URL=$(whiptail --inputbox "$(cat "$SCRIPT_TUI_FILE")" "$SCRIPT_TUI_HEIGHT" "$SCRIPT_TUI_WIDTH" "$ECOS_DOTS_DEFAULT_URL" 3>&1 1>&2 2>&3); then
@@ -1301,7 +1303,7 @@ ecos_tui_menu_tweaks() {
     #----------------------------------------
     # UPDATE TWEAKS REPO
     #----------------------------------------
-    if ! [ -d "$ECOS_CACHE_REPO_ECOS" ]; then
+    if ! [ -d "$ECOS_CACHE_REPO_ECOS/.git" ]; then
         print_title "Cloning Tweaks"
         git clone "$ECOS_GIT_URL" "$ECOS_CACHE_REPO_ECOS"
     fi
@@ -1480,7 +1482,6 @@ ecos_update_core() {
     mkdir -p "$ECOS_HOME"
     mkdir -p "$ECOS_CACHE"
     mkdir -p "$ECOS_BIN_DIR"
-    mkdir -p "$ECOS_CACHE_REPO_ECOS"
     mkdir -p "$HOME/.local/share/applications"
 
     local tmp_ecos="$ECOS_CACHE/ecos-new"
