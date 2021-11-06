@@ -1321,6 +1321,7 @@ ecos_tui_menu_tweaks() {
     # UPDATE TWEAKS REPO
     #----------------------------------------
     local ecos_repo="$ECOS_LOCAL_REPOS_DIR/ecos"
+    local ecos_tweaks="$ecos_repo/tweaks"
     if ! [ -d "$ecos_repo" ]; then
         print_title "Cloning Tweaks"
         git clone "$ECOS_GIT_URL" "$ecos_repo"
@@ -1338,22 +1339,22 @@ ecos_tui_menu_tweaks() {
     local tweaks_array_all=()
     local tweaks_array_enabled=()
     local tweaks_array_disabled=()
+    local tweak_dir_list=()
 
-    local tweak_dir_list=($(find "$ecos_repo/tweaks" -maxdepth 1 -printf '%f\n'))
+    readarray -d '' tweak_dir_list < <(find "$ecos_tweaks" -mindepth 1 -maxdepth 1 -type d -print0)
 
     for i in "${tweak_dir_list[@]}"; do
 
-        local tweak_id="$i"
-        local tweak_dir="$ECOS_TWEAKS_LOCAL_DIR/$tweak_id"
-        local tweak_sh="$tweak_dir/$tweak_id.sh"
+        local tweak_id="$(basename $i)"
+        local tweak_sh="$ecos_tweaks/$tweak_id/$tweak_id.sh"
 
         # Check sh file
-        if ! [ -f "$ecos_repo/tweaks/$tweak_id/$tweak_id.sh" ]; then
+        if ! [ -f "$tweak_sh" ]; then
             continue
         fi
 
         # Check if installed
-        if [ -f "$tweak_sh" ]; then
+        if [ -f "$ECOS_CACHE/tweaks/$tweak_id/${tweak_id}.tweak" ]; then
             # Add to enabled
             tweaks_array_enabled+=("$tweak_id")
         else
@@ -1430,8 +1431,8 @@ ecos_exec_tweak() {
 
     local tweak_id="$1"
     local tweak_action="$2"
-    local tweak_res_dir="$$ECOS_LOCAL_REPOS_DIR/ecos/tweaks/$tweak_id"
-    local tweak_cache_dir="$ECOS_CACHE/$tweak_id"
+    local tweak_res_dir="$ECOS_LOCAL_REPOS_DIR/ecos/tweaks/$tweak_id"
+    local tweak_cache_dir="$ECOS_CACHE/tweaks/$tweak_id"
     local tweak_sh="$tweak_res_dir/$tweak_id.sh"
 
     if [ "$tweak_action" = "" ]; then
@@ -1468,13 +1469,13 @@ ecos_exec_tweak() {
         bash -c "ECOS_HOME=$ECOS_HOME $tweak_sh $tweak_action $tweak_res_dir $tweak_cache_dir"
 
         # Install
-        if [ "$tweak_action" = "remove" ]; then
-            echo "$(date "+%Y-%m-%d-%H:%M:%S")" >"$ECOS_CACHE/$tweak_id.installed"
+        if [ "$tweak_action" = "install" ]; then
+            echo "$(date "+%Y-%m-%d-%H:%M:%S")" >"$tweak_cache_dir/$tweak_id.tweak"
         fi
 
         # Remove
         if [ "$tweak_action" = "remove" ]; then
-            rm "$ECOS_CACHE/$tweak_id.installed"
+            rm "$tweak_cache_dir/$tweak_id.tweak"
         fi
     else
         echo "Error: TWEAK_ACTION=$tweak_action not supported"
@@ -1490,7 +1491,6 @@ ecos_update_core() {
     mkdir -p "$ECOS_CACHE"
     mkdir -p "$ECOS_BIN_DIR"
     mkdir -p "$ECOS_LOCAL_REPOS_DIR"
-    mkdir -p "$ECOS_TWEAKS_LOCAL_DIR"
     mkdir -p "$HOME/.local/share/applications"
 
     local tmp_ecos="$ECOS_CACHE/ecos-new"
