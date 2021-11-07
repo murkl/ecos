@@ -253,7 +253,8 @@ tui_menu_init() {
     # Manual Install
     #----------------------------------------
     if [ "$menu_input" = "3" ]; then
-        echo -e "Simply type 'ecos' to open again\n\nInstall your System manually..."
+        clear
+        echo -e "\nSimply type 'ecos' to open again\n\nInstall your System manually..."
         exit 0
     fi
 
@@ -1195,6 +1196,28 @@ ecos_check_paru() {
     fi
 }
 
+ecos_update_cache_repo() {
+    if ! [ -d "$ECOS_CACHE_REPO_ECOS/.git" ]; then
+        git clone "$ECOS_GIT_URL" "$ECOS_CACHE_REPO_ECOS"
+    fi
+
+    cd "$ECOS_CACHE_REPO_ECOS" || exit 1
+    git fetch --all
+    git reset --hard origin/HEAD
+}
+
+ecos_create_desktop_file() {
+    mkdir -p "$HOME/.local/share/applications/"
+    {
+        echo "[Desktop Entry]"
+        echo "Name=ECOS"
+        echo "Icon=ecos"
+        echo 'Exec=gnome-terminal -- bash -c $HOME/.ecos/bin/ecos'
+        echo "Type=Application"
+    } >"$ECOS_DESKTOP_FILE"
+    chmod +x "$ECOS_DESKTOP_FILE"
+}
+
 ecos_tui_install_ecos() {
 
     check_internet
@@ -1225,6 +1248,10 @@ ecos_tui_install_ecos() {
 
     print_title "CHECK PARU"
     ecos_check_paru
+    echo -e "DONE"
+
+    print_title "UPDATE ECOS REPO"
+    ecos_update_cache_repo
     echo -e "DONE"
 
     print_title "CLONE DOTFILES"
@@ -1282,15 +1309,7 @@ ecos_tui_install_ecos() {
 
     # Create Desktop file
     print_title 'CREATE ECOS DESKTOP FILE'
-    mkdir -p "$HOME/.local/share/applications/"
-    {
-        echo "[Desktop Entry]"
-        echo "Name=ECOS"
-        echo "Icon=ecos"
-        echo 'Exec=gnome-terminal -- bash -c $HOME/.ecos/bin/ecos'
-        echo "Type=Application"
-    } >"$ECOS_DESKTOP_FILE"
-    chmod +x "$ECOS_DESKTOP_FILE"
+    ecos_create_desktop_file
     echo -e "DONE"
 
     print_title "ECOS INSTALLATION FINISHED"
@@ -1307,24 +1326,12 @@ ecos_tui_menu_tweaks() {
 
     ecos_check_git
     ecos_check_paru
+    ecos_update_cache_repo
 
     local tweaks_array_all=()
     local tweaks_array_enabled=()
     local tweaks_array_disabled=()
     local tweak_dir_list=()
-
-    #----------------------------------------
-    # UPDATE TWEAKS REPO
-    #----------------------------------------
-    if ! [ -d "$ECOS_CACHE_REPO_ECOS/.git" ]; then
-        print_title "Cloning Tweaks"
-        git clone "$ECOS_GIT_URL" "$ECOS_CACHE_REPO_ECOS"
-    fi
-
-    print_title "Updating Tweaks..."
-    cd "$ECOS_CACHE_REPO_ECOS" || exit 1
-    git fetch --all
-    git reset --hard origin/HEAD
 
     #----------------------------------------
     # READ TWEAK LIST
@@ -1430,6 +1437,11 @@ ecos_exec_tweak() {
     local tweak_meta="$tweak_cache_dir/${tweak_id}.tweak"
 
     #----------------------------------------
+    # Update repo
+    #----------------------------------------
+    ecos_update_cache_repo
+
+    #----------------------------------------
     # Check
     #----------------------------------------
     if [ "$tweak_id" = "" ]; then
@@ -1475,6 +1487,7 @@ ecos_exec_tweak() {
 
 ecos_update_tweaks() {
     local tweak_dir_list=()
+    ecos_update_cache_repo
     readarray -d '' tweak_dir_list < <(find "$ECOS_CACHE_TWEAKS" -mindepth 1 -maxdepth 1 -type d -print0)
     for i in "${tweak_dir_list[@]}"; do
         local tweak_id="$(basename $i)"
@@ -1525,6 +1538,11 @@ ecos_update_system() {
     ecos_check_paru
     echo ">>> OK"
 
+    print_title 'UPDATE ECOS REPO'
+    echo ">>> OK"
+
+    ecos_update_cache_repo
+
     # DOTFILES UPDATE
     print_title 'ECOS DOTFILES UPDATE'
     cd "$HOME"
@@ -1572,6 +1590,11 @@ ecos_update_system() {
             bash -c "$ECOS_INIT --update"
         fi
     fi
+
+    # UPDATE DESKTOP FILE
+    print_title 'UPDATE ECOS DESKTOP FILE'
+    ecos_create_desktop_file
+    echo ">>> OK"
 
     # FINISH
     print_title 'ECOS UPDATE FINISHED'
