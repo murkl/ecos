@@ -1515,7 +1515,8 @@ ecos_update_core() {
 }
 
 ecos_update_system() {
-
+    
+    clear
     print_header
     check_internet
 
@@ -1529,7 +1530,6 @@ ecos_update_system() {
     cd "$HOME"
 
     # RESET LOCAL FILES
-    mv "$ECOS_INIT" "$ECOS_INIT.bak"
     bash -c "dots fetch --all && dots reset --hard HEAD"
 
     # PACKAGE UPDATE
@@ -1552,27 +1552,26 @@ ecos_update_system() {
         echo "Skipped..."
     fi
 
+    # UPDATE TWEAKS
+    print_title 'UPDATING ECOS TWEAKS'
+    ecos_update_tweaks
+
     # UPDATE INIT FILE
-    print_title 'UPDATING ECOS INIT FILE'
     if [ -f "$ECOS_INIT" ]; then
         latest_changelog_version=""
         if [ -f "$ECOS_INITIALIZED" ]; then
             latest_changelog_version=$(<"$ECOS_INITIALIZED")
         fi
         if [ "$SCRIPT_VERSION" != "$latest_changelog_version" ]; then
-            echo -e "Force Init..."
+            print_title 'REINSTALL ECOS INIT FILE'
             bash -c "$ECOS_INIT --install"
             echo "$SCRIPT_VERSION" >"$ECOS_INITIALIZED"
             touch "$ECOS_SHOW_CHANGELOG"
         else
-            echo -e "Update Init..."
+            print_title 'UPDATING ECOS INIT FILE'
             bash -c "$ECOS_INIT --update"
         fi
     fi
-
-    # UPDATE TWEAKS
-    print_title 'UPDATING ECOS TWEAKS'
-    ecos_update_tweaks
 
     # FINISH
     print_title 'ECOS UPDATE FINISHED'
