@@ -1241,6 +1241,7 @@ ecos_tui_install_ecos() {
 
     print_title "INSTALL ECOS CORE"
     ecos_update_core
+    echo -e "DONE"
 
     print_title "CHECK GIT"
     ecos_check_git
@@ -1302,7 +1303,6 @@ ecos_tui_install_ecos() {
     chmod -R go-rwx "$HOME/.local/share/gnupg"
 
     # Create initialized state file
-    print_title "DOTFILES INITIALIZED"
     echo "$SCRIPT_VERSION" >"$ECOS_INITIALIZED"
     touch "$ECOS_SHOW_CHANGELOG"
     echo -e "DONE"
