@@ -7,7 +7,9 @@ install() {
 }
 
 remove() {
-    paru -Rsn synology-drive
+    if pacman -Qi synology-drive >/dev/null; then
+        paru -Rsn synology-drive
+    fi
 }
 
 update() {

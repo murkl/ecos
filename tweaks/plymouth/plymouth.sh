@@ -87,7 +87,10 @@ install() {
 }
 
 remove() {
-    paru --noconfirm --sudoloop -Rs plymouth
+    if pacman -Qi plymouth >/dev/null; then
+        paru --noconfirm --sudoloop -Rs plymouth
+
+    fi
 }
 
 update() {

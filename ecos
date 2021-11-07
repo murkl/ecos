@@ -1544,11 +1544,6 @@ ecos_exec_tweak() {
     local tweak_meta="$tweak_cache_dir/${tweak_id}.tweak"
 
     #----------------------------------------
-    # Update repo
-    #----------------------------------------
-    ecos_update_cache_repo
-
-    #----------------------------------------
     # Check
     #----------------------------------------
     if [ "$tweak_id" = "" ]; then
