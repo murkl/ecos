@@ -253,7 +253,7 @@ tui_menu_init() {
     # Manual Install
     #----------------------------------------
     if [ "$menu_input" = "3" ]; then
-        echo "Install your System manually..."
+        echo -e "Simply type 'ecos' to open again\n\nInstall your System manually..."
         exit 0
     fi
 
@@ -1515,7 +1515,7 @@ ecos_update_core() {
 }
 
 ecos_update_system() {
-    
+
     clear
     print_header
     check_internet
