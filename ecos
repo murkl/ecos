@@ -1196,16 +1196,6 @@ ecos_check_paru() {
     fi
 }
 
-ecos_update_cache_repo() {
-    if ! [ -d "$ECOS_CACHE_REPO_ECOS/.git" ]; then
-        git clone "$ECOS_REPO_URL" "$ECOS_CACHE_REPO_ECOS"
-    fi
-
-    cd "$ECOS_CACHE_REPO_ECOS" || exit 1
-    git fetch --all
-    git reset --hard origin/HEAD
-}
-
 ecos_create_desktop_file() {
     mkdir -p "$HOME/.local/share/applications/"
     {
@@ -1315,6 +1305,123 @@ ecos_tui_install_ecos() {
     print_title "ECOS INSTALLATION FINISHED"
     read -p 'Please REBOOT NOW! Close with any Key...'
     wait
+    exit 0
+}
+
+#/////////////////////////////////////////////////////
+# UPDATE
+#/////////////////////////////////////////////////////
+
+ecos_update_cache_repo() {
+    if ! [ -d "$ECOS_CACHE_REPO_ECOS/.git" ]; then
+        git clone "$ECOS_REPO_URL" "$ECOS_CACHE_REPO_ECOS"
+    fi
+
+    cd "$ECOS_CACHE_REPO_ECOS" || exit 1
+    git fetch --all
+    git reset --hard origin/HEAD
+}
+
+ecos_update_core() {
+
+    check_internet
+
+    # Make dirs
+    mkdir -p "$ECOS_HOME"
+    mkdir -p "$ECOS_CACHE"
+    mkdir -p "$ECOS_BIN_DIR"
+    mkdir -p "$HOME/.local/share/applications"
+
+    local tmp_ecos="$ECOS_CACHE/ecos-new"
+    if ! curl -s -L "$ECOS_CORE_URL" >"$tmp_ecos"; then
+        echo "ERROR: ECOS CORE DOWNLOAD"
+        exit 1
+    fi
+    if [ ! -f "$tmp_ecos" ]; then
+        echo "ERROR: ECOS UPDATE FILE NOT FOUND"
+        exit 1
+    else
+        mv "$tmp_ecos" "$ECOS_CORE"
+    fi
+    if ! chmod +x "$ECOS_CORE"; then
+        echo "ERROR: ECOS CORE NOT FOUND"
+        exit 1
+    fi
+}
+
+ecos_update_system() {
+
+    clear
+    print_header
+    check_internet
+
+    print_title 'CHECK ECOS DEPENDENCIES'
+    ecos_check_git
+    ecos_check_paru
+    echo ">>> OK"
+
+    print_title 'UPDATE ECOS REPO'
+    echo ">>> OK"
+
+    ecos_update_cache_repo
+
+    # DOTFILES UPDATE
+    print_title 'ECOS DOTFILES UPDATE'
+    cd "$HOME"
+
+    # RESET LOCAL FILES
+    bash -c "dots fetch --all && dots reset --hard HEAD"
+
+    # PACKAGE UPDATE
+    print_title 'FETCH PACKAGE UPDATES'
+    paru -Syy
+
+    # PACKAGE UPGRADE
+    print_title 'UPGRADE SYSTEM PACKAGES'
+    paru -Qu
+    echo ''
+    read -p "Upgrade packages? [y/n]: " user_input
+    if [ "$user_input" = "y" ]; then
+        if ! paru -Su --noconfirm; then
+            echo -e "ERROR: paru"
+            exit 1
+        fi
+        wait
+
+    else
+        echo "Skipped..."
+    fi
+
+    # UPDATE TWEAKS
+    print_title 'UPDATING ECOS TWEAKS'
+    ecos_update_tweaks
+
+    # UPDATE INIT FILE
+    if [ -f "$ECOS_INIT" ]; then
+        latest_changelog_version=""
+        if [ -f "$ECOS_INITIALIZED" ]; then
+            latest_changelog_version=$(<"$ECOS_INITIALIZED")
+        fi
+        if [ "$SCRIPT_VERSION" != "$latest_changelog_version" ]; then
+            print_title 'REINSTALL ECOS INIT FILE'
+            bash -c "$ECOS_INIT --install"
+            echo "$SCRIPT_VERSION" >"$ECOS_INITIALIZED"
+            touch "$ECOS_SHOW_CHANGELOG"
+        else
+            print_title 'UPDATING ECOS INIT FILE'
+            bash -c "$ECOS_INIT --update"
+        fi
+    fi
+
+    # UPDATE DESKTOP FILE
+    print_title 'UPDATE ECOS DESKTOP FILE'
+    ecos_create_desktop_file
+    echo ">>> OK"
+
+    # FINISH
+    print_title 'ECOS UPDATE FINISHED'
+    echo ""
+    read -p "Press any Key to close..."
     exit 0
 }
 
@@ -1494,113 +1601,6 @@ ecos_update_tweaks() {
         local tweak_sh="$ECOS_CACHE_REPO_ECOS/$tweak_id/${tweak_id}.sh"
         ecos_exec_tweak "update" "$tweak_id"
     done
-}
-
-#/////////////////////////////////////////////////////
-# UPDATE
-#/////////////////////////////////////////////////////
-
-ecos_update_core() {
-
-    check_internet
-
-    # Make dirs
-    mkdir -p "$ECOS_HOME"
-    mkdir -p "$ECOS_CACHE"
-    mkdir -p "$ECOS_BIN_DIR"
-    mkdir -p "$HOME/.local/share/applications"
-
-    local tmp_ecos="$ECOS_CACHE/ecos-new"
-    if ! curl -s -L "$ECOS_CORE_URL" >"$tmp_ecos"; then
-        echo "ERROR: ECOS CORE DOWNLOAD"
-        exit 1
-    fi
-    if [ ! -f "$tmp_ecos" ]; then
-        echo "ERROR: ECOS UPDATE FILE NOT FOUND"
-        exit 1
-    else
-        mv "$tmp_ecos" "$ECOS_CORE"
-    fi
-    if ! chmod +x "$ECOS_CORE"; then
-        echo "ERROR: ECOS CORE NOT FOUND"
-        exit 1
-    fi
-}
-
-ecos_update_system() {
-
-    clear
-    print_header
-    check_internet
-
-    print_title 'CHECK ECOS DEPENDENCIES'
-    ecos_check_git
-    ecos_check_paru
-    echo ">>> OK"
-
-    print_title 'UPDATE ECOS REPO'
-    echo ">>> OK"
-
-    ecos_update_cache_repo
-
-    # DOTFILES UPDATE
-    print_title 'ECOS DOTFILES UPDATE'
-    cd "$HOME"
-
-    # RESET LOCAL FILES
-    bash -c "dots fetch --all && dots reset --hard HEAD"
-
-    # PACKAGE UPDATE
-    print_title 'FETCH PACKAGE UPDATES'
-    paru -Syy
-
-    # PACKAGE UPGRADE
-    print_title 'UPGRADE SYSTEM PACKAGES'
-    paru -Qu
-    echo ''
-    read -p "Upgrade packages? [y/n]: " user_input
-    if [ "$user_input" = "y" ]; then
-        if ! paru -Su --noconfirm; then
-            echo -e "ERROR: paru"
-            exit 1
-        fi
-        wait
-
-    else
-        echo "Skipped..."
-    fi
-
-    # UPDATE TWEAKS
-    print_title 'UPDATING ECOS TWEAKS'
-    ecos_update_tweaks
-
-    # UPDATE INIT FILE
-    if [ -f "$ECOS_INIT" ]; then
-        latest_changelog_version=""
-        if [ -f "$ECOS_INITIALIZED" ]; then
-            latest_changelog_version=$(<"$ECOS_INITIALIZED")
-        fi
-        if [ "$SCRIPT_VERSION" != "$latest_changelog_version" ]; then
-            print_title 'REINSTALL ECOS INIT FILE'
-            bash -c "$ECOS_INIT --install"
-            echo "$SCRIPT_VERSION" >"$ECOS_INITIALIZED"
-            touch "$ECOS_SHOW_CHANGELOG"
-        else
-            print_title 'UPDATING ECOS INIT FILE'
-            bash -c "$ECOS_INIT --update"
-        fi
-    fi
-
-    # UPDATE DESKTOP FILE
-    print_title 'UPDATE ECOS DESKTOP FILE'
-    ecos_create_desktop_file
-    echo ">>> OK"
-
-    # FINISH
-    print_title 'ECOS UPDATE FINISHED'
-    echo ""
-    read -p "Press any Key to close..."
-    exit 0
 }
 
 #/////////////////////////////////////////////////////

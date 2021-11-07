@@ -14,8 +14,12 @@ install() {
 }
 
 remove() {
-    sudo $THEME_REPO_DIR/install.sh --remove
-    rm -rf "$THEME_REPO_DIR"
+    if [ -f $THEME_REPO_DIR/install.sh ]; then
+        sudo $THEME_REPO_DIR/install.sh --remove
+    fi
+    if [ -d $THEME_REPO_DIR ]; then
+        rm -rf "$THEME_REPO_DIR"
+    fi
 }
 
 update() {
