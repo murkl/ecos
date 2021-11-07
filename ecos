@@ -27,11 +27,11 @@ SCRIPT_TUI_HEIGHT=24
 #/////////////////////////////////////////////////////
 
 # URLS
-ECOS_URL="https://raw.githubusercontent.com/murkl/ecos/main"
-ECOS_GIT_URL="git@github.com:murkl/ecos.git"
-ECOS_TWEAKS_URL="$ECOS_URL/tweaks"
-ECOS_CORE_URL="$ECOS_URL/ecos"
+ECOS_REPO_URL="https://github.com/murkl/ecos.git"
 ECOS_DOTS_DEFAULT_URL="https://github.com/murkl/dotfiles-gnome.git"
+ECOS_RAW_URL="https://raw.githubusercontent.com/murkl/ecos/main"
+ECOS_TWEAKS_URL="$ECOS_RAW_URL/tweaks"
+ECOS_CORE_URL="$ECOS_RAW_URL/ecos"
 ECOS_ARCH_ISO_DEFAULT_URL="https://www.archlinux.de/download/iso/2021.11.01/archlinux-2021.11.01-x86_64.iso"
 
 # ECOS
@@ -1198,7 +1198,7 @@ ecos_check_paru() {
 
 ecos_update_cache_repo() {
     if ! [ -d "$ECOS_CACHE_REPO_ECOS/.git" ]; then
-        git clone "$ECOS_GIT_URL" "$ECOS_CACHE_REPO_ECOS"
+        git clone "$ECOS_REPO_URL" "$ECOS_CACHE_REPO_ECOS"
     fi
 
     cd "$ECOS_CACHE_REPO_ECOS" || exit 1
