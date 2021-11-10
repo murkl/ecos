@@ -5,6 +5,7 @@ TWEAK_CACHE_DIR="$3"
 install() {
     rm -rf "$TWEAK_CACHE_DIR/repo"
     git clone "https://github.com/home-sweet-gnome/dash-to-panel.git" "$TWEAK_CACHE_DIR/repo"
+    remove
     make install
 }
 
