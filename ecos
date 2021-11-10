@@ -1244,7 +1244,7 @@ ecos_tui_install_ecos() {
     check_internet
 
     # Create dirs
-    mkdir -p "$ECOS_WORKSPACE"
+    mkdir -p "$ECOS_WORKSPACE_DIR"
     mkdir -p "$ECOS_USER_TWEAKS"
 
     tui_init 0 "Dotfiles URL"
@@ -1381,12 +1381,12 @@ ecos_update_core() {
 
     # Make dirs
     mkdir -p "$ECOS_HOME"
-    mkdir -p "$ECOS_WORKSPACE"
+    mkdir -p "$ECOS_WORKSPACE_DIR"
     mkdir -p "$ECOS_BIN_DIR"
     mkdir -p "$ECOS_USER_TWEAKS"
     mkdir -p "$HOME/.local/share/applications"
 
-    local tmp_ecos="$ECOS_WORKSPACE/ecos-new"
+    local tmp_ecos="$ECOS_WORKSPACE_DIR/ecos-new"
     if ! curl -s -L "$ECOS_CORE_URL" >"$tmp_ecos"; then
         echo "ERROR: ECOS CORE DOWNLOAD"
         exit 1
@@ -1706,7 +1706,7 @@ tui_create_usb() {
 
     # Check and download arch iso
     #--------------------------------------------
-    mkdir -p "$ECOS_WORKSPACE"
+    mkdir -p "$ECOS_WORKSPACE_DIR"
     if ! [ -f "$ECOS_ARCH_ISO_FILE" ]; then
         print_title "Downloading $ECOS_ARCH_ISO_FILE from $ECOS_ARCH_ISO_DEFAULT_URL..."
 
