@@ -7,6 +7,7 @@ install() {
     git clone "https://github.com/home-sweet-gnome/dash-to-panel.git" "$TWEAK_CACHE_DIR/repo"
     remove
     make install
+    gnome-extensions enable "dash-to-panel@jderose9.github.com"
 }
 
 remove() {
