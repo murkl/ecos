@@ -1,4 +1,18 @@
 #!/bin/bash
+##################################################
+# NVIDIA DRIVER (https://wiki.archlinux.org/title/Bumblebee)
+##################################################
+
+# paru -S mesa nvidia-390xx lib32-nvidia-390xx-utils bumblebee bbswitch primus lib32-virtualgl
+# (optional): paru -S xf86-video-intel
+
+# sudo gpasswd -a $USER bumblebee
+# sudo systemctl enable bumblebeed.service
+
+# Test
+# optirun glxspheres64
+# primusrun glxspheres64
+
 TWEAK_APPS='mesa-demos bumblebee nvidia-390xx lib32-virtualgl opencl-nvidia-390xx lib32-nvidia-390xx-utils lib32-opencl-nvidia-390xx'
 
 install() {

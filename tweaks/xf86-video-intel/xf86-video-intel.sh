@@ -1,4 +1,18 @@
 #!/bin/bash
+##################################################
+# Intel + Vulkan Driver
+##################################################
+
+# paru -S xf86-video-intel
+# paru -S lib32-mesa vulkan-intel lib32-vulkan-intel vulkan-tools
+# sudo vim /etc/X11/xorg.conf.d/20-intel.conf
+
+# Section "Device"
+#    Identifier  "Intel Graphics"
+#    Driver      "intel"
+#    Option      "DRI"    "3"
+# EndSection
+
 APPS='xf86-video-intel lib32-mesa vulkan-intel lib32-vulkan-intel vulkan-tools'
 
 install() {

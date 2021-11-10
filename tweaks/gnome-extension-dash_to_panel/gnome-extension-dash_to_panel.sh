@@ -9,6 +9,8 @@ install() {
     cd "$TWEAK_CACHE_DIR/repo" || exit 1
     make install
     gnome-extensions enable "dash-to-panel@jderose9.github.com"
+    # dash-to-panel Workaround for Bug: https://github.com/home-sweet-gnome/dash-to-panel/issues/1437
+    #sudo curl -Ls https://raw.githubusercontent.com/home-sweet-gnome/dash-to-panel/81af73b23911cbbdce807566ed6ef2a864417d6c/overview.js -o /usr/share/gnome-shell/extensions/dash-to-panel@jderose9.github.com/overview.js
 }
 
 remove() {
