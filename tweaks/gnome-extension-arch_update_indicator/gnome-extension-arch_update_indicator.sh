@@ -11,15 +11,16 @@ install() {
     gnome-extensions enable "arch-update@RaphaelRochet"
 
     # Configuration
-    dconf write always-visible false
-    dconf write auto-expand-list 0
-    dconf write check-cmd "/bin/sh -c \"(/usr/bin/checkupdates; /usr/bin/paru -Qqu --color never | sed 's/Get .*//') | sort -u -t' ' -k1,1\""
-    dconf write check-interval 360
-    dconf write position 2
-    dconf write position-number 0
-    dconf write show-count true
-    dconf write update-cmd "gnome-terminal -e 'bash -c  \"ecos\"'"
-    dconf write use-buildin-icons false
+    # dconf dump /org/gnome/shell/extensions/arch-update/
+    dconf write /org/gnome/shell/extensions/arch-update/always-visible false
+    dconf write /org/gnome/shell/extensions/arch-update/auto-expand-list 0
+    dconf write /org/gnome/shell/extensions/arch-update/check-cmd "/bin/sh -c \"(/usr/bin/checkupdates; /usr/bin/paru -Qqu --color never | sed 's/Get .*//') | sort -u -t' ' -k1,1\""
+    dconf write /org/gnome/shell/extensions/arch-update/check-interval 360
+    dconf write /org/gnome/shell/extensions/arch-update/position 2
+    dconf write /org/gnome/shell/extensions/arch-update/position-number 0
+    dconf write /org/gnome/shell/extensions/arch-update/show-count true
+    dconf write /org/gnome/shell/extensions/arch-update/update-cmd "gnome-terminal -e 'bash -c  \"ecos\"'"
+    dconf write /org/gnome/shell/extensions/arch-update/use-buildin-icons false
 }
 
 remove() {

@@ -9,6 +9,7 @@ install() {
     gnome-extensions enable "trayIconsReloaded@selfmade.pl"
 
     # Configuration
+    # dconf dump /org/gnome/shell/extensions/trayIconsReloaded/
     dconf write /org/gnome/shell/extensions/trayIconsReloaded/icon-brightness 20
     dconf write /org/gnome/shell/extensions/trayIconsReloaded/icon-contrast 20
     dconf write /org/gnome/shell/extensions/trayIconsReloaded/icon-margin-horizontal 0
