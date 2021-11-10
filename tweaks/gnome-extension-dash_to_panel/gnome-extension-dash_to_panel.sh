@@ -3,15 +3,18 @@ TWEAK_RES_DIR="$2"
 TWEAK_CACHE_DIR="$3"
 
 install() {
+    rm -rf "$TWEAK_CACHE_DIR/repo"
     git clone "https://github.com/home-sweet-gnome/dash-to-panel.git" "$TWEAK_CACHE_DIR/repo"
+    make install
 }
 
 remove() {
-    rm -rf "$HOME/.local/share/gnome-shell/extensions/dash-to-panel@jderose9.github.com_v44"
+    rm -rf "$HOME/.local/share/gnome-shell/extensions/dash-to-panel@jderose9.github.com"*
 }
 
 update() {
     cd "$TWEAK_CACHE_DIR/repo" || exit 1
+    git pull
     remove
     make install
 }
