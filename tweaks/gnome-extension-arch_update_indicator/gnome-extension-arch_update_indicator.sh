@@ -9,10 +9,17 @@ install() {
     curl -Ls "https://github.com/RaphaelRochet/arch-update/releases/download/v45/arch-update@RaphaelRochet.zip" -o "$TWEAK_CACHE_DIR/arch-update@RaphaelRochet.zip"
     unzip "$TWEAK_CACHE_DIR/arch-update@RaphaelRochet.zip" -d "$HOME/.local/share/gnome-shell/extensions/arch-update@RaphaelRochet"
     gnome-extensions enable "arch-update@RaphaelRochet"
-    #gsettings set org.gnome.shell.extensions.arch-update always-visible false
-    gsettings set org.gnome.shell.extensions.arch-update check-cmd "/bin/sh -c \"(/usr/bin/checkupdates; /usr/bin/paru -Qqu --color never | sed 's/Get .*//') | sort -u -t' ' -k1,1\""
-    gsettings set org.gnome.shell.extensions.arch-update update-cmd "gnome-terminal -e 'bash -c  \"ecos\"'"
 
+    # Configuration
+    dconf write always-visible false
+    dconf write auto-expand-list 0
+    dconf write check-cmd "/bin/sh -c \"(/usr/bin/checkupdates; /usr/bin/paru -Qqu --color never | sed 's/Get .*//') | sort -u -t' ' -k1,1\""
+    dconf write check-interval 360
+    dconf write position 2
+    dconf write position-number 0
+    dconf write show-count true
+    dconf write update-cmd "gnome-terminal -e 'bash -c  \"ecos\"'"
+    dconf write use-buildin-icons false
 }
 
 remove() {
