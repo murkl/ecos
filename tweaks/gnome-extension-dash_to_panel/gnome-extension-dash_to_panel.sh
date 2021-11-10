@@ -9,8 +9,6 @@ install() {
     cd "$TWEAK_CACHE_DIR/repo" || exit 1
     make install
     gnome-extensions enable "dash-to-panel@jderose9.github.com"
-    killall -3 gnome-shell
-    sleep 3
 }
 
 remove() {
