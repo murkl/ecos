@@ -11,7 +11,7 @@ install() {
 }
 
 remove() {
-    rm -rf "$HOME/.local/share/gnome-shell/extensions/dash-to-panel@jderose9.github.com"*
+    rm -rf "$HOME/.local/share/gnome-shell/extensions"/dash-to-panel@jderose9.github.com*
 }
 
 update() {
