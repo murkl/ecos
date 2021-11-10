@@ -1,12 +1,12 @@
 #!/bin/bash
-SCRIPT_VERSION=2.0.7
+SCRIPT_VERSION=2.0.8
 
 #/////////////////////////////////////////////////////
 # CHANGELOG
 #/////////////////////////////////////////////////////
 
 SCRIPT_CHANGELOG="
-2.0.7
+2.0.8
   + User Tweaks added
 
 2.0.6
@@ -39,17 +39,17 @@ ECOS_ARCH_ISO_DEFAULT_URL="https://www.archlinux.de/download/iso/2021.11.01/arch
 
 # ECOS
 ECOS_HOME="$HOME/.ecos"
+ECOS_WORKSPACE_DIR="$ECOS_HOME/.workspace"
 ECOS_BIN_DIR="$ECOS_HOME/bin"
 ECOS_CORE="$ECOS_BIN_DIR/$SCRIPT_ID"
 ECOS_INIT="$ECOS_HOME/init"
-ECOS_LOCAL_DOTFILES="$ECOS_HOME/dotfiles"
-ECOS_CACHE="$ECOS_HOME/cache"
-ECOS_INITIALIZED="$ECOS_CACHE/initialized"
-ECOS_CACHE_REPO_ECOS="$ECOS_CACHE/repo"
-ECOS_CACHE_TWEAKS="$ECOS_CACHE/tweaks"
+ECOS_LOCAL_DOTFILES="$ECOS_WORKSPACE_DIR/dotfiles"
+ECOS_INITIALIZED="$ECOS_WORKSPACE_DIR/initialized"
+ECOS_CACHE_REPO_ECOS="$ECOS_WORKSPACE_DIR/repo"
+ECOS_CACHE_TWEAKS="$ECOS_WORKSPACE_DIR/tweaks"
 ECOS_USER_TWEAKS="$ECOS_HOME/tweaks"
-ECOS_SHOW_CHANGELOG="$ECOS_CACHE/show_changelog"
-ECOS_ARCH_ISO_FILE="$ECOS_CACHE/archlinux-x86_64.iso"
+ECOS_SHOW_CHANGELOG="$ECOS_WORKSPACE_DIR/show_changelog"
+ECOS_ARCH_ISO_FILE="$ECOS_WORKSPACE_DIR/archlinux-x86_64.iso"
 ECOS_DESKTOP_FILE="$HOME/.local/share/applications/$SCRIPT_ID.desktop"
 
 #/////////////////////////////////////////////////////
@@ -1244,7 +1244,7 @@ ecos_tui_install_ecos() {
     check_internet
 
     # Create dirs
-    mkdir -p "$ECOS_CACHE"
+    mkdir -p "$ECOS_WORKSPACE"
     mkdir -p "$ECOS_USER_TWEAKS"
 
     tui_init 0 "Dotfiles URL"
@@ -1381,12 +1381,12 @@ ecos_update_core() {
 
     # Make dirs
     mkdir -p "$ECOS_HOME"
-    mkdir -p "$ECOS_CACHE"
+    mkdir -p "$ECOS_WORKSPACE"
     mkdir -p "$ECOS_BIN_DIR"
     mkdir -p "$ECOS_USER_TWEAKS"
     mkdir -p "$HOME/.local/share/applications"
 
-    local tmp_ecos="$ECOS_CACHE/ecos-new"
+    local tmp_ecos="$ECOS_WORKSPACE/ecos-new"
     if ! curl -s -L "$ECOS_CORE_URL" >"$tmp_ecos"; then
         echo "ERROR: ECOS CORE DOWNLOAD"
         exit 1
@@ -1706,7 +1706,7 @@ tui_create_usb() {
 
     # Check and download arch iso
     #--------------------------------------------
-    mkdir -p "$ECOS_CACHE"
+    mkdir -p "$ECOS_WORKSPACE"
     if ! [ -f "$ECOS_ARCH_ISO_FILE" ]; then
         print_title "Downloading $ECOS_ARCH_ISO_FILE from $ECOS_ARCH_ISO_DEFAULT_URL..."
 
