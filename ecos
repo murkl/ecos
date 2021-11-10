@@ -1523,9 +1523,9 @@ ecos_tui_menu_tweaks() {
         tweaks_array_all+=("$tweak_id")
     done
 
-    echo "ALL: ${tweaks_array_all[@]}"
-    echo "ENABLED: ${tweaks_array_enabled[@]}"
-    echo "DISABLED: ${tweaks_array_disabled[@]}"
+    #echo "ALL: ${tweaks_array_all[@]}"
+    #echo "ENABLED: ${tweaks_array_enabled[@]}"
+    #echo "DISABLED: ${tweaks_array_disabled[@]}"
 
     #----------------------------------------
     # TUI SELECT TWEAK ACTION
@@ -1574,6 +1574,7 @@ ecos_tui_menu_tweaks() {
     fi
 
     local selected_array=($(echo "$menu_input" | tr -d '"'))
+    clear
     echo "SELECTED TWEAKS: ${selected_array[@]}"
 
     #----------------------------------------
