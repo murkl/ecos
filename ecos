@@ -1626,7 +1626,7 @@ ecos_exec_tweak() {
 
         # Execute tweak
         chmod +x "$tweak_sh"
-        bash -c "ECOS_HOME=$ECOS_HOME $tweak_sh $tweak_action $tweak_res_dir $tweak_cache_dir"
+        bash -c "cd $tweak_cache_dir && ECOS_HOME=$ECOS_HOME $tweak_sh $tweak_action $tweak_res_dir $tweak_cache_dir"
 
         # Install or update
         if [ "$tweak_action" = "install" ] || [ "$tweak_action" = "update" ]; then
