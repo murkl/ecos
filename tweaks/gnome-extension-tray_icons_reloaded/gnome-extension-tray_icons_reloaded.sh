@@ -23,7 +23,7 @@ install() {
     dconf write /org/gnome/shell/extensions/trayIconsReloaded/position-weight -1
     dconf write /org/gnome/shell/extensions/trayIconsReloaded/tray-margin-left 0
     dconf write /org/gnome/shell/extensions/trayIconsReloaded/tray-margin-right 0
-    dconf write /org/gnome/shell/extensions/trayIconsReloaded/tray-position 'right'
+    dconf write /org/gnome/shell/extensions/trayIconsReloaded/tray-positione "'right'"
     dconf write /org/gnome/shell/extensions/trayIconsReloaded/wine-behavior true
 }
 
