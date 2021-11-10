@@ -22,7 +22,6 @@ update() {
     git pull
     remove
     make install
-
 }
 
 if [ "$1" = "install" ]; then install "$@"; fi
