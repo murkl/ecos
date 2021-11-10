@@ -39,7 +39,7 @@ ECOS_ARCH_ISO_DEFAULT_URL="https://www.archlinux.de/download/iso/2021.11.01/arch
 
 # ECOS
 ECOS_HOME="$HOME/.ecos"
-ECOS_WORKSPACE_DIR="$ECOS_HOME/.workspace"
+ECOS_WORKSPACE_DIR="$ECOS_HOME/.cache"
 ECOS_BIN_DIR="$ECOS_HOME/bin"
 ECOS_CORE="$ECOS_BIN_DIR/$SCRIPT_ID"
 ECOS_INIT="$ECOS_HOME/init"
@@ -1284,7 +1284,7 @@ ecos_tui_install_ecos() {
 
     # Removing existing init
     if [ -f "$ECOS_INIT" ]; then
-        bash -c "$ECOS_INIT --remove"
+        "$ECOS_INIT" --remove
     fi
 
     # Create dots bin
@@ -1312,7 +1312,7 @@ ecos_tui_install_ecos() {
 
     # Call init script
     echo -e "EXECUTE $ECOS_INIT"
-    chmod +x "$ECOS_INIT" && bash -c "$ECOS_INIT --install"
+    chmod +x "$ECOS_INIT" && "$ECOS_INIT" --install
 
     # Silent Boot
     echo '# Disable the last login message on startup with this file' >"$HOME/.hushlogin"
@@ -1424,7 +1424,8 @@ ecos_update_system() {
     cd "$HOME"
 
     # RESET LOCAL FILES
-    bash -c "dots fetch --all && dots reset --hard HEAD"
+    git --git-dir="$ECOS_LOCAL_DOTFILES" --work-tree="$HOME" fetch --all
+    git --git-dir="$ECOS_LOCAL_DOTFILES" --work-tree="$HOME" reset --hard HEAD
 
     # PACKAGE UPDATE
     print_title 'FETCH PACKAGE UPDATES'
@@ -1458,12 +1459,12 @@ ecos_update_system() {
         fi
         if [ "$SCRIPT_VERSION" != "$latest_changelog_version" ]; then
             print_title 'REINSTALL ECOS INIT FILE'
-            bash -c "$ECOS_INIT --install"
+            "$ECOS_INIT" --install
             echo "$SCRIPT_VERSION" >"$ECOS_INITIALIZED"
             touch "$ECOS_SHOW_CHANGELOG"
         else
             print_title 'UPDATING ECOS INIT FILE'
-            bash -c "$ECOS_INIT --update"
+            "$ECOS_INIT" --update
         fi
     fi
 
@@ -1626,7 +1627,8 @@ ecos_exec_tweak() {
 
         # Execute tweak
         chmod +x "$tweak_sh"
-        bash -c "cd $tweak_cache_dir && ECOS_HOME=$ECOS_HOME $tweak_sh $tweak_action $tweak_res_dir $tweak_cache_dir"
+        cd "$tweak_cache_dir" || exit 1
+        ECOS_HOME=$ECOS_HOME $tweak_sh $tweak_action $tweak_res_dir $tweak_cache_dir
 
         # Install or update
         if [ "$tweak_action" = "install" ] || [ "$tweak_action" = "update" ]; then
