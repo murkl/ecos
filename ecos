@@ -1,12 +1,15 @@
 #!/bin/bash
-SCRIPT_VERSION=2.0.6
+SCRIPT_VERSION=2.0.7
 
 #/////////////////////////////////////////////////////
 # CHANGELOG
 #/////////////////////////////////////////////////////
 
 SCRIPT_CHANGELOG="
-$SCRIPT_VERSION
+2.0.7
+  + User Tweaks added
+
+2.0.6
   + New Tweaks Mechanism
   + Big Refactoring
 "
@@ -44,6 +47,7 @@ ECOS_CACHE="$ECOS_HOME/cache"
 ECOS_INITIALIZED="$ECOS_CACHE/initialized"
 ECOS_CACHE_REPO_ECOS="$ECOS_CACHE/repo"
 ECOS_CACHE_TWEAKS="$ECOS_CACHE/tweaks"
+ECOS_USER_TWEAKS="$ECOS_HOME/tweaks"
 ECOS_SHOW_CHANGELOG="$ECOS_CACHE/show_changelog"
 ECOS_ARCH_ISO_FILE="$ECOS_CACHE/archlinux-x86_64.iso"
 ECOS_DESKTOP_FILE="$HOME/.local/share/applications/$SCRIPT_ID.desktop"
@@ -172,7 +176,7 @@ main() {
             tui_menu_core_install
         else
             if [ ! -f "$ECOS_INITIALIZED" ]; then
-                tui_menu_init
+                tui_menu_welcome
             else
                 tui_menu_manager
             fi
@@ -189,7 +193,7 @@ tui_menu_core_install() {
     #----------------------------------------
     # Show TUI menu
     #----------------------------------------
-    tui_init 0 ""
+    tui_init 24 "CORE INSTALLER"
     if ! menu_input=$(whiptail --menu --notags "$(cat "$SCRIPT_TUI_FILE")\n\n" "$SCRIPT_TUI_HEIGHT" "$SCRIPT_TUI_WIDTH" 3 "1" "Install ECOS Core" "2" "    Recovery" "3" "      Logs" 3>&1 1>&2 2>&3); then
         exit 0
     fi
@@ -226,8 +230,8 @@ tui_menu_init() {
     #----------------------------------------
     # Show TUI menu
     #----------------------------------------
-    tui_init 0 ""
-    if ! menu_input=$(whiptail --menu --notags "$(cat "$SCRIPT_TUI_FILE")\n\n" "$SCRIPT_TUI_HEIGHT" "$SCRIPT_TUI_WIDTH" 3 "1" "Install Dotfiles" "2" "Change Password" "3" "Manual Installation" 3>&1 1>&2 2>&3); then
+    tui_init 24 "ECOS INSTALLER"
+    if ! menu_input=$(whiptail --menu --notags "$(cat "$SCRIPT_TUI_FILE")\n\n" "$SCRIPT_TUI_HEIGHT" "$SCRIPT_TUI_WIDTH" 3 "1" "   Install ECOS" "2" "  Change Password" "3" "Manual Installation" 3>&1 1>&2 2>&3); then
         exit 0
     fi
 
@@ -265,15 +269,15 @@ tui_menu_manager() {
     #----------------------------------------
     # Show TUI menu
     #----------------------------------------
-    tui_init 26 "MANAGER"
-    if ! menu_input=$(whiptail --menu --notags "$(cat "$SCRIPT_TUI_FILE")\n" "$SCRIPT_TUI_HEIGHT" "$SCRIPT_TUI_WIDTH" 4 "0" "Update ECOS" "1" "Tweaks" "2" "Init Dotfiles" "3" "Create USB Stick" 3>&1 1>&2 2>&3); then
+    tui_init 28 "MANAGER"
+    if ! menu_input=$(whiptail --menu --notags "$(cat "$SCRIPT_TUI_FILE")\n" "$SCRIPT_TUI_HEIGHT" "$SCRIPT_TUI_WIDTH" 4 "1" "     Update" "2" "     Tweaks" "3" "     Reset" "4" "Create USB Stick" 3>&1 1>&2 2>&3); then
         exit 0
     fi
 
     #----------------------------------------
     # Update ECOS
     #----------------------------------------
-    if [ "$menu_input" = "0" ]; then
+    if [ "$menu_input" = "1" ]; then
         ecos_update_core
         "$ECOS_CORE" --update-system
         exit 0
@@ -282,7 +286,7 @@ tui_menu_manager() {
     #----------------------------------------
     # Tweaks
     #----------------------------------------
-    if [ "$menu_input" = "1" ]; then
+    if [ "$menu_input" = "2" ]; then
         ecos_tui_menu_tweaks
         exit 0
     fi
@@ -290,7 +294,7 @@ tui_menu_manager() {
     #----------------------------------------
     # Init ECOS
     #----------------------------------------
-    if [ "$menu_input" = "2" ]; then
+    if [ "$menu_input" = "3" ]; then
         ecos_tui_install_ecos
         exit 0
     fi
@@ -298,7 +302,34 @@ tui_menu_manager() {
     #----------------------------------------
     # Create USB Stick
     #----------------------------------------
-    if [ "$menu_input" = "3" ]; then
+    if [ "$menu_input" = "4" ]; then
+        tui_create_usb
+        exit 0
+    fi
+}
+
+tui_menu_welcome() {
+
+    #----------------------------------------
+    # Show TUI menu
+    #----------------------------------------
+    tui_init 27 "WELCOME"
+    if ! menu_input=$(whiptail --menu --notags "$(cat "$SCRIPT_TUI_FILE")\n" "$SCRIPT_TUI_HEIGHT" "$SCRIPT_TUI_WIDTH" 2 "1" "  Install ECOS" "2" "Create USB Stick" 3>&1 1>&2 2>&3); then
+        exit 0
+    fi
+
+    #----------------------------------------
+    # Install ECOS
+    #----------------------------------------
+    if [ "$menu_input" = "1" ]; then
+        ecos_tui_install_ecos
+        exit 0
+    fi
+
+    #----------------------------------------
+    # Create USB Stick
+    #----------------------------------------
+    if [ "$menu_input" = "2" ]; then
         tui_create_usb
         exit 0
     fi
@@ -1214,6 +1245,7 @@ ecos_tui_install_ecos() {
 
     # Create dirs
     mkdir -p "$ECOS_CACHE"
+    mkdir -p "$ECOS_USER_TWEAKS"
 
     tui_init 0 "Dotfiles URL"
     if ! ECOS_DOTS_DEFAULT_URL=$(whiptail --inputbox "$(cat "$SCRIPT_TUI_FILE")" "$SCRIPT_TUI_HEIGHT" "$SCRIPT_TUI_WIDTH" "$ECOS_DOTS_DEFAULT_URL" 3>&1 1>&2 2>&3); then
@@ -1320,6 +1352,27 @@ ecos_update_cache_repo() {
     cd "$ECOS_CACHE_REPO_ECOS" || exit 1
     git fetch --all
     git reset --hard origin/HEAD
+    git clean -d -f
+
+    # Add user tweaks
+    if [ -d "$ECOS_USER_TWEAKS" ]; then
+
+        readarray -d '' user_tweaks_list < <(find "$ECOS_USER_TWEAKS" -mindepth 1 -maxdepth 1 -type d -print0)
+
+        for i in "${user_tweaks_list[@]}"; do
+
+            local tweak_id="$(basename $i)"
+            local tweak_sh="$ECOS_USER_TWEAKS/$tweak_id/${tweak_id}.sh"
+
+            # Check sh file
+            if ! [ -f "$tweak_sh" ]; then
+                continue
+            fi
+
+            #Copy User tweaks
+            cp -r "$ECOS_USER_TWEAKS/$tweak_id" "$ECOS_CACHE_REPO_ECOS/tweaks/$tweak_id"
+        done
+    fi
 }
 
 ecos_update_core() {
@@ -1330,6 +1383,7 @@ ecos_update_core() {
     mkdir -p "$ECOS_HOME"
     mkdir -p "$ECOS_CACHE"
     mkdir -p "$ECOS_BIN_DIR"
+    mkdir -p "$ECOS_USER_TWEAKS"
     mkdir -p "$HOME/.local/share/applications"
 
     local tmp_ecos="$ECOS_CACHE/ecos-new"
