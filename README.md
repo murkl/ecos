@@ -44,13 +44,13 @@ base base-devel linux linux-firmware efibootmgr dosfstools gptfdisk networkmanag
 
 ## Dotfiles Installation
 
-After the first reboot the ECOS TUI will open again automatically. Feel free to execute the ECOS Dotfiles Installation or exit the TUI and install your system manually. The following packages will install before execute your personal `.init` file.
+After the first reboot the ECOS TUI will open again automatically. Feel free to execute the ECOS Dotfiles Installation or exit the TUI and install your system manually. The following packages will install before execute your personal `~/.ecos/init` file.
 
 ```
 git paru
 ```
 
-**Note:** _The ECOS Dotfiles Installation routine will ask you for your Dotfiles URL and will execute the personal `~/.init` file inside your Dotfiles Repository_
+**Note:** _The ECOS Dotfiles Installation routine will ask you for your Dotfiles URL and will execute the personal `~/.ecos/init` file inside your Dotfiles Repository_
 
 ### GNOME Variant
 

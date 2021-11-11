@@ -1411,9 +1411,9 @@ ecos_update_system() {
     echo ">>> OK"
 
     print_title 'UPDATE ECOS REPO'
+    ecos_update_cache_repo
     echo ">>> OK"
 
-    ecos_update_cache_repo
 
     # DOTFILES UPDATE
     print_title 'ECOS DOTFILES UPDATE'
