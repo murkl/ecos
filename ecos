@@ -1348,6 +1348,7 @@ ecos_update_cache_repo() {
     git fetch --all
     git reset --hard origin/HEAD
     git clean -d -f
+    git pull
 
     # Add user tweaks
     if [ -d "$ECOS_USER_TWEAKS" ]; then
@@ -1421,6 +1422,7 @@ ecos_update_system() {
     # RESET LOCAL FILES
     git --git-dir="$ECOS_LOCAL_DOTFILES" --work-tree="$HOME" fetch --all
     git --git-dir="$ECOS_LOCAL_DOTFILES" --work-tree="$HOME" reset --hard HEAD
+    git --git-dir="$ECOS_LOCAL_DOTFILES" --work-tree="$HOME" pull
 
     # PACKAGE UPDATE
     print_title 'FETCH PACKAGE UPDATES'
