@@ -39,17 +39,17 @@ ECOS_ARCH_ISO_DEFAULT_URL="https://www.archlinux.de/download/iso/2021.11.01/arch
 
 # ECOS
 ECOS_HOME="$HOME/.ecos"
-ECOS_WORKSPACE_DIR="$ECOS_HOME/.cache"
+ECOS_WORKING_DIR="$ECOS_HOME/.cache"
 ECOS_BIN_DIR="$ECOS_HOME/bin"
 ECOS_CORE="$ECOS_BIN_DIR/$SCRIPT_ID"
 ECOS_INIT="$ECOS_HOME/init"
-ECOS_LOCAL_DOTFILES="$ECOS_WORKSPACE_DIR/dotfiles"
-ECOS_INITIALIZED="$ECOS_WORKSPACE_DIR/initialized"
-ECOS_CACHE_REPO_ECOS="$ECOS_WORKSPACE_DIR/repo"
-ECOS_CACHE_TWEAKS="$ECOS_WORKSPACE_DIR/tweaks"
+ECOS_LOCAL_DOTFILES="$ECOS_WORKING_DIR/dotfiles"
+ECOS_INITIALIZED="$ECOS_WORKING_DIR/initialized"
+ECOS_CACHE_REPO_ECOS="$ECOS_WORKING_DIR/repo"
+ECOS_CACHE_TWEAKS="$ECOS_WORKING_DIR/tweaks"
 ECOS_USER_TWEAKS="$ECOS_HOME/tweaks"
-ECOS_SHOW_CHANGELOG="$ECOS_WORKSPACE_DIR/show_changelog"
-ECOS_ARCH_ISO_FILE="$ECOS_WORKSPACE_DIR/archlinux-x86_64.iso"
+ECOS_SHOW_CHANGELOG="$ECOS_WORKING_DIR/show_changelog"
+ECOS_ARCH_ISO_FILE="$ECOS_WORKING_DIR/archlinux-x86_64.iso"
 ECOS_DESKTOP_FILE="$HOME/.local/share/applications/$SCRIPT_ID.desktop"
 
 #/////////////////////////////////////////////////////
@@ -1244,7 +1244,7 @@ ecos_tui_install_ecos() {
     check_internet
 
     # Create dirs
-    mkdir -p "$ECOS_WORKSPACE_DIR"
+    mkdir -p "$ECOS_WORKING_DIR"
     mkdir -p "$ECOS_USER_TWEAKS"
 
     tui_init 0 "Dotfiles URL"
@@ -1286,13 +1286,6 @@ ecos_tui_install_ecos() {
     if [ -f "$ECOS_INIT" ]; then
         "$ECOS_INIT" --remove
     fi
-
-    # Create dots bin
-    local dots_bin="$ECOS_BIN_DIR/dots"
-    mkdir -p "$ECOS_BIN_DIR"
-    echo '#!/bin/sh' >"$dots_bin"
-    echo 'git --git-dir="'$ECOS_LOCAL_DOTFILES'" --work-tree="$HOME" "$@"' >>"$dots_bin"
-    chmod +x "$dots_bin"
 
     # Clone dotfiles
     git clone --bare "$ECOS_DOTS_DEFAULT_URL" "$ECOS_LOCAL_DOTFILES"
@@ -1381,12 +1374,12 @@ ecos_update_core() {
 
     # Make dirs
     mkdir -p "$ECOS_HOME"
-    mkdir -p "$ECOS_WORKSPACE_DIR"
+    mkdir -p "$ECOS_WORKING_DIR"
     mkdir -p "$ECOS_BIN_DIR"
     mkdir -p "$ECOS_USER_TWEAKS"
     mkdir -p "$HOME/.local/share/applications"
 
-    local tmp_ecos="$ECOS_WORKSPACE_DIR/ecos-new"
+    local tmp_ecos="$ECOS_WORKING_DIR/ecos-new"
     if ! curl -s -L "$ECOS_CORE_URL" >"$tmp_ecos"; then
         echo "ERROR: ECOS CORE DOWNLOAD"
         exit 1
@@ -1469,8 +1462,23 @@ ecos_update_system() {
     fi
 
     # UPDATE DESKTOP FILE
-    print_title 'UPDATE ECOS DESKTOP FILE'
+    print_title 'UPDATE ECOS FILES'
+
+    # Create desktop file
     ecos_create_desktop_file
+
+    # Create dots bin
+    local dots_bin="$ECOS_BIN_DIR/dots"
+    echo '#!/bin/sh' >"$dots_bin"
+    echo 'git --git-dir="'$ECOS_LOCAL_DOTFILES'" --work-tree="$HOME" "$@"' >>"$dots_bin"
+    chmod +x "$dots_bin"
+
+    # Create check-update
+    local check_update_bin="$ECOS_BIN_DIR/check-update"
+    echo '#!/bin/bash' >"$check_update_bin"
+    echo "(/usr/bin/checkupdates; /usr/bin/paru -Qqu --color never | sed 's/Get .*//') | sort -u -t' ' -k1,1" >>"$check_update_bin"
+    chmod +x "$check_update_bin"
+
     echo ">>> OK"
 
     # FINISH
@@ -1709,7 +1717,7 @@ tui_create_usb() {
 
     # Check and download arch iso
     #--------------------------------------------
-    mkdir -p "$ECOS_WORKSPACE_DIR"
+    mkdir -p "$ECOS_WORKING_DIR"
     if ! [ -f "$ECOS_ARCH_ISO_FILE" ]; then
         print_title "Downloading $ECOS_ARCH_ISO_FILE from $ECOS_ARCH_ISO_DEFAULT_URL..."
 
