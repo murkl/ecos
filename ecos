@@ -1307,6 +1307,12 @@ ecos_tui_install_ecos() {
     echo -e "EXECUTE $ECOS_INIT"
     chmod +x "$ECOS_INIT" && "$ECOS_INIT" --install
 
+    # Create dots bin
+    local dots_bin="$ECOS_BIN_DIR/dots"
+    echo '#!/bin/sh' >"$dots_bin"
+    echo 'git --git-dir="'$ECOS_LOCAL_DOTFILES'" --work-tree="$HOME" "$@"' >>"$dots_bin"
+    chmod +x "$dots_bin"
+
     # Silent Boot
     echo '# Disable the last login message on startup with this file' >"$HOME/.hushlogin"
 
@@ -1465,16 +1471,8 @@ ecos_update_system() {
 
     # UPDATE DESKTOP FILE
     print_title 'UPDATE ECOS FILES'
-
     # Create desktop file
     ecos_create_desktop_file
-
-    # Create dots bin
-    local dots_bin="$ECOS_BIN_DIR/dots"
-    echo '#!/bin/sh' >"$dots_bin"
-    echo 'git --git-dir="'$ECOS_LOCAL_DOTFILES'" --work-tree="$HOME" "$@"' >>"$dots_bin"
-    chmod +x "$dots_bin"
-
     echo ">>> OK"
 
     # FINISH
