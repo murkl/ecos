@@ -1,0 +1,17 @@
+[/]
+icon-brightness=20
+icon-contrast=20
+icon-margin-horizontal=0
+icon-margin-vertical=0
+icon-padding-horizontal=10
+icon-padding-vertical=0
+icon-saturation=0
+icon-size=16
+icons-limit=4
+invoke-to-workspace=true
+position-weight=-1
+tray-margin-left=0
+tray-margin-right=0
+tray-position='right'
+tray-positione='right'
+wine-behavior=true

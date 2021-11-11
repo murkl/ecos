@@ -9,22 +9,10 @@ install() {
     gnome-extensions enable "trayIconsReloaded@selfmade.pl"
 
     # Configuration
-    # dconf dump /org/gnome/shell/extensions/trayIconsReloaded/
-    dconf write /org/gnome/shell/extensions/trayIconsReloaded/icon-brightness 20
-    dconf write /org/gnome/shell/extensions/trayIconsReloaded/icon-contrast 20
-    dconf write /org/gnome/shell/extensions/trayIconsReloaded/icon-margin-horizontal 0
-    dconf write /org/gnome/shell/extensions/trayIconsReloaded/icon-margin-vertical 0
-    dconf write /org/gnome/shell/extensions/trayIconsReloaded/icon-padding-horizontal 10
-    dconf write /org/gnome/shell/extensions/trayIconsReloaded/icon-padding-vertical 0
-    dconf write /org/gnome/shell/extensions/trayIconsReloaded/icon-saturation 0
-    dconf write /org/gnome/shell/extensions/trayIconsReloaded/icon-size 16
-    dconf write /org/gnome/shell/extensions/trayIconsReloaded/icons-limit 4
-    dconf write /org/gnome/shell/extensions/trayIconsReloaded/invoke-to-workspace true
-    dconf write /org/gnome/shell/extensions/trayIconsReloaded/position-weight -1
-    dconf write /org/gnome/shell/extensions/trayIconsReloaded/tray-margin-left 0
-    dconf write /org/gnome/shell/extensions/trayIconsReloaded/tray-margin-right 0
-    dconf write /org/gnome/shell/extensions/trayIconsReloaded/tray-positione "'right'"
-    dconf write /org/gnome/shell/extensions/trayIconsReloaded/wine-behavior true
+    # dconf dump /org/gnome/shell/extensions/trayIconsReloaded/ > dconf.dump
+    local dconf_path='/org/gnome/shell/extensions/trayIconsReloaded/'
+    dconf reset -f "$dconf_path"
+    dconf load "$dconf_path" <"$TWEAK_RES_DIR/dconf.dump"
 }
 
 remove() {

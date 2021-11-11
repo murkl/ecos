@@ -1473,12 +1473,6 @@ ecos_update_system() {
     echo 'git --git-dir="'$ECOS_LOCAL_DOTFILES'" --work-tree="$HOME" "$@"' >>"$dots_bin"
     chmod +x "$dots_bin"
 
-    # Create check-update
-    local check_update_bin="$ECOS_BIN_DIR/check-update"
-    echo '#!/bin/bash' >"$check_update_bin"
-    echo "(/usr/bin/checkupdates; /usr/bin/paru -Qqu --color never | sed 's/Get .*//') | sort -u -t' ' -k1,1" >>"$check_update_bin"
-    chmod +x "$check_update_bin"
-
     echo ">>> OK"
 
     # FINISH

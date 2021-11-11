@@ -11,16 +11,10 @@ install() {
     gnome-extensions enable "arch-update@RaphaelRochet"
 
     # Configuration
-    # dconf dump /org/gnome/shell/extensions/arch-update/
-    dconf write /org/gnome/shell/extensions/arch-update/always-visible false
-    dconf write /org/gnome/shell/extensions/arch-update/auto-expand-list 0
-    dconf write /org/gnome/shell/extensions/arch-update/check-cmd "'/bin/sh -c \"check-update\"'"
-    dconf write /org/gnome/shell/extensions/arch-update/check-interval 360
-    dconf write /org/gnome/shell/extensions/arch-update/position 2
-    dconf write /org/gnome/shell/extensions/arch-update/position-number 0
-    dconf write /org/gnome/shell/extensions/arch-update/show-count true
-    dconf write /org/gnome/shell/extensions/arch-update/update-cmd "'gnome-terminal -e \"bash -c ecos\"'"
-    dconf write /org/gnome/shell/extensions/arch-update/use-buildin-icons false
+    # dconf dump /org/gnome/shell/extensions/arch-update/ > dconf.dump
+    local dconf_path='/org/gnome/shell/extensions/arch-update/'
+    dconf reset -f "$dconf_path"
+    dconf load "$dconf_path" <"$TWEAK_RES_DIR/dconf.dump"
 }
 
 remove() {
