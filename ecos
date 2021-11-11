@@ -1338,6 +1338,8 @@ ecos_tui_install_ecos() {
 #/////////////////////////////////////////////////////
 
 ecos_update_cache_repo() {
+
+    mkdir -p "$ECOS_CACHE_REPO_ECOS"
     if ! [ -d "$ECOS_CACHE_REPO_ECOS/.git" ]; then
         git clone "$ECOS_REPO_URL" "$ECOS_CACHE_REPO_ECOS"
     fi
