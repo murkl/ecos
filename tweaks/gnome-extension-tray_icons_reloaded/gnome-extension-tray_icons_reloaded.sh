@@ -4,6 +4,7 @@ TWEAK_CACHE_DIR="$3"
 
 install() {
     remove
+    mkdir -p "$HOME/.local/share/gnome-shell/extensions/"
     curl -Ls "https://github.com/MartinPL/Tray-Icons-Reloaded/releases/download/17/trayIconsReloaded@selfmade.pl.zip" -o "$TWEAK_CACHE_DIR/trayIconsReloaded@selfmade.pl.zip"
     unzip "$TWEAK_CACHE_DIR/trayIconsReloaded@selfmade.pl.zip" -d "$HOME/.local/share/gnome-shell/extensions/trayIconsReloaded@selfmade.pl"
 

@@ -4,6 +4,7 @@ TWEAK_CACHE_DIR="$3"
 
 install() {
     remove
+    mkdir -p "$HOME/.local/share/gnome-shell/extensions/"
     rm -rf "$TWEAK_CACHE_DIR/repo"
     git clone "https://gitlab.gnome.org/jrahmatzadeh/just-perfection.git" "$TWEAK_CACHE_DIR/repo"
     cd "$TWEAK_CACHE_DIR/repo" || exit 1
