@@ -1,5 +1,5 @@
 #!/bin/bash
-APPS='mesa-demos xorg-xrandr xf86-video-nouveau lib32-mesa'
+APPS='mesa-demos xf86-video-nouveau prime xorg-xrandr lib32-mesa'
 
 install() {
 
