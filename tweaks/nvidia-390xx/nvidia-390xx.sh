@@ -12,7 +12,7 @@
 
 install() {
 
-    if ! local menu_input=$(whiptail --menu --notags "NVIDIA INSTALLER" 68 24 2 "1" "NVIDIA ONLY (nvidia)" "2" "BUMBLEBEE (intel + nvidia)" 3>&1 1>&2 2>&3); then
+    if ! local menu_input=$(whiptail --menu --notags "NVIDIA INSTALLER" 0 0 2 "1" "NVIDIA ONLY (nvidia)" "2" "BUMBLEBEE (intel + nvidia)" 3>&1 1>&2 2>&3); then
         exit 0
     fi
 
