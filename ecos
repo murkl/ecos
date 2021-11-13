@@ -1275,8 +1275,8 @@ ecos_tui_install_ecos() {
 
     print_title "CLONE ECOS REPO"
     rm -rf "$ECOS_CACHE_REPO_ECOS"
-    mkdir -p "$ECOS_CACHE_REPO_ECOS"
-    git clone "$ECOS_REPO_URL" "$ECOS_CACHE_REPO_ECOS"
+    sleep 3 && git clone "$ECOS_REPO_URL" "$ECOS_CACHE_REPO_ECOS"
+    ecos_update_cache_repo
     echo -e "DONE"
 
     print_title "CLONE DOTFILES"
