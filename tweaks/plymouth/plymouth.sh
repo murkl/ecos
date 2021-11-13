@@ -94,7 +94,7 @@ install() {
 
 remove() {
     paru --noconfirm --sudoloop -Rs plymouth
-    sudo mv -f "$MKINIT_CONF".bak "$MKINIT_CONF"
+    sudo sed -i "s/keymap plymouth plymouth-encrypt filesystems/keymap encrypt filesystems/g" "$MKINIT_CONF"
     sudo mv -f "$SPINNER_CONF".bak "$SPINNER_CONF"
     sudo mv -f "$WATERMARK_FILE".bak "$WATERMARK_FILE"
     sudo mkinitcpio -p linux
