@@ -43,6 +43,7 @@ install() {
 }
 
 remove() {
+    sudo systemctl disable bumblebeed.service
     paru --noconfirm --sudoloop -Rsn $TWEAK_APPS
 }
 
