@@ -1591,6 +1591,7 @@ ecos_tui_menu_tweaks() {
     done
 
     # Exit ECOS
+    echo -e "\n\nTWEAKS SUCCEFULLY INSTALLED\n"
     exit
 }
 
