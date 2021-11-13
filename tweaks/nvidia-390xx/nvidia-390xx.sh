@@ -10,10 +10,11 @@
 # sudo systemctl enable bumblebeed.service
 
 # Test
+# glxinfo | grep NVIDIA
 # optirun glxspheres64
 # primusrun glxspheres64
 
-TWEAK_APPS='mesa-demos bumblebee nvidia-390xx lib32-virtualgl opencl-nvidia-390xx lib32-nvidia-390xx-utils lib32-opencl-nvidia-390xx'
+TWEAK_APPS='mesa-demos bumblebee nvidia-390xx nvidia-390xx-dkms lib32-virtualgl opencl-nvidia-390xx lib32-nvidia-390xx-utils lib32-opencl-nvidia-390xx'
 
 install() {
 

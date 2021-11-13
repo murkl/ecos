@@ -1346,8 +1346,8 @@ ecos_tui_install_ecos() {
 ecos_update_cache_repo() {
 
     if ! [ -d "$ECOS_CACHE_REPO_ECOS" ]; then
+        mkdir -p "$ECOS_CACHE_REPO_ECOS"
         git clone "$ECOS_REPO_URL" "$ECOS_CACHE_REPO_ECOS"
-        wait
     fi
 
     cd "$ECOS_CACHE_REPO_ECOS" || exit 1
