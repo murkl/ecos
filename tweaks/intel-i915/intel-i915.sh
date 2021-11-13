@@ -1,13 +1,14 @@
 #!/bin/bash
 
 install() {
-    paru --needed --sudoloop -Syyu mesa lib32-mesa vulkan-intel lib32-vulkan-intel vulkan-tools
+    paru -S mesa vulkan-intel vulkan-tools
+    paru -S lib32-mesa lib32-vulkan-intel
     sudo sed -i "s/MODULES=()/MODULES=(i915)/g" "/etc/mkinitcpio.conf"
     sudo mkinitcpio -p linux
 }
 
 remove() {
-    paru --sudoloop -Rsnvulkan-intel lib32-vulkan-intel vulkan-tools
+    paru -R vulkan-intel vulkan-tools lib32-mesa lib32-vulkan-intel
     sudo sed -i "s/MODULES=(i915)/MODULES=()/g" "/etc/mkinitcpio.conf"
     sudo mkinitcpio -p linux
 }
