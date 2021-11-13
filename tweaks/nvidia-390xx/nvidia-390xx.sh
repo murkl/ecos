@@ -49,19 +49,19 @@ Section "OutputClass"
     ModulePath "/usr/lib/nvidia/xorg"
     ModulePath "/usr/lib/xorg/modules"
 EndSection
-' >/etc/X11/xorg.conf.d/10-nvidia-drm-outputclass.conf
+' >/tmp/10-nvidia-drm-outputclass.conf
+    sudo cp -f /tmp/10-nvidia-drm-outputclass.conf /etc/X11/xorg.conf.d/10-nvidia-drm-outputclass.conf
 
     # Set for GNOME GDM
-    local nvidia_desktop_file_content='
+    echo '
 [Desktop Entry]
 Type=Application
 Name=Optimus
 Exec=sh -c "xrandr --setprovideroutputsource modesetting NVIDIA-0; xrandr --auto"
 NoDisplay=true
-X-GNOME-Autostart-Phase=DisplayServer'
-
-    echo "$nvidia_desktop_file_content" >/usr/share/gdm/greeter/autostart/optimus.desktop
-    echo "$nvidia_desktop_file_content" >/etc/xdg/autostart/optimus.desktop
+X-GNOME-Autostart-Phase=DisplayServer' >/tmp/optimus.desktop
+    sudo cp -f /tmp/optimus.desktop /usr/share/gdm/greeter/autostart/optimus.desktop
+    sudo cp -f /tmp/optimus.desktop /etc/xdg/autostart/optimus.desktop
 }
 
 remove() {
