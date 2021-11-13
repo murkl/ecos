@@ -1273,8 +1273,10 @@ ecos_tui_install_ecos() {
     ecos_check_paru
     echo -e "DONE"
 
-    print_title "UPDATE ECOS REPO"
-    ecos_update_cache_repo
+    print_title "CLONE ECOS REPO"
+    rm -rf "$ECOS_CACHE_REPO_ECOS"
+    mkdir -p "$ECOS_CACHE_REPO_ECOS"
+    git clone "$ECOS_REPO_URL" "$ECOS_CACHE_REPO_ECOS"
     echo -e "DONE"
 
     print_title "CLONE DOTFILES"
@@ -1346,7 +1348,6 @@ ecos_tui_install_ecos() {
 ecos_update_cache_repo() {
 
     if ! [ -d "$ECOS_CACHE_REPO_ECOS" ]; then
-        mkdir -p "$ECOS_CACHE_REPO_ECOS"
         git clone "$ECOS_REPO_URL" "$ECOS_CACHE_REPO_ECOS"
     fi
 
