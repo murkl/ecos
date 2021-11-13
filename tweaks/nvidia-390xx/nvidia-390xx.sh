@@ -65,16 +65,14 @@ X-GNOME-Autostart-Phase=DisplayServer' >/tmp/optimus.desktop
 
 remove() {
     #paru --noconfirm --sudoloop -R nvidia-390xx-dkms opencl-nvidia-390xx nvidia-390xx-settings lib32-nvidia-390xx-utils lib32-opencl-nvidia-390xx lib32-virtualgl
-    paru --noconfirm --sudoloop -R nvidia-390xx-dkms nvidia-390xx-settings lib32-nvidia-390xx-utils
+    paru --noconfirm --sudoloop -Rsn nvidia-390xx-dkms nvidia-390xx-settings
 
     sudo rm -f /etc/X11/xorg.conf.d/10-nvidia-drm-outputclass.conf
     sudo rm -f /etc/X11/xorg.conf.d/30-nvidia-ignoreabi.conf
     sudo rm -f /usr/share/gdm/greeter/autostart/optimus.desktop
     sudo rm -f /etc/xdg/autostart/optimus.desktop
 
-    sudo mv -f "/etc/mkinitcpio.conf.bak.nvidia-390xx" "/etc/mkinitcpio.conf"
-    sudo mv -f "/boot/loader/entries/arch.conf.bak.nvidia-390xx" "/boot/loader/entries/arch.conf"
-
+    sudo sed -i "s/vt.global_cursor_default=0 nvidia-drm.modeset=1 rw/vt.global_cursor_default=0 rw/g" "/boot/loader/entries/arch.conf"
     sudo mkinitcpio -p linux
 }
 
