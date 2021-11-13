@@ -44,7 +44,7 @@ install() {
     if [ "$BUMBLEBEE_ENABLED" = "true" ]; then
         paru --noconfirm --needed --sudoloop -S bumblebee xf86-video-intel
         #paru --noconfirm --needed --sudoloop -S lib32-virtualgl
-        gpasswd -a user bumblebee
+        sudo gpasswd -a $USER bumblebee
         sudo systemctl enable bumblebeed.service
     else
         # NVDIA Driver Only (https://wiki.archlinux.org/title/NVIDIA_Optimus#Use_NVIDIA_graphics_only)
