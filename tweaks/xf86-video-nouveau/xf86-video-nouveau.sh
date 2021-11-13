@@ -20,6 +20,7 @@ install() {
 }
 
 remove() {
+    sudo cp "$mkinit_conf".bak "$mkinit_conf"
     paru --noconfirm --sudoloop -Rsn $APPS
 }
 
