@@ -13,19 +13,19 @@
 install() {
 
     # Remove Nouveau Driver
-    paru -R xf86-video-nouveau prime
+    paru --noconfirm --sudoloop -R xf86-video-nouveau prime
     sudo cp -f "/etc/mkinitcpio.conf" "/etc/mkinitcpio.conf.bak.nvidia-390xx"
     sudo sed -i "s/MODULES=(nouveau)/MODULES=()/g" "/etc/mkinitcpio.conf"
     sudo mkinitcpio -p linux
 
     # Install Dependencies
-    paru -S linux-headers xorg-xrandr mesa-demos
+    paru --noconfirm --needed --sudoloop -S linux-headers xorg-xrandr mesa-demos
 
     # Install NVIDIA Driver
-    paru -S nvidia-390xx-dkms opencl-nvidia-390xx nvidia-390xx-settings
+    paru --noconfirm --needed --sudoloop -S nvidia-390xx-dkms opencl-nvidia-390xx nvidia-390xx-settings
 
     # 32 Bit Support
-    paru -S lib32-nvidia-390xx-utils lib32-opencl-nvidia-390xx lib32-virtualgl
+    paru --noconfirm --needed --sudoloop -S lib32-nvidia-390xx-utils lib32-opencl-nvidia-390xx lib32-virtualgl
 
     # Add Kernel parameter (nvidia-drm.modeset=1)
     sudo cp -f "/boot/loader/entries/arch.conf" "/boot/loader/entries/arch.conf.bak.nvidia-390xx"
@@ -65,7 +65,7 @@ X-GNOME-Autostart-Phase=DisplayServer'
 }
 
 remove() {
-    paru -R nvidia-390xx-dkms opencl-nvidia-390xx nvidia-390xx-settings lib32-nvidia-390xx-utils lib32-opencl-nvidia-390xx lib32-virtualgl
+    paru --noconfirm --sudoloop -R nvidia-390xx-dkms opencl-nvidia-390xx nvidia-390xx-settings lib32-nvidia-390xx-utils lib32-opencl-nvidia-390xx lib32-virtualgl
 
     sudo rm -f /etc/X11/xorg.conf.d/10-nvidia-drm-outputclass.conf
     sudo rm -f /etc/X11/xorg.conf.d/30-nvidia-ignoreabi.conf
