@@ -26,7 +26,7 @@ install() {
 
     # 32 Bit Support
     # lib32-opencl-nvidia-390xx lib32-virtualgl
-    #paru --noconfirm --needed --sudoloop -S lib32-nvidia-390xx-utils
+    paru --noconfirm --needed --sudoloop -S lib32-nvidia-390xx-utils
 
     # Add Kernel parameter (nvidia-drm.modeset=1)
     sudo cp -f "/boot/loader/entries/arch.conf" "/boot/loader/entries/arch.conf.bak.nvidia-390xx"
@@ -64,7 +64,7 @@ X-GNOME-Autostart-Phase=DisplayServer' >/tmp/optimus.desktop
 
 remove() {
     # opencl-nvidia-390xx lib32-opencl-nvidia-390xx
-    paru --noconfirm --sudoloop -Rsn nvidia-390xx-dkms nvidia-390xx-settings nvidia-390xx-utils
+    paru --noconfirm --sudoloop -Rsn nvidia-390xx-dkms nvidia-390xx-settings nvidia-390xx-utils lib32-nvidia-390xx-utils
 
     sudo rm -f /etc/X11/xorg.conf.d/10-nvidia-drm-outputclass.conf
     sudo rm -f /etc/X11/xorg.conf.d/30-nvidia-ignoreabi.conf
