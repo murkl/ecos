@@ -26,7 +26,7 @@ install() {
     paru --noconfirm --needed --sudoloop -S nvidia-390xx-dkms nvidia-390xx-settings
 
     # 32 Bit Support
-    paru --noconfirm --needed --sudoloop -S lib32-nvidia-390xx-utils
+    #paru --noconfirm --needed --sudoloop -S lib32-nvidia-390xx-utils
     #paru --noconfirm --needed --sudoloop -S lib32-virtualgl
 
     # Add Kernel parameter (nvidia-drm.modeset=1)
