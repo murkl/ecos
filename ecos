@@ -1590,8 +1590,8 @@ ecos_tui_menu_tweaks() {
         wait
     done
 
-    # Return to tui
-    ecos_tui_menu_tweaks
+    # Exit ECOS
+    exit
 }
 
 ecos_exec_tweak() {
