@@ -16,7 +16,6 @@ install() {
     paru --noconfirm --sudoloop -R xf86-video-nouveau prime
     sudo cp -f "/etc/mkinitcpio.conf" "/etc/mkinitcpio.conf.bak.nvidia-390xx"
     sudo sed -i "s/MODULES=(nouveau)/MODULES=()/g" "/etc/mkinitcpio.conf"
-    sudo mkinitcpio -p linux
 
     # Install Dependencies
     paru --noconfirm --needed --sudoloop -S linux-headers xorg-xrandr mesa-demos
