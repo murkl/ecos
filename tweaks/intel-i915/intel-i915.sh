@@ -1,29 +1,19 @@
 #!/bin/bash
-APPS='lib32-mesa vulkan-intel lib32-vulkan-intel vulkan-tools'
 
 install() {
-
-    # Installing packages
-    if ! paru --noconfirm --needed --sudoloop -Syyu mesa $APPS; then
-        echo "Error installing $APPS"
-        return 1
-    fi
-
-    # Modify /etc/mkinitcpio.conf
-    local mkinit_conf='/etc/mkinitcpio.conf'
-    sudo cp "$mkinit_conf" "$mkinit_conf".bak
-    if ! sudo sed -i "s/MODULES=()/MODULES=(i915)/g" "$mkinit_conf"; then
-        echo "Error edit $mkinit_conf"
-        return 1
-    fi
+    paru --needed --sudoloop -Syyu mesa lib32-mesa vulkan-intel lib32-vulkan-intel vulkan-tools
+    sudo sed -i "s/MODULES=()/MODULES=(i915)/g" "/etc/mkinitcpio.conf"
+    sudo mkinitcpio -p linux
 }
 
 remove() {
-    paru -Rsn $APPS
+    paru --sudoloop -Rsnvulkan-intel lib32-vulkan-intel vulkan-tools
+    sudo sed -i "s/MODULES=(i915)/MODULES=()/g" "/etc/mkinitcpio.conf"
+    sudo mkinitcpio -p linux
 }
 
 update() {
-    echo "Nohting to update"
+    echo "Nohting to do..."
 }
 
 if [ "$1" = "install" ]; then install "$@"; fi
