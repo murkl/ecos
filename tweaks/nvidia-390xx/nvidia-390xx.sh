@@ -22,10 +22,12 @@ install() {
     paru --noconfirm --needed --sudoloop -S linux-headers xorg-xrandr mesa-demos
 
     # Install NVIDIA Driver
-    paru --noconfirm --needed --sudoloop -S nvidia-390xx-dkms opencl-nvidia-390xx nvidia-390xx-settings
+    #paru --noconfirm --needed --sudoloop -S nvidia-390xx-dkms opencl-nvidia-390xx nvidia-390xx-settings
+    paru --noconfirm --needed --sudoloop -S nvidia-390xx-dkms nvidia-390xx-settings
 
     # 32 Bit Support
-    paru --noconfirm --needed --sudoloop -S lib32-nvidia-390xx-utils lib32-opencl-nvidia-390xx lib32-virtualgl
+    paru --noconfirm --needed --sudoloop -S lib32-nvidia-390xx-utils
+    #paru --noconfirm --needed --sudoloop -S lib32-virtualgl
 
     # Add Kernel parameter (nvidia-drm.modeset=1)
     sudo cp -f "/boot/loader/entries/arch.conf" "/boot/loader/entries/arch.conf.bak.nvidia-390xx"
@@ -33,8 +35,7 @@ install() {
     sudo mkinitcpio -p linux
 
     # Set NVDIA Driver (https://wiki.archlinux.org/title/NVIDIA_Optimus#Use_NVIDIA_graphics_only)
-    echo '
-Section "OutputClass"
+    echo 'Section "OutputClass"
     Identifier "intel"
     MatchDriver "i915"
     Driver "modesetting"
@@ -48,13 +49,11 @@ Section "OutputClass"
     Option "PrimaryGPU" "yes"
     ModulePath "/usr/lib/nvidia/xorg"
     ModulePath "/usr/lib/xorg/modules"
-EndSection
-' >/tmp/10-nvidia-drm-outputclass.conf
+EndSection' >/tmp/10-nvidia-drm-outputclass.conf
     sudo cp -f /tmp/10-nvidia-drm-outputclass.conf /etc/X11/xorg.conf.d/10-nvidia-drm-outputclass.conf
 
     # Set for GNOME GDM
-    echo '
-[Desktop Entry]
+    echo '[Desktop Entry]
 Type=Application
 Name=Optimus
 Exec=sh -c "xrandr --setprovideroutputsource modesetting NVIDIA-0; xrandr --auto"
@@ -65,7 +64,8 @@ X-GNOME-Autostart-Phase=DisplayServer' >/tmp/optimus.desktop
 }
 
 remove() {
-    paru --noconfirm --sudoloop -R nvidia-390xx-dkms opencl-nvidia-390xx nvidia-390xx-settings lib32-nvidia-390xx-utils lib32-opencl-nvidia-390xx lib32-virtualgl
+    #paru --noconfirm --sudoloop -R nvidia-390xx-dkms opencl-nvidia-390xx nvidia-390xx-settings lib32-nvidia-390xx-utils lib32-opencl-nvidia-390xx lib32-virtualgl
+    paru --noconfirm --sudoloop -R nvidia-390xx-dkms nvidia-390xx-settings lib32-nvidia-390xx-utils
 
     sudo rm -f /etc/X11/xorg.conf.d/10-nvidia-drm-outputclass.conf
     sudo rm -f /etc/X11/xorg.conf.d/30-nvidia-ignoreabi.conf
