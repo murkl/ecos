@@ -1,6 +1,15 @@
 #!/bin/bash
 TWEAK_RES_DIR="$2"
 
+MKINIT_CONF='/etc/mkinitcpio.conf'
+MKINIT_CONF_BAK="$MKINIT_CONF.bak.before-plymouth"
+
+SPINNER_CONF='/usr/share/plymouth/themes/spinner/spinner.plymouth'
+SPINNER_CONF_BAK="$SPINNER_CONF.bak"
+
+WATERMARK_FILE='/usr/share/plymouth/themes/spinner/watermark.png'
+WATERMARK_FILE_BAK="$WATERMARK_FILE.bak"
+
 install() {
 
     if ! efivar -l >/dev/null; then
@@ -21,6 +30,7 @@ install() {
     wait
     if ! paru --noconfirm --needed --sudoloop -Syyu plymouth; then
         echo "ERROR paru"
+        remove
         exit 1
     fi
     echo -e 'OK'
@@ -30,10 +40,10 @@ install() {
     #----------------------------------------
     echo 'CONFIGURE MKINITCPIO'
     # Intel graphic support (other: https://wiki.archlinux.org/index.php/Kernel_mode_setting#Early_KMS_start)
-    local mkinit_conf='/etc/mkinitcpio.conf'
-    sudo cp "$mkinit_conf" "$mkinit_conf".before-plymouth
-    if ! sudo sed -i "s/keymap encrypt filesystems/keymap plymouth plymouth-encrypt filesystems/g" "$mkinit_conf"; then
+    sudo cp -f "$MKINIT_CONF" "$MKINIT_CONF_BAK"
+    if ! sudo sed -i "s/keymap encrypt filesystems/keymap plymouth plymouth-encrypt filesystems/g" "$MKINIT_CONF"; then
         echo "ERROR"
+        remove
         exit 1
     fi
     echo -e 'OK'
@@ -42,13 +52,13 @@ install() {
     # Configure Spinner
     #----------------------------------------
     echo 'CONFIGURE SPINNER'
-    local spinner_conf='/usr/share/plymouth/themes/spinner/spinner.plymouth'
-    sudo cp -f "$spinner_conf" "$spinner_conf".bak
+    sudo cp -f "$SPINNER_CONF" "$SPINNER_CONF_BAK"
 
     replace_spinner_conf_value() {
-        #sed -i "s#$1=.*#$1=$2#g" "$spinner_conf"
-        if ! sudo sed -i "s#$1=.*#$1=$2#g" "$spinner_conf"; then
+        #sed -i "s#$1=.*#$1=$2#g" "$SPINNER_CONF"
+        if ! sudo sed -i "s#$1=.*#$1=$2#g" "$SPINNER_CONF"; then
             echo "ERROR"
+            remove
             exit 1
         fi
     }
@@ -64,9 +74,8 @@ install() {
     # Download Watermark
     #----------------------------------------
     echo 'DOWNLOAD WATERMARK'
-    local watermark_file='/usr/share/plymouth/themes/spinner/watermark.png'
-    sudo mv -f "$watermark_file" "$watermark_file".bak
-    sudo cp "$TWEAK_RES_DIR/plymouth.png" "$watermark_file"
+    sudo mv -f "$WATERMARK_FILE" "$WATERMARK_FILE_BAK"
+    sudo cp -f "$TWEAK_RES_DIR/plymouth.png" "$WATERMARK_FILE"
 
     #----------------------------------------
     # Rebuild
@@ -76,10 +85,7 @@ install() {
         # On error
         echo 'ERROR'
         echo "Error installing plymouth: rolling back..."
-        sudo mv -f "$mkinit_conf".bak "$mkinit_conf"
-        sudo mv -f "$spinner_conf".bak "$spinner_conf"
-        sudo mv -f "$watermark_file".bak "$watermark_file"
-        sudo mkinitcpio -p linux
+        remove
     else
         echo 'PLYMOUTH SUCCESFUL INSTALLED'
         echo "Please Reboot..."
@@ -87,10 +93,11 @@ install() {
 }
 
 remove() {
-    if pacman -Qi plymouth >/dev/null; then
-        paru --noconfirm --sudoloop -Rs plymouth
-
-    fi
+    paru --noconfirm --sudoloop -Rs plymouth
+    sudo mv -f "$MKINIT_CONF".bak "$MKINIT_CONF"
+    sudo mv -f "$SPINNER_CONF".bak "$SPINNER_CONF"
+    sudo mv -f "$WATERMARK_FILE".bak "$WATERMARK_FILE"
+    sudo mkinitcpio -p linux
 }
 
 update() {

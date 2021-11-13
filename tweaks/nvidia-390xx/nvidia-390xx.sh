@@ -14,7 +14,7 @@ install() {
 
     # Remove Nouveau Driver
     paru -R xf86-video-nouveau prime
-    sudo cp "/etc/mkinitcpio.conf" "/etc/mkinitcpio.conf.bak"
+    sudo cp -f "/etc/mkinitcpio.conf" "/etc/mkinitcpio.conf.bak.nvidia-390xx"
     sudo sed -i "s/MODULES=(nouveau)/MODULES=()/g" "/etc/mkinitcpio.conf"
     sudo mkinitcpio -p linux
 
@@ -28,7 +28,7 @@ install() {
     paru -S lib32-nvidia-390xx-utils lib32-opencl-nvidia-390xx lib32-virtualgl
 
     # Add Kernel parameter (nvidia-drm.modeset=1)
-    sudo cp "/boot/loader/entries/arch.conf " "/boot/loader/entries/arch.conf.bak"
+    sudo cp -f "/boot/loader/entries/arch.conf" "/boot/loader/entries/arch.conf.bak.nvidia-390xx"
     sudo sed -i "s/MODULES=(vt.global_cursor_default=0 rw)/MODULES=(vt.global_cursor_default=0 nvidia-drm.modeset=1 rw)/g" "/etc/mkinitcpio.conf"
     sudo mkinitcpio -p linux
 
@@ -66,13 +66,15 @@ X-GNOME-Autostart-Phase=DisplayServer'
 
 remove() {
     paru -R nvidia-390xx-dkms opencl-nvidia-390xx nvidia-390xx-settings lib32-nvidia-390xx-utils lib32-opencl-nvidia-390xx lib32-virtualgl
-    
-    udo rm -f /etc/X11/xorg.conf.d/10-nvidia-drm-outputclass.conf
+
+    sudo rm -f /etc/X11/xorg.conf.d/10-nvidia-drm-outputclass.conf
     sudo rm -f /etc/X11/xorg.conf.d/30-nvidia-ignoreabi.conf
     sudo rm -f /usr/share/gdm/greeter/autostart/optimus.desktop
     sudo rm -f /etc/xdg/autostart/optimus.desktop
 
-    sudo sed -i "s/MODULES=(vt.global_cursor_default=0 nvidia-drm.modeset=1 rw)/MODULES=(vt.global_cursor_default=0 rw)/g" "/etc/mkinitcpio.conf"
+    sudo mv -f "/etc/mkinitcpio.conf.bak.nvidia-390xx" "/etc/mkinitcpio.conf"
+    sudo mv -f "/boot/loader/entries/arch.conf.bak.nvidia-390xx" "/boot/loader/entries/arch.conf"
+
     sudo mkinitcpio -p linux
 }
 
