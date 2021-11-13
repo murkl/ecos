@@ -64,7 +64,7 @@ X-GNOME-Autostart-Phase=DisplayServer' >/tmp/optimus.desktop
 
 remove() {
     #paru --noconfirm --sudoloop -R nvidia-390xx-dkms opencl-nvidia-390xx nvidia-390xx-settings lib32-nvidia-390xx-utils lib32-opencl-nvidia-390xx lib32-virtualgl
-    paru --noconfirm --sudoloop -Rsn nvidia-390xx-dkms nvidia-390xx-settings
+    paru --noconfirm --sudoloop -Rsn nvidia-390xx-dkms nvidia-390xx-settings nvidia-390xx-utils
 
     sudo rm -f /etc/X11/xorg.conf.d/10-nvidia-drm-outputclass.conf
     sudo rm -f /etc/X11/xorg.conf.d/30-nvidia-ignoreabi.conf
