@@ -14,6 +14,10 @@ BUMBLEBEE_ENABLED="false"
 
 install() {
 
+    if ! local menu_input=$(whiptail --menu --notags "NVIDIA INSTALLER" 68 24 2 "1" "NVIDIA ONLY (nvidia)" "2" "BUMBLEBEE (intel + nvidia)" 3>&1 1>&2 2>&3); then; exit 0; fi
+    if [ "$menu_input" = "1" ]; then; BUMBLEBEE_ENABLED="false"; fi
+    if [ "$menu_input" = "2" ]; then; BUMBLEBEE_ENABLED="true"; fi
+
     # Remove Nouveau Driver
     paru --noconfirm --sudoloop -R xf86-video-nouveau prime
     sudo cp -f "/etc/mkinitcpio.conf" "/etc/mkinitcpio.conf.bak.nvidia-390xx"
@@ -80,14 +84,14 @@ remove() {
 
     sudo rm -f /etc/X11/xorg.conf.d/30-nvidia-ignoreabi.conf
 
-    if [ "$BUMBLEBEE_ENABLED" = "true" ]; then
-        sudo systemctl disable bumblebeed.service
-        paru --noconfirm --sudoloop -Rsn bumblebee xf86-video-intel
-    else
-        sudo rm -f /etc/X11/xorg.conf.d/10-nvidia-drm-outputclass.conf
-        sudo rm -f /usr/share/gdm/greeter/autostart/optimus.desktop
-        sudo rm -f /etc/xdg/autostart/optimus.desktop
-    fi
+    # Bumblebee
+    sudo systemctl disable bumblebeed.service
+    paru --noconfirm --sudoloop -Rsn bumblebee xf86-video-intel
+
+    # Nvidia Only
+    sudo rm -f /etc/X11/xorg.conf.d/10-nvidia-drm-outputclass.conf
+    sudo rm -f /usr/share/gdm/greeter/autostart/optimus.desktop
+    sudo rm -f /etc/xdg/autostart/optimus.desktop
 }
 
 update() {
