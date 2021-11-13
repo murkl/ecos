@@ -36,7 +36,7 @@ install() {
     sudo mkinitcpio -p linux
 
     if [ "$BUMBLEBEE_ENABLED" = "true" ]; then
-        paru --noconfirm --needed --sudoloop -S bumblebee xf86-video-intel lib32-virtualgl
+        paru --noconfirm --needed --sudoloop -S bumblebee xf86-video-intel
         #paru --noconfirm --needed --sudoloop -S lib32-virtualgl
         gpasswd -a user bumblebee
         sudo systemctl enable bumblebeed.service
