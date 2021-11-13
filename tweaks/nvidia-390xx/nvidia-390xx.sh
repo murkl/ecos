@@ -22,10 +22,10 @@ install() {
     paru -S linux-headers xorg-xrandr mesa-demos
 
     # Install NVIDIA Driver
-    paru -S nvidia-390xx-dkms nvidia-390xx-settings
+    paru -S nvidia-390xx-dkms nvidia-390xx-settings opencl-nvidia-390xx
 
     # 32 Bit Support
-    paru -S lib32-nvidia-390xx-utils lib32-virtualgl
+    paru -S lib32-nvidia-390xx-utils lib32-virtualgl lib32-opencl-nvidia-390xx
 
     # Add Kernel parameter (nvidia-drm.modeset=1)
     sudo cp "/boot/loader/entries/arch.conf " "/boot/loader/entries/arch.conf.bak"
@@ -65,7 +65,7 @@ X-GNOME-Autostart-Phase=DisplayServer'
 }
 
 remove() {
-    sudo pacman -Rsn nvidia-390xx-dkms nvidia-390xx-settings lib32-nvidia-390xx-utils lib32-virtualgl
+    sudo pacman -Rsn nvidia-390xx-dkms nvidia-390xx-settings opencl-nvidia-390xx lib32-nvidia-390xx-utils lib32-virtualgl lib32-opencl-nvidia-390xx
     sudo rm -f /etc/X11/xorg.conf.d/10-nvidia-drm-outputclass.conf
     sudo rm -f /etc/X11/xorg.conf.d/30-nvidia-ignoreabi.conf
     sudo rm -f /usr/share/gdm/greeter/autostart/optimus.desktop
