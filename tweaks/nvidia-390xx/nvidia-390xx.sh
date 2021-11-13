@@ -29,7 +29,7 @@ install() {
 
     # Add Kernel parameter (nvidia-drm.modeset=1)
     sudo cp -f "/boot/loader/entries/arch.conf" "/boot/loader/entries/arch.conf.bak.nvidia-390xx"
-    sudo sed -i "s/MODULES=(vt.global_cursor_default=0 rw)/MODULES=(vt.global_cursor_default=0 nvidia-drm.modeset=1 rw)/g" "/etc/mkinitcpio.conf"
+    sudo sed -i "s/vt.global_cursor_default=0 rw/vt.global_cursor_default=0 nvidia-drm.modeset=1 rw/g" "/boot/loader/entries/arch.conf"
     sudo mkinitcpio -p linux
 
     # Set NVDIA Driver (https://wiki.archlinux.org/title/NVIDIA_Optimus#Use_NVIDIA_graphics_only)
