@@ -1275,6 +1275,7 @@ ecos_tui_install_ecos() {
 
     print_title "CLONE ECOS REPO"
     rm -rf "$ECOS_CACHE_REPO_ECOS"
+    mkdir -p "$ECOS_CACHE_REPO_ECOS"
     sleep 3 && /usr/bin/git clone "$ECOS_REPO_URL" "$ECOS_CACHE_REPO_ECOS"
     ecos_update_cache_repo
     echo -e "DONE"
@@ -1290,7 +1291,7 @@ ecos_tui_install_ecos() {
     fi
 
     # Clone dotfiles
-    git clone --bare "$ECOS_DOTS_DEFAULT_URL" "$ECOS_LOCAL_DOTFILES"
+    /usr/bin/git clone --bare "$ECOS_DOTS_DEFAULT_URL" "$ECOS_LOCAL_DOTFILES"
 
     # Reset dotfiles
     /usr/bin/git --git-dir="$ECOS_LOCAL_DOTFILES" --work-tree="$HOME" fetch --all
@@ -1347,8 +1348,13 @@ ecos_tui_install_ecos() {
 
 ecos_update_cache_repo() {
 
-    if ! [ -d "$ECOS_CACHE_REPO_ECOS" ]; then
+    if ! [ -d "$ECOS_CACHE_REPO_ECOS/.git" ]; then
         git clone "$ECOS_REPO_URL" "$ECOS_CACHE_REPO_ECOS"
+    fi
+
+    if ! [ -d "$ECOS_CACHE_REPO_ECOS/.git" ]; then
+        echo "Error: Cant find $ECOS_CACHE_REPO_ECOS/.git"
+        exit 1
     fi
 
     cd "$ECOS_CACHE_REPO_ECOS" || exit 1
