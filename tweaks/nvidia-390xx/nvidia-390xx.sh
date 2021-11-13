@@ -11,10 +11,9 @@ sudo mkinitcpio -p linux
 
 # Install NVIDIA Driver
 paru -S nvidia-390xx-dkms linux-headers xorg-xrandr
-paru -S opencl-nvidia-390xx
 
 # 32 Bit Support
-paru -S lib32-nvidia-390xx-utils lib32-virtualgl lib32-opencl-nvidia-390xx
+paru -S lib32-nvidia-390xx-utils lib32-virtualgl
 
 # Optional
 paru -S nvidia-390xx-settings
@@ -67,6 +66,8 @@ sudo rm -f /etc/X11/xorg.conf.d/10-nvidia-drm-outputclass.conf
 sudo rm -f /usr/share/gdm/greeter/autostart/optimus.desktop
 sudo rm -f /etc/xdg/autostart/optimus.desktop
 paru -S bumblebee
+paru -S opencl-nvidia-390xx lib32-opencl-nvidia-390xx
+
 sudo gpasswd -a $USER bumblebee
 sudo systemctl enable bumblebeed.service
 
