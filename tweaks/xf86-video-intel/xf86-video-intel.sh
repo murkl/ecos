@@ -10,8 +10,8 @@
 #    Identifier  "Intel Graphics"
 #    Driver      "intel"
 #    Option      "DRI" "3"
-#    Option      "TearFree" "true" # Will not work with AccelMethod=uxa
 #    Option      "AccelMethod" "uxa"
+#    #Option      "TearFree" "true" # Will not work with AccelMethod=uxa
 # EndSection
 
 install() {
