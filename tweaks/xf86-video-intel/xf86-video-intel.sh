@@ -1,4 +1,5 @@
 #!/bin/bash
+# https://wiki.archlinux.org/title/Intel_graphics
 
 ##################################################
 # Intel + Vulkan Driver
