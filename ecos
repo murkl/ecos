@@ -1273,13 +1273,6 @@ ecos_tui_install_ecos() {
     ecos_check_paru
     echo -e "DONE"
 
-    print_title "CLONE ECOS REPO"
-    rm -rf "$ECOS_CACHE_REPO_ECOS"
-    mkdir -p "$ECOS_CACHE_REPO_ECOS"
-    sleep 3 && /usr/bin/git clone "$ECOS_REPO_URL" "$ECOS_CACHE_REPO_ECOS"
-    ecos_update_cache_repo
-    echo -e "DONE"
-
     print_title "CLONE DOTFILES"
     rm -rf "$ECOS_LOCAL_DOTFILES"
     mkdir -p "$ECOS_LOCAL_DOTFILES"
@@ -1349,6 +1342,7 @@ ecos_tui_install_ecos() {
 ecos_update_cache_repo() {
 
     if ! [ -d "$ECOS_CACHE_REPO_ECOS/.git" ]; then
+        mkdir -p "$ECOS_CACHE_REPO_ECOS"
         git clone "$ECOS_REPO_URL" "$ECOS_CACHE_REPO_ECOS"
     fi
 
@@ -1609,6 +1603,11 @@ ecos_exec_tweak() {
     local tweak_cache_dir="$ECOS_CACHE_TWEAKS/$tweak_id"
     local tweak_sh="$tweak_res_dir/${tweak_id}.sh"
     local tweak_meta="$tweak_cache_dir/${tweak_id}.tweak"
+
+    #----------------------------------------
+    # Check & update repo
+    #----------------------------------------
+    ecos_update_cache_repo
 
     #----------------------------------------
     # Check
