@@ -1,6 +1,8 @@
 #!/bin/bash
 # https://wiki.archlinux.org/title/Intel_graphics
 
+# BUG: After scrensafer the screen still be black
+
 install() {
     paru --noconfirm --needed --sudoloop -S xf86-video-intel mesa vulkan-intel vulkan-tools
     paru --noconfirm --needed --sudoloop -S lib32-mesa lib32-vulkan-intel
