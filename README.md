@@ -42,7 +42,7 @@ This is the first installation step and will install all essential packages and 
 base base-devel linux linux-firmware efibootmgr dosfstools gptfdisk networkmanager zsh
 ```
 
-## 2. Step: Dotfiles Installation
+## 2. Step: Dotfiles Installation (optional)
 
 After the first reboot the ECOS TUI will open again automatically. Feel free to execute the ECOS Dotfiles Installation (with all preconfigured packages) or exit the TUI and install your fresh Arch Linux system manually.
 The following packages will be installed during this routine before the `~/.ecos/init` script within the given Dotfiles Repository will be executed.
