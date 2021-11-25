@@ -1593,9 +1593,7 @@ ecos_tui_menu_tweaks() {
         wait
     done
 
-    # Exit ECOS
-    echo -e "\n\nTWEAKS SUCCEFULLY INSTALLED\n"
-    exit
+    exit 0
 }
 
 ecos_exec_tweak() {
@@ -1647,16 +1645,19 @@ ecos_exec_tweak() {
             # Install or update on success
             if [ "$tweak_action" = "install" ] || [ "$tweak_action" = "update" ]; then
                 echo "$(date "+%Y-%m-%d-%H:%M:%S")" >"$tweak_meta"
+                echo -e "\nTWEAK $tweak_id:  Successfully installed\n"
             fi
 
             # Remove on success
             if [ "$tweak_action" = "remove" ]; then
                 rm -rf "$tweak_cache_dir"
+                echo -e "\nTWEAK $tweak_id:  Successfully remove\n"
             fi
+        else
+            # Remove dir if error during execution
+            rm -rf "$tweak_cache_dir"
         fi
-
     else
-
         echo "Error: TWEAK_ACTION=$tweak_action not supported"
     fi
 }
