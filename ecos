@@ -118,7 +118,7 @@ main() {
         if [ ! -f "$ECOS_INITIALIZED" ]; then
             tui_menu_init
         else
-            exit
+            exit 0
         fi
     fi
 
@@ -127,7 +127,7 @@ main() {
     # ---------------------------------------
     if [ "$1" = "--tweak" ]; then
         ecos_exec_tweak "$2" "$3"
-        exit
+        exit 0
     fi
 
     # ---------------------------------------
@@ -135,7 +135,7 @@ main() {
     # ---------------------------------------
     if [ "$1" = "--update-core" ]; then
         ecos_update_core
-        exit
+        exit 0
     fi
 
     # ---------------------------------------
@@ -143,7 +143,7 @@ main() {
     # ---------------------------------------
     if [ "$1" = "--update-system" ]; then
         ecos_update_system
-        exit
+        exit 0
     fi
 
     # ---------------------------------------
@@ -155,7 +155,7 @@ main() {
             whiptail --title "Changelog" --scrolltext --msgbox "$(cat "$SCRIPT_TUI_FILE")\n\n$SCRIPT_CHANGELOG" $SCRIPT_TUI_HEIGHT $SCRIPT_TUI_WIDTH 3>&1 1>&2 2>&3
             rm -f "$ECOS_SHOW_CHANGELOG"
         fi
-        exit
+        exit 0
     fi
 
     # ---------------------------------------
@@ -163,7 +163,7 @@ main() {
     # ---------------------------------------
     if [ "$1" = "--core" ]; then
         tui_menu_core_install
-        exit
+        exit 0
     fi
 
     #----------------------------------------
@@ -211,7 +211,7 @@ tui_menu_core_install() {
     #----------------------------------------
     if [ "$menu_input" = "2" ]; then
         tui_open_recovery
-        exit
+        exit 0
     fi
 
     #----------------------------------------
@@ -220,7 +220,7 @@ tui_menu_core_install() {
     if [ "$menu_input" = "3" ]; then
         core_tui_show_logs
         tui_menu_core_install
-        exit
+        exit 0
     fi
 }
 
@@ -1254,7 +1254,7 @@ ecos_tui_install_ecos() {
     if [ "$ECOS_DOTS_DEFAULT_URL" = "" ]; then
         tui_init 0 "Dotfiles URL was empty!"
         whiptail --textbox "$SCRIPT_TUI_FILE" "$SCRIPT_TUI_HEIGHT" "$SCRIPT_TUI_WIDTH"
-        return
+        return 1
     fi
 
     clear
@@ -1570,12 +1570,15 @@ ecos_tui_menu_tweaks() {
         local tweak_id="$i"
         whiptail_tweaks_array+=("${tweak_id} ${tweak_id} ${tweak_status}")
     done
+    # Sort array
+    IFS=$'\n' whiptail_tweaks_array_sorted=($(sort <<<"${whiptail_tweaks_array[*]}"))
+    unset IFS
 
     #----------------------------------------
     # TUI TWEAK LIST
     #----------------------------------------
     tui_init 0 ""
-    local menu_input=$(whiptail --checklist --notags "$(cat "$SCRIPT_TUI_FILE")\n\n" "$SCRIPT_TUI_HEIGHT" "$SCRIPT_TUI_WIDTH" 10 ${whiptail_tweaks_array[@]} 3>&1 1>&2 2>&3)
+    local menu_input=$(whiptail --checklist --notags "$(cat "$SCRIPT_TUI_FILE")\n\n" "$SCRIPT_TUI_HEIGHT" "$SCRIPT_TUI_WIDTH" 10 ${whiptail_tweaks_array_sorted[@]} 3>&1 1>&2 2>&3)
     if [ "$menu_input" = "" ]; then
         main
         exit 0

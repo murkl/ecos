@@ -13,7 +13,7 @@ remove() {
 }
 
 update() {
-    echo "Nohting to do..."
+    echo "Nothing to do..."
 }
 
 if [ "$1" = "--install" ]; then install "$@"; fi

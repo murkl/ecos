@@ -23,7 +23,7 @@ remove() {
 }
 
 update() {
-    cd "$THEME_REPO_DIR" || return 1
+    cd "$THEME_REPO_DIR" || exit 1
 
     git reset --hard
     git pull

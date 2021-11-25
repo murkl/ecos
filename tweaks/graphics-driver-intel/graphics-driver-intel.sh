@@ -14,7 +14,7 @@ install() {
         paru --noconfirm --needed --sudoloop -S lib32-mesa lib32-vulkan-intel
         sudo sed -i "s/MODULES=()/MODULES=(intel_agp i915)/g" "/etc/mkinitcpio.conf"
         sudo mkinitcpio -p linux
-        return 0
+        exit 0
     fi
 
     if [ "$whiptail_result" = 'xf86-video-intel' ]; then
@@ -33,7 +33,7 @@ Section "Device"
 EndSection'
         echo "$conf" | sudo tee -a "/etc/X11/xorg.conf.d/20-intel.conf"
         sudo mkinitcpio -p linux
-        return 0
+        exit 0
     fi
 }
 

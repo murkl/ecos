@@ -14,13 +14,13 @@ install() {
 
     if ! efivar -l >/dev/null; then
         echo "BIOS detected. Plymouth only available on UEFI!"
-        return 1
+        exit 1
     fi
 
     # Check if installed
     if pacman -Qi plymouth >/dev/null; then
         echo "Plymouth already installed!"
-        return 1
+        exit 1
     fi
 
     #----------------------------------------
