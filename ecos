@@ -33,7 +33,6 @@ SCRIPT_TUI_HEIGHT=24
 ECOS_REPO_URL="https://github.com/murkl/ecos.git"
 ECOS_DOTS_DEFAULT_URL="https://github.com/murkl/dotfiles-gnome.git"
 ECOS_RAW_URL="https://raw.githubusercontent.com/murkl/ecos/main"
-ECOS_TWEAKS_URL="$ECOS_RAW_URL/tweaks"
 ECOS_CORE_URL="$ECOS_RAW_URL/ecos"
 ECOS_ARCH_ISO_DEFAULT_URL="https://www.archlinux.de/download/iso/2021.11.01/archlinux-2021.11.01-x86_64.iso"
 
@@ -1305,6 +1304,7 @@ ecos_tui_install_ecos() {
 
     # Create dots bin
     local dots_bin="$ECOS_BIN_DIR/dots"
+    mkdir -p "$ECOS_BIN_DIR"
     echo '#!/bin/sh' >"$dots_bin"
     echo 'git --git-dir="'$ECOS_LOCAL_DOTFILES'" --work-tree="$HOME" "$@"' >>"$dots_bin"
     chmod +x "$dots_bin"
@@ -1315,18 +1315,17 @@ ecos_tui_install_ecos() {
     # GnuPG conf
     mkdir -p "$HOME/.local/share/gnupg"
     echo 'pinentry-program /usr/bin/pinentry-gnome3' >"$HOME/.local/share/gnupg/gpg-agent.conf"
-
     # Set correct gnupg permission
     chmod -R go-rwx "$HOME/.local/share/gnupg"
-
-    # Create initialized state file
-    echo "$SCRIPT_VERSION" >"$ECOS_INITIALIZED"
-    touch "$ECOS_SHOW_CHANGELOG"
-    echo -e "DONE"
 
     # Create Desktop file
     print_title 'CREATE ECOS DESKTOP FILE'
     ecos_create_desktop_file
+    echo -e "DONE"
+
+    # Create initialized state file
+    echo "$SCRIPT_VERSION" >"$ECOS_INITIALIZED"
+    touch "$ECOS_SHOW_CHANGELOG"
     echo -e "DONE"
 
     wait
@@ -1427,7 +1426,7 @@ ecos_update_system() {
 
     # DOTFILES UPDATE
     print_title 'ECOS DOTFILES UPDATE'
-    cd "$HOME"
+    cd "$HOME" || exit 1
 
     # RESET LOCAL FILES
     git --git-dir="$ECOS_LOCAL_DOTFILES" --work-tree="$HOME" fetch --all
@@ -1576,7 +1575,7 @@ ecos_tui_menu_tweaks() {
     # TUI TWEAK LIST
     #----------------------------------------
     tui_init 0 ""
-    local menu_input=$(whiptail --checklist --notags "$(cat "$SCRIPT_TUI_FILE")\n\n" "$SCRIPT_TUI_HEIGHT" "$SCRIPT_TUI_WIDTH" 10 ${whiptail_tweaks_array[@]} 3>&1 1>&2 2>&3)
+    local menu_input=$(whiptail --checklist --notags "$(cat "$SCRIPT_TUI_FILE")\n\n" "$SCRIPT_TUI_HEIGHT" "$SCRIPT_TUI_WIDTH" 10 "${whiptail_tweaks_array[@]}" 3>&1 1>&2 2>&3)
     if [ "$menu_input" = "" ]; then
         main
         exit 0
@@ -1584,7 +1583,7 @@ ecos_tui_menu_tweaks() {
 
     local selected_array=($(echo "$menu_input" | tr -d '"'))
     clear
-    echo "SELECTED TWEAKS: ${selected_array[@]}"
+    echo "SELECTED TWEAKS: ${selected_array[*]}"
 
     #----------------------------------------
     # EXECUTE TWEAK LIST
@@ -1642,7 +1641,7 @@ ecos_exec_tweak() {
         # Execute tweak
         chmod +x "$tweak_sh"
         cd "$tweak_cache_dir" || exit 1
-        ECOS_HOME=$ECOS_HOME $tweak_sh $tweak_action $tweak_res_dir $tweak_cache_dir
+        ECOS_HOME="$ECOS_HOME" "$tweak_sh" "$tweak_action" "$tweak_res_dir" "$tweak_cache_dir"
 
         # Install or update
         if [ "$tweak_action" = "install" ] || [ "$tweak_action" = "update" ]; then
