@@ -270,7 +270,7 @@ tui_menu_manager() {
     # Show TUI menu
     #----------------------------------------
     tui_init 28 "MANAGER"
-    if ! menu_input=$(whiptail --menu --notags "$(cat "$SCRIPT_TUI_FILE")\n" "$SCRIPT_TUI_HEIGHT" "$SCRIPT_TUI_WIDTH" 4 "1" "     Update" "2" "     Tweaks" "3" "     Reset" "4" "Create USB Stick" 3>&1 1>&2 2>&3); then
+    if ! menu_input=$(whiptail --menu --notags "$(cat "$SCRIPT_TUI_FILE")\n" "$SCRIPT_TUI_HEIGHT" "$SCRIPT_TUI_WIDTH" 4 "1" "   Update ECOS" "2" "  Tweak Manager" "3" "   Reset ECOS" "4" "Create USB Stick" 3>&1 1>&2 2>&3); then
         exit 0
     fi
 
