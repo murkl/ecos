@@ -1651,13 +1651,12 @@ ecos_exec_tweak() {
             # Remove on success
             if [ "$tweak_action" = "remove" ]; then
                 rm -rf "$tweak_cache_dir"
-                echo -e "\nTWEAK $tweak_id:  Successfully remove\n"
+                echo -e "\nTWEAK $tweak_id:  Successfully removed\n"
             fi
         else
             # Remove dir if error during execution
             rm -rf "$tweak_cache_dir"
             echo -e "\nTWEAK $tweak_id: Failed\n"
-
         fi
     else
         echo "Error: TWEAK_ACTION=$tweak_action not supported"
