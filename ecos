@@ -1656,6 +1656,8 @@ ecos_exec_tweak() {
         else
             # Remove dir if error during execution
             rm -rf "$tweak_cache_dir"
+            echo -e "\nTWEAK $tweak_id:  Failed\n"
+
         fi
     else
         echo "Error: TWEAK_ACTION=$tweak_action not supported"
