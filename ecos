@@ -1638,21 +1638,25 @@ ecos_exec_tweak() {
         # Create tweak cache dir
         mkdir -p "$tweak_cache_dir"
 
-        # Execute tweak
         chmod +x "$tweak_sh"
         cd "$tweak_cache_dir" || exit 1
-        ECOS_HOME="$ECOS_HOME" "$tweak_sh" "$tweak_action" "$tweak_res_dir" "$tweak_cache_dir"
 
-        # Install or update
-        if [ "$tweak_action" = "install" ] || [ "$tweak_action" = "update" ]; then
-            echo "$(date "+%Y-%m-%d-%H:%M:%S")" >"$tweak_meta"
+        # Execute tweak
+        if ECOS_HOME="$ECOS_HOME" "$tweak_sh" "--$tweak_action" "$tweak_res_dir" "$tweak_cache_dir"; then
+
+            # Install or update on success
+            if [ "$tweak_action" = "install" ] || [ "$tweak_action" = "update" ]; then
+                echo "$(date "+%Y-%m-%d-%H:%M:%S")" >"$tweak_meta"
+            fi
+
+            # Remove on success
+            if [ "$tweak_action" = "remove" ]; then
+                rm -rf "$tweak_cache_dir"
+            fi
         fi
 
-        # Remove
-        if [ "$tweak_action" = "remove" ]; then
-            rm -rf "$tweak_cache_dir"
-        fi
     else
+
         echo "Error: TWEAK_ACTION=$tweak_action not supported"
     fi
 }

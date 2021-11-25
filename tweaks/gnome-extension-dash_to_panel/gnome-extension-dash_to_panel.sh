@@ -35,6 +35,6 @@ update() {
     gnome-extensions enable "dash-to-panel@jderose9.github.com"
 }
 
-if [ "$1" = "install" ]; then install "$@"; fi
-if [ "$1" = "remove" ]; then remove "$@"; fi
-if [ "$1" = "update" ]; then update "$@"; fi
+if [ "$1" = "--install" ]; then install "$@"; fi
+if [ "$1" = "--remove" ]; then remove "$@"; fi
+if [ "$1" = "--update" ]; then update "$@"; fi

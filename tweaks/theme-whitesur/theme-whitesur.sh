@@ -56,6 +56,6 @@ update() {
     sudo sed -ni "/$APP_START/{p;:a;N;/$APP_END/!ba;s/.*\n/$APP_CONTENT\n/};p" "$THEME_CSS_FILE"
 }
 
-if [ "$1" = "install" ]; then install "$@"; fi
-if [ "$1" = "remove" ]; then remove "$@"; fi
-if [ "$1" = "update" ]; then update "$@"; fi
+if [ "$1" = "--install" ]; then install "$@"; fi
+if [ "$1" = "--remove" ]; then remove "$@"; fi
+if [ "$1" = "--update" ]; then update "$@"; fi

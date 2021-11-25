@@ -29,6 +29,6 @@ update() {
     echo "Nothing to do..."
 }
 
-if [ "$1" = "install" ]; then install "$@"; fi
-if [ "$1" = "remove" ]; then remove "$@"; fi
-if [ "$1" = "update" ]; then update "$@"; fi
+if [ "$1" = "--install" ]; then install "$@"; fi
+if [ "$1" = "--remove" ]; then remove "$@"; fi
+if [ "$1" = "--update" ]; then update "$@"; fi
