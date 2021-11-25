@@ -1645,7 +1645,7 @@ ecos_exec_tweak() {
             # Install or update on success
             if [ "$tweak_action" = "install" ] || [ "$tweak_action" = "update" ]; then
                 echo "$(date "+%Y-%m-%d-%H:%M:%S")" >"$tweak_meta"
-                echo -e "\nTWEAK $tweak_id:  Successfully installed\n"
+                echo -e "\nTWEAK $tweak_id:  Successfully installed/updated\n"
             fi
 
             # Remove on success
