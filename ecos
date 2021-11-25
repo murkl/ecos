@@ -1495,7 +1495,10 @@ ecos_tui_menu_tweaks() {
 
     ecos_check_git
     ecos_check_paru
-    ecos_update_cache_repo
+
+    if [ "$1" != '--no-update' ]; then
+        ecos_update_cache_repo
+    fi
 
     local tweaks_array_all=()
     local tweaks_array_enabled=()
@@ -1580,7 +1583,7 @@ ecos_tui_menu_tweaks() {
     tui_init 0 ""
     local menu_input=$(whiptail --checklist --notags "$(cat "$SCRIPT_TUI_FILE")\n\n" "$SCRIPT_TUI_HEIGHT" "$SCRIPT_TUI_WIDTH" 10 ${whiptail_tweaks_array_sorted[@]} 3>&1 1>&2 2>&3)
     if [ "$menu_input" = "" ]; then
-        main
+        ecos_tui_menu_tweaks '--no-update'
         exit 0
     fi
 
@@ -1596,7 +1599,7 @@ ecos_tui_menu_tweaks() {
         wait
     done
 
-    ecos_tui_menu_tweaks
+    ecos_tui_menu_tweaks '--no-update'
 }
 
 ecos_exec_tweak() {
