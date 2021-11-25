@@ -1596,7 +1596,7 @@ ecos_tui_menu_tweaks() {
         wait
     done
 
-    exit 0
+    ecos_tui_menu_tweaks
 }
 
 ecos_exec_tweak() {
