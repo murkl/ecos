@@ -25,7 +25,7 @@
 
 - Create bootable USB Stick
   - `curl -sL http://ecos.webhop.me | bash`
-- Boot from USB Stick...
+- Boot [Arch ISO](https://www.archlinux.de/download) from USB Stick...
   - `loadkeys de-latin1`
   - `curl -L http://ecos.webhop.me > ecos`
   - `bash ecos`
