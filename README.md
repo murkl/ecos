@@ -34,7 +34,7 @@
 
 ECOS is a full automatic TUI based installation script for Arch Linux. This script will install a minimal installation of Arch Linux including encryption (LUKS) and your prefered Dotfiles. It is seperated in two installation steps.
 
-## Core Installation
+## 1. Step: Core Installation
 
 This is the first installation step and will install all essential packages and configurations for Arch Linux. You have to reboot after this step. The following packages will be installed during this installation step.
 
@@ -42,7 +42,7 @@ This is the first installation step and will install all essential packages and 
 base base-devel linux linux-firmware efibootmgr dosfstools gptfdisk networkmanager zsh
 ```
 
-## Dotfiles Installation
+## 2. Step: Dotfiles Installation
 
 After the first reboot the ECOS TUI will open again automatically. Feel free to execute the ECOS Dotfiles Installation (with all preconfigured packages) or exit the TUI and install your fresh Arch Linux system manually.
 The following packages will be installed during this routine before the `~/.ecos/init` script within the given Dotfiles Repository will be executed.
