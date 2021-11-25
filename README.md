@@ -4,7 +4,7 @@
   <p>ARCH LINUX • MICRO • ENCRYPTED • DOTBASED</p>
 
   <p>
-  <img src="https://raw.githubusercontent.com/murkl/ecos/master/screenshots/ecos.png" />
+    <img width="70%" src="https://raw.githubusercontent.com/murkl/ecos/master/screenshots/ecos-title.png" />
   </p>
 
   <p><b>The userfriendly & dotbased OS</b></p>
