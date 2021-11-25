@@ -71,7 +71,7 @@ git paru
   <img width="45%" src="https://raw.githubusercontent.com/murkl/ecos/master/screenshots/bspwm-02.png">
 </span>
 
-## ECOS Core Installation Screenshots
+## ECOS Installation Screenshots
 
 <span align="center">
   <img width="22%" src="https://raw.githubusercontent.com/murkl/ecos/master/screenshots/ecos-core-01.png">
@@ -93,4 +93,5 @@ git paru
   <img width="22%" src="https://raw.githubusercontent.com/murkl/ecos/master/screenshots/ecos-manager-02.png">
   <img width="22%" src="https://raw.githubusercontent.com/murkl/ecos/master/screenshots/ecos-manager-03.png">
   <img width="22%" src="https://raw.githubusercontent.com/murkl/ecos/master/screenshots/ecos-manager-04.png">
+  <img width="22%" src="https://raw.githubusercontent.com/murkl/ecos/master/screenshots/ecos-manager-05.png">
 </span>
