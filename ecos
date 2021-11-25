@@ -1329,9 +1329,13 @@ ecos_tui_install_ecos() {
     ecos_create_desktop_file
     echo -e "DONE"
 
-    print_title "ECOS INSTALLATION FINISHED"
-    read -p 'Please REBOOT NOW! Close with any Key...'
     wait
+    tui_init 0 "ECOS Installation finished"
+    tui_add 0 "Reboot now?"
+    if (whiptail --yesno "$(cat "$SCRIPT_TUI_FILE")" "$SCRIPT_TUI_HEIGHT" "$SCRIPT_TUI_WIDTH"); then
+        reboot
+    fi
+
     exit 0
 }
 
