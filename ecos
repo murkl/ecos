@@ -1575,7 +1575,7 @@ ecos_tui_menu_tweaks() {
     # TUI TWEAK LIST
     #----------------------------------------
     tui_init 0 ""
-    local menu_input=$(whiptail --checklist --notags "$(cat "$SCRIPT_TUI_FILE")\n\n" "$SCRIPT_TUI_HEIGHT" "$SCRIPT_TUI_WIDTH" 10 "${whiptail_tweaks_array[@]}" 3>&1 1>&2 2>&3)
+    local menu_input=$(whiptail --checklist --notags "$(cat "$SCRIPT_TUI_FILE")\n\n" "$SCRIPT_TUI_HEIGHT" "$SCRIPT_TUI_WIDTH" 10 ${whiptail_tweaks_array[@]} 3>&1 1>&2 2>&3)
     if [ "$menu_input" = "" ]; then
         main
         exit 0
