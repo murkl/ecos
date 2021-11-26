@@ -1,5 +1,5 @@
 #!/bin/bash
-SCRIPT_VERSION=2.0.8
+SCRIPT_VERSION=2.0.9
 
 #/////////////////////////////////////////////////////
 # CHANGELOG
@@ -34,21 +34,25 @@ ECOS_REPO_URL="https://github.com/murkl/ecos.git"
 ECOS_DOTS_DEFAULT_URL="https://github.com/murkl/dotfiles-gnome.git"
 ECOS_RAW_URL="https://raw.githubusercontent.com/murkl/ecos/main"
 ECOS_CORE_URL="$ECOS_RAW_URL/ecos"
-ECOS_ARCH_ISO_DEFAULT_URL="https://www.archlinux.de/download/iso/2021.11.01/archlinux-2021.11.01-x86_64.iso"
+
+# ARCH ISO
+ECOS_ARCH_ISO_ROOT_URL="https://www.archlinux.de/download/iso/$(date "+%Y.%m.01")"
+ECOS_ARCH_ISO_FILE="archlinux-$(date "+%Y.%m.01")-x86_64.iso"
+ECOS_ARCH_ISO_SHA1="sha1sums.txt"
 
 # ECOS
 ECOS_HOME="$HOME/.ecos"
-ECOS_WORKING_DIR="$ECOS_HOME/.cache"
 ECOS_BIN_DIR="$ECOS_HOME/bin"
 ECOS_CORE="$ECOS_BIN_DIR/$SCRIPT_ID"
-ECOS_INIT="$ECOS_HOME/init"
+ECOS_INIT_SCRIPT="$ECOS_HOME/init"
+ECOS_WORKING_DIR="$ECOS_HOME/.cache"
 ECOS_LOCAL_DOTFILES="$ECOS_WORKING_DIR/dotfiles"
-ECOS_INITIALIZED="$ECOS_WORKING_DIR/initialized"
+ECOS_STATE_DIR="$ECOS_WORKING_DIR/state"
+ECOS_STATE_INITIALIZED="$ECOS_STATE_DIR/initialized"
+ECOS_STATE_SHOW_CHANGELOG="$ECOS_STATE_DIR/show_changelog"
 ECOS_CACHE_REPO_ECOS="$ECOS_WORKING_DIR/repo"
 ECOS_CACHE_TWEAKS="$ECOS_WORKING_DIR/tweaks"
 ECOS_USER_TWEAKS="$ECOS_HOME/tweaks"
-ECOS_SHOW_CHANGELOG="$ECOS_WORKING_DIR/show_changelog"
-ECOS_ARCH_ISO_FILE="$ECOS_WORKING_DIR/archlinux-x86_64.iso"
 ECOS_DESKTOP_FILE="$HOME/.local/share/applications/$SCRIPT_ID.desktop"
 
 #/////////////////////////////////////////////////////
@@ -115,7 +119,7 @@ main() {
     # INIT
     # ---------------------------------------
     if [ "$1" = "--init" ]; then
-        if [ ! -f "$ECOS_INITIALIZED" ]; then
+        if [ ! -f "$ECOS_STATE_INITIALIZED" ]; then
             tui_menu_init
         else
             exit 0
@@ -150,10 +154,10 @@ main() {
     # ECOS SCRIPT_CHANGELOG
     # ---------------------------------------
     if [ "$1" = "--changelog" ]; then
-        if [ -f "$ECOS_SHOW_CHANGELOG" ]; then
+        if [ -f "$ECOS_STATE_SHOW_CHANGELOG" ]; then
             tui_init 0 ""
             whiptail --title "Changelog" --scrolltext --msgbox "$(cat "$SCRIPT_TUI_FILE")\n\n$SCRIPT_CHANGELOG" $SCRIPT_TUI_HEIGHT $SCRIPT_TUI_WIDTH 3>&1 1>&2 2>&3
-            rm -f "$ECOS_SHOW_CHANGELOG"
+            rm -f "$ECOS_STATE_SHOW_CHANGELOG"
         fi
         exit 0
     fi
@@ -174,7 +178,7 @@ main() {
         if [ "$(cat /proc/sys/kernel/hostname)" = "archiso" ]; then
             tui_menu_core_install
         else
-            if [ ! -f "$ECOS_INITIALIZED" ]; then
+            if [ ! -f "$ECOS_STATE_INITIALIZED" ]; then
                 tui_menu_welcome
             else
                 tui_menu_manager
@@ -1245,6 +1249,7 @@ ecos_tui_install_ecos() {
     # Create dirs
     mkdir -p "$ECOS_WORKING_DIR"
     mkdir -p "$ECOS_USER_TWEAKS"
+    mkdir -p "$ECOS_STATE_DIR"
 
     tui_init 0 "Dotfiles URL"
     if ! ECOS_DOTS_DEFAULT_URL=$(whiptail --inputbox "$(cat "$SCRIPT_TUI_FILE")" "$SCRIPT_TUI_HEIGHT" "$SCRIPT_TUI_WIDTH" "$ECOS_DOTS_DEFAULT_URL" 3>&1 1>&2 2>&3); then
@@ -1278,8 +1283,8 @@ ecos_tui_install_ecos() {
     cd "$HOME" || exit 1
 
     # Removing existing init
-    if [ -f "$ECOS_INIT" ]; then
-        "$ECOS_INIT" --remove
+    if [ -f "$ECOS_INIT_SCRIPT" ]; then
+        "$ECOS_INIT_SCRIPT" --remove
     fi
 
     # Clone dotfiles
@@ -1293,14 +1298,14 @@ ecos_tui_install_ecos() {
     echo -e "DONE"
 
     print_title "INIT DOTFILES"
-    if [ ! -f "$ECOS_INIT" ]; then
-        echo "ERROR: $ECOS_INIT not found"
+    if [ ! -f "$ECOS_INIT_SCRIPT" ]; then
+        echo "ERROR: $ECOS_INIT_SCRIPT not found"
         exit 1
     fi
 
     # Call init script
-    echo -e "EXECUTE $ECOS_INIT"
-    chmod +x "$ECOS_INIT" && "$ECOS_INIT" --install
+    echo -e "EXECUTE $ECOS_INIT_SCRIPT"
+    chmod +x "$ECOS_INIT_SCRIPT" && "$ECOS_INIT_SCRIPT" --install
 
     # Create dots bin
     local dots_bin="$ECOS_BIN_DIR/dots"
@@ -1318,8 +1323,8 @@ ecos_tui_install_ecos() {
     echo -e "DONE"
 
     # Create initialized state file
-    echo "$SCRIPT_VERSION" >"$ECOS_INITIALIZED"
-    touch "$ECOS_SHOW_CHANGELOG"
+    echo "$SCRIPT_VERSION" >"$ECOS_STATE_INITIALIZED"
+    touch "$ECOS_STATE_SHOW_CHANGELOG"
     echo -e "DONE"
 
     wait
@@ -1452,19 +1457,19 @@ ecos_update_system() {
     ecos_update_tweaks
 
     # UPDATE INIT FILE
-    if [ -f "$ECOS_INIT" ]; then
+    if [ -f "$ECOS_INIT_SCRIPT" ]; then
         latest_changelog_version=""
-        if [ -f "$ECOS_INITIALIZED" ]; then
-            latest_changelog_version=$(<"$ECOS_INITIALIZED")
+        if [ -f "$ECOS_STATE_INITIALIZED" ]; then
+            latest_changelog_version=$(<"$ECOS_STATE_INITIALIZED")
         fi
         if [ "$SCRIPT_VERSION" != "$latest_changelog_version" ]; then
             print_title 'REINSTALL ECOS INIT FILE'
-            "$ECOS_INIT" --install
-            echo "$SCRIPT_VERSION" >"$ECOS_INITIALIZED"
-            touch "$ECOS_SHOW_CHANGELOG"
+            "$ECOS_INIT_SCRIPT" --install
+            echo "$SCRIPT_VERSION" >"$ECOS_STATE_INITIALIZED"
+            touch "$ECOS_STATE_SHOW_CHANGELOG"
         else
             print_title 'UPDATING ECOS INIT FILE'
-            "$ECOS_INIT" --update
+            "$ECOS_INIT_SCRIPT" --update
         fi
     fi
 
@@ -1697,72 +1702,83 @@ tui_create_usb() {
 
     # Select Disk
     #--------------------------------------------
-    disk_array=()
+    local disk_array=()
     while read disk_line; do
         disk_size=$(lsblk -d -n -o SIZE /dev/$disk_line)
         disk_array+=("/dev/$disk_line")
         disk_array+=(" ($disk_size)")
     done < <(lsblk -I 8 -d -o KNAME -n)
 
-    usb_disk=''
+    local usb_disk=''
     tui_init 11 "Choose USB Stick for ECOS Installation"
     if ! usb_disk=$(whiptail --menu "$(cat "$SCRIPT_TUI_FILE")\n" "$SCRIPT_TUI_HEIGHT" "$SCRIPT_TUI_WIDTH" "${#disk_array[@]}" "${disk_array[@]}" 3>&1 1>&2 2>&3); then
         main
         exit 0
     fi
-    tui_init 0 "Arch ISO URL"
-    if ! ECOS_ARCH_ISO_DEFAULT_URL=$(whiptail --inputbox "$(cat "$SCRIPT_TUI_FILE")\n" "$SCRIPT_TUI_HEIGHT" "$SCRIPT_TUI_WIDTH" "$ECOS_ARCH_ISO_DEFAULT_URL" 3>&1 1>&2 2>&3); then
-        main
-        exit 0
-    fi
-    if [ "$ECOS_ARCH_ISO_DEFAULT_URL" = "" ]; then
-        echo "URL was empty"
-        main
-        exit 1
-    fi
 
-    print_header
-    print_title "USB Disk: $usb_disk"
-    echo -e '\n'
-    print_title "ARCH URL: $ECOS_ARCH_ISO_DEFAULT_URL"
+    local local_iso_dir="$ECOS_WORKING_DIR/arch-iso"
+    local iso_url="$ECOS_ARCH_ISO_ROOT_URL/$ECOS_ARCH_ISO_FILE"
+    local sha1_url="$ECOS_ARCH_ISO_ROOT_URL/$ECOS_ARCH_ISO_SHA1"
+    local local_iso_file="$local_iso_dir/$ECOS_ARCH_ISO_FILE"
+    local local_sha1_file="$local_iso_dir/$ECOS_ARCH_ISO_FILE.sha1"
+
+    mkdir -p "$local_iso_dir"
 
     # Check and download arch iso
     #--------------------------------------------
-    mkdir -p "$ECOS_WORKING_DIR"
-    if ! [ -f "$ECOS_ARCH_ISO_FILE" ]; then
-        print_title "Downloading $ECOS_ARCH_ISO_FILE from $ECOS_ARCH_ISO_DEFAULT_URL..."
+    print_header
+    print_title "USB Disk: $usb_disk"
 
-        if ! curl -L "$ECOS_ARCH_ISO_DEFAULT_URL" -o "$ECOS_ARCH_ISO_FILE.part"; then
-            echo "ERROR: Downloading ISO"
+    # Downloading ISO
+    if ! [ -f "$local_iso_file" ]; then
+        print_title "Downloading ISO: $iso_url"
+        if ! curl -L "$iso_url" -o "$local_iso_file.part"; then
+            echo "ERROR: Downloading ISO $iso_url"
             exit 1
         fi
         wait
-
-        if ! mv "$ECOS_ARCH_ISO_FILE.part" "$ECOS_ARCH_ISO_FILE"; then
-            echo "ERROR: Moving ISO file"
+        if ! mv "$local_iso_file.part" "$local_iso_file"; then
+            echo "ERROR: Moving ISO $local_iso_file"
             exit 1
         fi
     fi
 
-    print_title "Arch ISO: $ECOS_ARCH_ISO_FILE"
+    # Downloading SHA1 Sum
+    if ! [ -f "$local_sha1_file" ]; then
+        print_title "Downloading SHA1: $sha1_url"
+        if ! curl -L "$sha1_url" -o "$local_sha1_file.part"; then
+            echo "ERROR: Downloading SHA1 Sum $sha1_url"
+            exit 1
+        fi
+        wait
+        if ! mv "$local_sha1_file.part" "$local_sha1_file"; then
+            echo "ERROR: Moving SHA1 Sum $local_sha1_file"
+            exit 1
+        fi
+    fi
+
+    # Check SHA1 Sum
+    cd "$local_iso_dir" || exit 1
+    if grep -qrnw "$local_sha1_file" -e "$(sha1sum "$ECOS_ARCH_ISO_FILE")"; then
+        print_title "SHA1 Checksum correct"
+    else
+        print_title "ERROR: SHA1 Checksum incorrect"
+        exit 1
+    fi
+
+    print_title "Arch ISO: $local_iso_file"
 
     # Create Bootable USB Stick
     #--------------------------------------------
-    print_title "// Create Bootable USB Stick"
+    print_title "Create Bootable USB Stick"
 
-    if ! sudo dd bs=4M if="$ECOS_ARCH_ISO_FILE" of="$usb_disk" status=progress oflag=sync; then
+    if ! sudo dd bs=4M if="$local_iso_file" of="$usb_disk" status=progress oflag=sync; then
         echo "ERROR: Creating USB Stick"
         exit 1
     fi
-    wait
 
-    # Unmount
-    #--------------------------------------------
-    print_title "Unmount USB Stick"
-    sudo umount -R "$usb_disk"
-    wait
-
-    print_title "FINISHED! Please remove the USB Stick $usb_disk"
+    # Finished
+    wait && print_title "FINISHED! Please remove the USB Stick $usb_disk"
 }
 
 #/////////////////////////////////////////////////////

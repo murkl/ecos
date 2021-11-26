@@ -48,7 +48,7 @@ After the first reboot the ECOS TUI will open again automatically. Feel free to 
 The following packages will be installed during this routine before the `~/.ecos/init` script within the given Dotfiles Repository will be executed.
 
 ```
-git paru
+git paru zenity
 ```
 
 **Note:** _The ECOS Dotfiles Installation routine will ask you for your prefered Dotfiles URL and will execute the `~/.ecos/init` script inside this Dotfiles Repository. You can use a preconfigured Dotfiles Repository (see below) or your own one_
