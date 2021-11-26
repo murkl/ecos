@@ -1389,6 +1389,7 @@ ecos_update_core() {
     mkdir -p "$ECOS_WORKING_DIR"
     mkdir -p "$ECOS_BIN_DIR"
     mkdir -p "$ECOS_USER_TWEAKS"
+    mkdir -p "$ECOS_STATE_DIR"
     mkdir -p "$HOME/.local/share/applications"
 
     local tmp_ecos="$ECOS_WORKING_DIR/ecos-new"
