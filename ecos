@@ -1312,12 +1312,6 @@ ecos_tui_install_ecos() {
     # Silent Boot
     echo '# Disable the last login message on startup with this file' >"$HOME/.hushlogin"
 
-    # GnuPG conf
-    mkdir -p "$HOME/.local/share/gnupg"
-    echo 'pinentry-program /usr/bin/pinentry-gnome3' >"$HOME/.local/share/gnupg/gpg-agent.conf"
-    # Set correct gnupg permission
-    chmod -R go-rwx "$HOME/.local/share/gnupg"
-
     # Create Desktop file
     print_title 'CREATE ECOS DESKTOP FILE'
     ecos_create_desktop_file
