@@ -6,5 +6,5 @@ check-interval=360
 position=2
 position-number=0
 show-count=true
-update-cmd="gnome-terminal -e \"bash -c 'ecos --update-ecos'\""
+update-cmd="gnome-terminal -e \"bash -c 'ecos --update-system'\""
 use-buildin-icons=false
