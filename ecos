@@ -1627,14 +1627,14 @@ ecos_update_system() {
     echo ">>> OK"
 
     # PACKAGE UPDATE
-    print_title 'FETCH PACKAGE UPDATES'
+    print_title 'FETCH NEW PACKAGES'
     paru -Syy
 
     # PACKAGE UPGRADE
-    print_title 'UPGRADE SYSTEM PACKAGES'
+    print_title 'UPGRADE NEW PACKAGES'
     paru -Qu
-    echo ''
-    read -p "Upgrade ECOS System? [y/n]: " user_input
+    echo -e '\n'
+    read -p "Continue ECOS System Upgrade? [y/n]: " user_input
     if [ "$user_input" = "y" ]; then
         if ! paru -Su --noconfirm; then
             echo -e "ERROR: paru"
