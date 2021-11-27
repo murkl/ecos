@@ -30,6 +30,8 @@ ECOS_ARCH_ISO_SHA1="sha1sums.txt"
 
 # ECOS
 ECOS_HOME="$HOME/.ecos"
+ECOS_CONFIG_DIR="$ECOS_HOME/config"
+ECOS_CONFIG_FILE="$ECOS_CONFIG_DIR/ecos.conf"
 ECOS_BIN_DIR="$ECOS_HOME/bin"
 ECOS_CORE="$ECOS_BIN_DIR/$SCRIPT_ID"
 ECOS_INIT_SCRIPT="$ECOS_HOME/init"
@@ -200,7 +202,7 @@ zenity() {
 }
 
 notify() {
-    zenity --notification --text="$1"
+    zenity --notification --text="$SCRIPT_TITLE\n$1"
 }
 
 #/////////////////////////////////////////////////////
@@ -220,22 +222,35 @@ zenity_manager() {
     menu_entries+=("Update")
     menu_entries+=("Tweaks")
     menu_entries+=("Settings")
-    if ! local zenity_result="$(zenity --list --hide-header --column="" --text="$(print_zenity_header 'Manager')" --cancel-label='Exit' --ok-label='Ok' "${menu_entries[@]}")"; then
+    if ! zenity_result="$(zenity --list --hide-header --column="" --text="$(print_zenity_header 'Manager')" --cancel-label='Exit' --ok-label='Ok' "${menu_entries[@]}")"; then
         exit 0
     fi
 
     if [ "$zenity_result" = "Update" ]; then
         notify "Update"
-        return 0
+        zenity_manager
+        exit 0
     fi
     if [ "$zenity_result" = "Tweaks" ]; then
         notify "Tweaks"
-        return 0
+        zenity_manager
+        exit 0
     fi
     if [ "$zenity_result" = "Settings" ]; then
-        notify "Settings"
-        return 0
+        zenity_settings
+        zenity_manager
+        exit 0
     fi
+}
+
+zenity_settings() {
+    mkdir -p "$ECOS_CONFIG_DIR"
+    touch "$ECOS_CONFIG_FILE"
+    if zenity_result=$(zenity --text-info --width=550 --height=300 --title="Settings" --ok-label="Save" --cancel-label="Cancel" --font="monospace" --editable --filename="$ECOS_CONFIG_FILE"); then
+        echo "$zenity_result" >"$ECOS_CONFIG_FILE"
+        notify "Settings saved"
+    fi
+
 }
 
 zenity_show_changelog() {
