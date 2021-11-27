@@ -1301,7 +1301,7 @@ ecos_create_desktop_file() {
         echo "[Desktop Entry]"
         echo "Name=ECOS"
         echo "Icon=ecos"
-        echo 'Exec=$HOME/.ecos/bin/ecos --manager'
+        echo 'Exec=bash -c "$HOME/.ecos/bin/ecos --manager"'
         echo "Type=Application"
     } >"$ECOS_DESKTOP_FILE"
     chmod +x "$ECOS_DESKTOP_FILE"
