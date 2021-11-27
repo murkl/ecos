@@ -30,10 +30,7 @@ init() {
             exit 1
         fi
         cd './../release' || exit 1
-        if ! git add ./ecos && git commit -m "$(./ecos --version)"; then
-            echo -e "ERROR: git add ./ecos && git commit -m "$(./ecos --version)""
-            exit 1
-        fi
+        git add ./ecos && git commit -m "$(./ecos --version)"
         echo -e "ECOS succefully deployed!"
     else
         echo -e "Skipped..."
