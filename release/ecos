@@ -1,5 +1,5 @@
 #!/bin/bash
-SCRIPT_VERSION=2.1.4
+SCRIPT_VERSION=2.1.5
 
 #/////////////////////////////////////////////////////
 # SCRIPT VARIABLES
@@ -355,7 +355,7 @@ ecos_core_release() {
 
         # Git commit
         cd "$SCRIPT_DIR" || exit 1
-        local commit_msg="$(./release/ecos --version)"
+        local commit_msg="ECOS RELEASE $(./release/ecos --version)"
         git add "./release/ecos" && git add "./release/changelog.html" && git commit -m "$commit_msg"
         echo -e "ECOS CORE succefully released!"
     else
