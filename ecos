@@ -215,6 +215,7 @@ print_zenity_header() {
 
 zenity_manager() {
     ecos_check_zenity
+    ecos_init_dirs
     local menu_entries=()
     menu_entries+=("Update")
     menu_entries+=("Tweaks")
@@ -993,7 +994,7 @@ core_install_chroot() {
     #----------------------------------------
     local state_dir="/home/$USERNAME/.ecos/.cache/state"
     mkdir -p "$state_dir"
-    echo "$SCRIPT_VERSION|$(date "+%Y-%m-%d-%H:%M:%S")" >"$state_dir/core_initialized"
+    echo "$SCRIPT_VERSION" >"$state_dir/core_initialized"
 
     core_log "CHROOT successfully finished"
 }
