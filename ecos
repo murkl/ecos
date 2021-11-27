@@ -1637,8 +1637,9 @@ ecos_update_system() {
         exit 0
     fi
 
+    echo -e '------------------------------------------'
+
     # PACKAGE UPGRADE
-    echo -e '\n'
     print_title 'UPGRADE NEW PACKAGES'
     paru -Qu
     if ! paru -Su --noconfirm; then
