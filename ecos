@@ -1483,22 +1483,31 @@ ecos_update_core() {
 
     local ecos_update="$ECOS_WORKING_DIR/ecos.upate"
     if ! curl -s -L "$ECOS_CORE_URL" >"$ecos_update"; then
-        echo "ERROR: ECOS CORE DOWNLOAD"
+        echo "ERROR: ECOS CORE UPDATE DOWNLOAD: $ECOS_CORE_URL"
         exit 1
     fi
     if [ ! -f "$ecos_update" ]; then
-        echo "ERROR: ECOS UPDATE FILE NOT FOUND"
+        echo "ERROR: ECOS CORE UPDATE NOT FOUND: $ecos_update"
         exit 1
     else
-        if [ "$($ecos_update --version)" != "$($ECOS_CORE --version)" ]; then
-            echo "Updated: $($ECOS_CORE --version) ---> $($ecos_update --version)"
-            mv "$ecos_update" "$ECOS_CORE"
-            if ! chmod +x "$ECOS_CORE"; then
-                echo "ERROR: ECOS CORE NOT FOUND"
+        if ! chmod +x "$ecos_update"; then
+            echo "ERROR: CHMOD CORE UPDATE: $ecos_update"
+            exit 1
+        fi
+        local ecos_current_version="$($ECOS_CORE --version)"
+        local ecos_update_version="$($ecos_update --version)"
+        if [ "$ecos_current_version" != "$ecos_update_version" ]; then
+            if ! mv "$ecos_update" "$ECOS_CORE"; then
+                echo "ERROR: MOVE CORE: $ecos_update ---> $ECOS_CORE"
                 exit 1
             fi
+            if ! chmod +x "$ECOS_CORE"; then
+                echo "ERROR: CHMOD CORE: $ECOS_CORE"
+                exit 1
+            fi
+            echo "NEW ECOS CORE UPDATE: $ecos_current_version ---> $ecos_update_version"
         else
-            echo "No Update found"
+            echo "NO ECOS CORE UPDATE FOUND"
         fi
     fi
 }
