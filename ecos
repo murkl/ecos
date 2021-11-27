@@ -1,5 +1,5 @@
 #!/bin/bash
-SCRIPT_VERSION=2.1.3
+SCRIPT_VERSION=2.1.4
 
 #/////////////////////////////////////////////////////
 # SCRIPT VARIABLES
@@ -320,7 +320,7 @@ ecos_core_release() {
     fi
 
     # Check different changelog files
-    if diff "$DEVELOP_CHANGELOG" "$RELEASE_CHANGELOG" >/dev/null 2>&1; then
+    if ! diff "$DEVELOP_CHANGELOG" "$RELEASE_CHANGELOG" >/dev/null 2>&1; then
         show_warning="true"
         printf "${COLOR_RED}!! NO CHANGELOG UPDATE !!${COLOR_NULL}\n"
     fi
