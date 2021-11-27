@@ -1593,14 +1593,14 @@ ecos_update_core() {
         local ecos_update_version="$($ecos_update --version)"
         if [ "$ecos_current_version" != "$ecos_update_version" ]; then
             if ! mv "$ecos_update" "$ECOS_CORE"; then
-                echo "ERROR: MOVE CORE: $ecos_update ---> $ECOS_CORE"
+                echo "ERROR: MOVE CORE: $ecos_update --> $ECOS_CORE"
                 exit 1
             fi
             if ! chmod +x "$ECOS_CORE"; then
                 echo "ERROR: CHMOD CORE: $ECOS_CORE"
                 exit 1
             fi
-            echo "NEW ECOS CORE UPDATE: $ecos_current_version ---> $ecos_update_version"
+            echo "NEW ECOS CORE UPDATE: $ecos_current_version --> $ecos_update_version"
         else
             echo "$SCRIPT_TITLE $($ECOS_CORE --version): NO CORE UPDATE AVAILABLE (REMOTE: $ecos_update_version)"
         fi
