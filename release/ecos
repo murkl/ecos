@@ -1507,7 +1507,7 @@ ecos_update_core() {
             fi
             echo "NEW ECOS CORE UPDATE: $ecos_current_version ---> $ecos_update_version"
         else
-            echo "NO ECOS CORE UPDATE AVAILABLE"
+            echo "$($ECOS_CORE --version) | NO ECOS CORE UPDATE AVAILABLE"
         fi
     fi
 }
