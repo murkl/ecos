@@ -1,5 +1,5 @@
 #!/bin/bash
-SCRIPT_VERSION=2.1.9
+SCRIPT_VERSION=2.1.2
 
 #/////////////////////////////////////////////////////
 # SCRIPT VARIABLES
@@ -1486,12 +1486,6 @@ ecos_tui_install_ecos() {
         exit 1
     fi
 
-    # Call init script
-    echo -e "EXECUTE $ECOS_INIT_SCRIPT"
-    chmod +x "$ECOS_INIT_SCRIPT" || exit 1
-    "$ECOS_INIT_SCRIPT" --init
-    "$ECOS_INIT_SCRIPT" --update
-
     # Create dots bin
     local dots_bin="$ECOS_BIN_DIR/dots"
     mkdir -p "$ECOS_BIN_DIR"
@@ -1506,6 +1500,12 @@ ecos_tui_install_ecos() {
     print_title 'CREATE ECOS DESKTOP FILE'
     ecos_create_desktop_file
     echo -e "DONE"
+
+    # Call init script
+    echo -e "EXECUTE $ECOS_INIT_SCRIPT"
+    chmod +x "$ECOS_INIT_SCRIPT" || exit 1
+    "$ECOS_INIT_SCRIPT" --init
+    "$ECOS_INIT_SCRIPT" --update
 
     # Create initialized state file
     echo "$SCRIPT_VERSION" >"$ECOS_STATE_INITIALIZED"
@@ -1681,13 +1681,20 @@ ecos_update_system() {
         # Update if initialized file not exists or new init script available
         local new_init_script_version="$($ECOS_INIT_SCRIPT --version)"
         if [ "$SCRIPT_VERSION" != "$ecos_initialized_version" ] || [ "$new_init_script_version" != "$current_init_script_version" ]; then
-            echo "UPDATE INIT SCRIPT"
-            "$ECOS_INIT_SCRIPT" --update
-            echo "$SCRIPT_VERSION" >"$ECOS_STATE_INITIALIZED"
-            touch "$ECOS_STATE_SHOW_CHANGELOG"
-            echo ">>> OK"
+
+            read -p "UPDATE INIT? [y/n]: " user_input
+            if [ "$user_input" != "y" ]; then
+                echo -e "UPDATE INIT SCRIPT SKIPPED..."
+                echo ">>> OK"
+            else
+                echo "UPDATE INIT SCRIPT"
+                "$ECOS_INIT_SCRIPT" --update
+                echo "$SCRIPT_VERSION" >"$ECOS_STATE_INITIALIZED"
+                touch "$ECOS_STATE_SHOW_CHANGELOG"
+                echo ">>> OK"
+            fi
         else
-            echo "INIT UPDATE SKIPPED..."
+            echo "INIT SCRIPT UP TO DATE. SKIPPED..."
             echo ">>> OK"
         fi
     fi
