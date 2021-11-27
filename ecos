@@ -1455,16 +1455,20 @@ ecos_tui_install_ecos() {
     clear
     print_header
 
-    print_title "INSTALL ECOS CORE"
-    ecos_update_core
-    echo -e "DONE"
-
     print_title "CHECK GIT"
     ecos_check_git
     echo -e "DONE"
 
     print_title "CHECK PARU"
     ecos_check_paru
+    echo -e "DONE"
+
+    print_title "INSTALL ECOS CORE"
+    ecos_update_core
+    echo -e "DONE"
+
+    print_title "INSTALL ECOS REPO"
+    ecos_update_repo
     echo -e "DONE"
 
     print_title "CLONE DOTFILES"
@@ -1533,7 +1537,9 @@ ecos_tui_install_ecos() {
 # UPDATE
 #/////////////////////////////////////////////////////
 
-ecos_update_cache_repo() {
+ecos_update_repo() {
+
+    ecos_init_dirs
 
     if ! [ -d "$ECOS_REPO/.git" ]; then
         echo "CLONE ECOS REPO"
@@ -1605,9 +1611,8 @@ ecos_update_core() {
             fi
             echo "NEW ECOS CORE UPDATE: $ecos_current_version --> $ecos_update_version"
 
-            # UPDATE ECOS REPO
-            ecos_update_cache_repo
         else
+
             echo "$SCRIPT_TITLE $($ECOS_CORE --version): NO CORE UPDATE AVAILABLE (REMOTE: $ecos_update_version)"
         fi
     fi
@@ -1627,6 +1632,10 @@ ecos_update_system() {
 
     print_title 'UPDATE ECOS CORE'
     ecos_update_core
+    echo ">>> OK"
+
+    print_title 'UPDATE ECOS REPO'
+    ecos_update_repo
     echo ">>> OK"
 
     # PACKAGE UPDATE
