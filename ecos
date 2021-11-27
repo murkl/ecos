@@ -1481,20 +1481,25 @@ ecos_update_core() {
     check_internet
     ecos_init_dirs
 
-    local tmp_ecos="$ECOS_WORKING_DIR/ecos-new"
-    if ! curl -s -L "$ECOS_CORE_URL" >"$tmp_ecos"; then
+    local ecos_update="$ECOS_WORKING_DIR/ecos.upate"
+    if ! curl -s -L "$ECOS_CORE_URL" >"$ecos_update"; then
         echo "ERROR: ECOS CORE DOWNLOAD"
         exit 1
     fi
-    if [ ! -f "$tmp_ecos" ]; then
+    if [ ! -f "$ecos_update" ]; then
         echo "ERROR: ECOS UPDATE FILE NOT FOUND"
         exit 1
     else
-        mv "$tmp_ecos" "$ECOS_CORE"
-    fi
-    if ! chmod +x "$ECOS_CORE"; then
-        echo "ERROR: ECOS CORE NOT FOUND"
-        exit 1
+        if [ "$($ecos_update --version)" != "$($ECOS_CORE --version)" ]; then
+            echo "Updated: $($ECOS_CORE --version) ---> $($ecos_update --version)"
+            mv "$ecos_update" "$ECOS_CORE"
+            if ! chmod +x "$ECOS_CORE"; then
+                echo "ERROR: ECOS CORE NOT FOUND"
+                exit 1
+            fi
+        else
+            echo "No Update found"
+        fi
     fi
 }
 
