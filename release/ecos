@@ -21,7 +21,7 @@ SCRIPT_TUI_HEIGHT=24
 ECOS_REPO_URL="https://github.com/murkl/ecos.git"
 ECOS_DOTS_DEFAULT_URL="https://github.com/murkl/dotfiles-gnome.git"
 ECOS_RAW_URL="https://raw.githubusercontent.com/murkl/ecos/main"
-ECOS_CORE_URL="$ECOS_RAW_URL/ecos"
+ECOS_CORE_RELEASE_URL="$ECOS_RAW_URL/release/ecos"
 
 # ARCH ISO
 ECOS_ARCH_ISO_ROOT_URL="https://www.archlinux.de/download/iso/$(date "+%Y.%m.01")"
@@ -39,7 +39,7 @@ ECOS_WORKING_DIR="$ECOS_HOME/.cache"
 ECOS_DOTFILES="$ECOS_WORKING_DIR/dotfiles"
 ECOS_STATE_DIR="$ECOS_WORKING_DIR/state"
 ECOS_STATE_INITIALIZED="$ECOS_STATE_DIR/ecos_initialized"
-ECOS_STATE_SHOW_CHANGELOG="$ECOS_STATE_DIR/show_changelog"
+ECOS_STATE_SHOW_CHANGELOG="$ECOS_STATE_DIR/ecos.show_changelog"
 ECOS_REPO="$ECOS_WORKING_DIR/repo"
 ECOS_ICON_FILE="$ECOS_REPO/assets/ecos.svg"
 ECOS_CHANGELOG_FILE="$ECOS_REPO/assets/changelog.html"
@@ -1482,8 +1482,8 @@ ecos_update_core() {
     ecos_init_dirs
 
     local ecos_update="$ECOS_WORKING_DIR/ecos.upate"
-    if ! curl -s -L "$ECOS_CORE_URL" >"$ecos_update"; then
-        echo "ERROR: ECOS CORE UPDATE DOWNLOAD: $ECOS_CORE_URL"
+    if ! curl -s -L "$ECOS_CORE_RELEASE_URL" >"$ecos_update"; then
+        echo "ERROR: ECOS CORE UPDATE DOWNLOAD: $ECOS_CORE_RELEASE_URL"
         exit 1
     fi
     if [ ! -f "$ecos_update" ]; then
