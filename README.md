@@ -4,7 +4,7 @@
   <p>ARCH LINUX • MICRO • ENCRYPTED • DOTBASED</p>
 
   <p>
-    <img width="70%" src="https://raw.githubusercontent.com/murkl/ecos/master/screenshots/ecos-title.png" />
+    <img width="70%" src="https://raw.githubusercontent.com/murkl/ecos/master/assets/screenshots/ecos-title.png" />
   </p>
 
   <p><b>The userfriendly & dotbased OS</b></p>
@@ -58,8 +58,8 @@ git paru zenity
 <b>Repository:</b> https://github.com/murkl/dotfiles-gnome.git
 
 <span align="center">
-  <img width="45%" src="https://raw.githubusercontent.com/murkl/ecos/master/screenshots/gnome-01.png">
-  <img width="45%" src="https://raw.githubusercontent.com/murkl/ecos/master/screenshots/gnome-02.png">
+  <img width="45%" src="https://raw.githubusercontent.com/murkl/ecos/master/assets/screenshots/gnome-01.png">
+  <img width="45%" src="https://raw.githubusercontent.com/murkl/ecos/master/assets/screenshots/gnome-02.png">
 </span>
 
 ## BSPWM Variant
@@ -67,31 +67,31 @@ git paru zenity
 <b>Repository:</b> https://github.com/murkl/dotfiles-bspwm.git
 
 <span align="center">
-  <img width="45%" src="https://raw.githubusercontent.com/murkl/ecos/master/screenshots/bspwm-01.png">
-  <img width="45%" src="https://raw.githubusercontent.com/murkl/ecos/master/screenshots/bspwm-02.png">
+  <img width="45%" src="https://raw.githubusercontent.com/murkl/ecos/master/assets/screenshots/bspwm-01.png">
+  <img width="45%" src="https://raw.githubusercontent.com/murkl/ecos/master/assets/screenshots/bspwm-02.png">
 </span>
 
 ## ECOS Installation Screenshots
 
 <span align="center">
-  <img width="22%" src="https://raw.githubusercontent.com/murkl/ecos/master/screenshots/ecos-core-01.png">
-  <img width="22%" src="https://raw.githubusercontent.com/murkl/ecos/master/screenshots/ecos-core-02.png">
-  <img width="22%" src="https://raw.githubusercontent.com/murkl/ecos/master/screenshots/ecos-core-03.png">
-  <img width="22%" src="https://raw.githubusercontent.com/murkl/ecos/master/screenshots/ecos-core-04.png">
-  <img width="22%" src="https://raw.githubusercontent.com/murkl/ecos/master/screenshots/ecos-core-05.png">
-  <img width="22%" src="https://raw.githubusercontent.com/murkl/ecos/master/screenshots/ecos-core-06.png">
-  <img width="22%" src="https://raw.githubusercontent.com/murkl/ecos/master/screenshots/ecos-core-07.png">
-  <img width="22%" src="https://raw.githubusercontent.com/murkl/ecos/master/screenshots/ecos-core-08.png">
-  <img width="22%" src="https://raw.githubusercontent.com/murkl/ecos/master/screenshots/ecos-core-09.png">
-  <img width="22%" src="https://raw.githubusercontent.com/murkl/ecos/master/screenshots/ecos-core-10.png">
+  <img width="22%" src="https://raw.githubusercontent.com/murkl/ecos/master/assets/screenshots/ecos-core-01.png">
+  <img width="22%" src="https://raw.githubusercontent.com/murkl/ecos/master/assets/screenshots/ecos-core-02.png">
+  <img width="22%" src="https://raw.githubusercontent.com/murkl/ecos/master/assets/screenshots/ecos-core-03.png">
+  <img width="22%" src="https://raw.githubusercontent.com/murkl/ecos/master/assets/screenshots/ecos-core-04.png">
+  <img width="22%" src="https://raw.githubusercontent.com/murkl/ecos/master/assets/screenshots/ecos-core-05.png">
+  <img width="22%" src="https://raw.githubusercontent.com/murkl/ecos/master/assets/screenshots/ecos-core-06.png">
+  <img width="22%" src="https://raw.githubusercontent.com/murkl/ecos/master/assets/screenshots/ecos-core-07.png">
+  <img width="22%" src="https://raw.githubusercontent.com/murkl/ecos/master/assets/screenshots/ecos-core-08.png">
+  <img width="22%" src="https://raw.githubusercontent.com/murkl/ecos/master/assets/screenshots/ecos-core-09.png">
+  <img width="22%" src="https://raw.githubusercontent.com/murkl/ecos/master/assets/screenshots/ecos-core-10.png">
 </span>
 
 ## ECOS Manager Screenshots
 
 <span align="center">
-  <img width="22%" src="https://raw.githubusercontent.com/murkl/ecos/master/screenshots/ecos-manager-01.png">
-  <img width="22%" src="https://raw.githubusercontent.com/murkl/ecos/master/screenshots/ecos-manager-02.png">
-  <img width="22%" src="https://raw.githubusercontent.com/murkl/ecos/master/screenshots/ecos-manager-03.png">
-  <img width="22%" src="https://raw.githubusercontent.com/murkl/ecos/master/screenshots/ecos-manager-04.png">
-  <img width="22%" src="https://raw.githubusercontent.com/murkl/ecos/master/screenshots/ecos-manager-05.png">
+  <img width="22%" src="https://raw.githubusercontent.com/murkl/ecos/master/assets/screenshots/ecos-manager-01.png">
+  <img width="22%" src="https://raw.githubusercontent.com/murkl/ecos/master/assets/screenshots/ecos-manager-02.png">
+  <img width="22%" src="https://raw.githubusercontent.com/murkl/ecos/master/assets/screenshots/ecos-manager-03.png">
+  <img width="22%" src="https://raw.githubusercontent.com/murkl/ecos/master/assets/screenshots/ecos-manager-04.png">
+  <img width="22%" src="https://raw.githubusercontent.com/murkl/ecos/master/assets/screenshots/ecos-manager-05.png">
 </span>

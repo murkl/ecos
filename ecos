@@ -2,26 +2,14 @@
 SCRIPT_VERSION=2.0.9
 
 #/////////////////////////////////////////////////////
-# CHANGELOG
-#/////////////////////////////////////////////////////
-
-SCRIPT_CHANGELOG="
-2.0.8
-  + User Tweaks added
-
-2.0.6
-  + New Tweaks Mechanism
-  + Big Refactoring
-"
-
-#/////////////////////////////////////////////////////
 # SCRIPT VARIABLES
 #/////////////////////////////////////////////////////
 
 SCRIPT_ID="ecos"
+SCRIPT_TITLE="ECOS"
 SCRIPT_DIR="$(cd "$(dirname "$0")" >/dev/null 2>&1 && pwd)"
 SCRIPT_FILE="$SCRIPT_DIR/$(basename "$0")"
-SCRIPT_TUI_FILE="$SCRIPT_DIR/$SCRIPT_ID.tui"
+SCRIPT_TUI_FILE="$SCRIPT_DIR/.$SCRIPT_ID.tui"
 SCRIPT_TUI_WIDTH=68
 SCRIPT_TUI_HEIGHT=24
 
@@ -46,11 +34,13 @@ ECOS_BIN_DIR="$ECOS_HOME/bin"
 ECOS_CORE="$ECOS_BIN_DIR/$SCRIPT_ID"
 ECOS_INIT_SCRIPT="$ECOS_HOME/init"
 ECOS_WORKING_DIR="$ECOS_HOME/.cache"
-ECOS_LOCAL_DOTFILES="$ECOS_WORKING_DIR/dotfiles"
+ECOS_DOTFILES="$ECOS_WORKING_DIR/dotfiles"
 ECOS_STATE_DIR="$ECOS_WORKING_DIR/state"
 ECOS_STATE_INITIALIZED="$ECOS_STATE_DIR/initialized"
 ECOS_STATE_SHOW_CHANGELOG="$ECOS_STATE_DIR/show_changelog"
-ECOS_CACHE_REPO_ECOS="$ECOS_WORKING_DIR/repo"
+ECOS_REPO="$ECOS_WORKING_DIR/repo"
+ECOS_ICON_FILE="$ECOS_REPO/assets/ecos.svg"
+ECOS_CHANGELOG_FILE="$ECOS_REPO/assets/changelog.html"
 ECOS_CACHE_TWEAKS="$ECOS_WORKING_DIR/tweaks"
 ECOS_USER_TWEAKS="$ECOS_HOME/tweaks"
 ECOS_DESKTOP_FILE="$HOME/.local/share/applications/$SCRIPT_ID.desktop"
@@ -151,14 +141,20 @@ main() {
     fi
 
     # ---------------------------------------
-    # ECOS SCRIPT_CHANGELOG
+    # ECOS AUTOSTART
+    # ---------------------------------------
+    if [ "$1" = "--autostart" ]; then
+        if [ -f "$ECOS_STATE_SHOW_CHANGELOG" ]; then
+            zenity_show_changelog
+        fi
+        exit 0
+    fi
+
+    # ---------------------------------------
+    # ECOS CHANGELOG
     # ---------------------------------------
     if [ "$1" = "--changelog" ]; then
-        if [ -f "$ECOS_STATE_SHOW_CHANGELOG" ]; then
-            tui_init 0 ""
-            whiptail --title "Changelog" --scrolltext --msgbox "$(cat "$SCRIPT_TUI_FILE")\n\n$SCRIPT_CHANGELOG" $SCRIPT_TUI_HEIGHT $SCRIPT_TUI_WIDTH 3>&1 1>&2 2>&3
-            rm -f "$ECOS_STATE_SHOW_CHANGELOG"
-        fi
+        zenity_show_changelog
         exit 0
     fi
 
@@ -185,6 +181,30 @@ main() {
             fi
         fi
     fi
+}
+
+#/////////////////////////////////////////////////////
+# ZENITY
+#/////////////////////////////////////////////////////
+
+zenity() {
+    /usr/bin/zenity --name="$SCRIPT_ID" --width=340 --height=200 --title='' --text='' --window-icon="$ECOS_ICON_FILE" "$@" 2>/dev/null
+}
+
+notify() {
+    notify-send --icon="$ECOS_ICON_FILE" "$SCRIPT_TITLE" "$1"
+}
+
+#/////////////////////////////////////////////////////
+# ZENITY MENUS
+#/////////////////////////////////////////////////////
+
+zenity_show_changelog() {
+    ecos_check_zenity
+    if ! zenity --text-info --width=500 --height=500 --title="$SCRIPT_TITLE" --cancel-label="Close" --ok-label="Ok" --font="monospace" --html --no-interaction --filename="$ECOS_CHANGELOG_FILE"; then
+        exit 0
+    fi
+    rm -f "$ECOS_STATE_SHOW_CHANGELOG"
 }
 
 #/////////////////////////////////////////////////////
@@ -1230,6 +1250,12 @@ ecos_check_paru() {
     fi
 }
 
+ecos_check_zenity() {
+    if ! pacman -Qi zenity >/dev/null; then
+        sudo pacman --noconfirm --needed -Syyu zenity
+    fi
+}
+
 ecos_create_desktop_file() {
     mkdir -p "$HOME/.local/share/applications/"
     {
@@ -1278,8 +1304,8 @@ ecos_tui_install_ecos() {
     echo -e "DONE"
 
     print_title "CLONE DOTFILES"
-    rm -rf "$ECOS_LOCAL_DOTFILES"
-    mkdir -p "$ECOS_LOCAL_DOTFILES"
+    rm -rf "$ECOS_DOTFILES"
+    mkdir -p "$ECOS_DOTFILES"
     cd "$HOME" || exit 1
 
     # Removing existing init
@@ -1288,12 +1314,12 @@ ecos_tui_install_ecos() {
     fi
 
     # Clone dotfiles
-    /usr/bin/git clone --bare "$ECOS_DOTS_DEFAULT_URL" "$ECOS_LOCAL_DOTFILES"
+    /usr/bin/git clone --bare "$ECOS_DOTS_DEFAULT_URL" "$ECOS_DOTFILES"
 
     # Reset dotfiles
-    /usr/bin/git --git-dir="$ECOS_LOCAL_DOTFILES" --work-tree="$HOME" fetch --all
-    /usr/bin/git --git-dir="$ECOS_LOCAL_DOTFILES" --work-tree="$HOME" reset --hard HEAD
-    /usr/bin/git --git-dir="$ECOS_LOCAL_DOTFILES" --work-tree="$HOME" config --local status.showUntrackedFiles no
+    /usr/bin/git --git-dir="$ECOS_DOTFILES" --work-tree="$HOME" fetch --all
+    /usr/bin/git --git-dir="$ECOS_DOTFILES" --work-tree="$HOME" reset --hard HEAD
+    /usr/bin/git --git-dir="$ECOS_DOTFILES" --work-tree="$HOME" config --local status.showUntrackedFiles no
 
     echo -e "DONE"
 
@@ -1311,7 +1337,7 @@ ecos_tui_install_ecos() {
     local dots_bin="$ECOS_BIN_DIR/dots"
     mkdir -p "$ECOS_BIN_DIR"
     echo '#!/bin/sh' >"$dots_bin"
-    echo 'git --git-dir="'$ECOS_LOCAL_DOTFILES'" --work-tree="$HOME" "$@"' >>"$dots_bin"
+    echo 'git --git-dir="'$ECOS_DOTFILES'" --work-tree="$HOME" "$@"' >>"$dots_bin"
     chmod +x "$dots_bin"
 
     # Silent Boot
@@ -1343,17 +1369,17 @@ ecos_tui_install_ecos() {
 
 ecos_update_cache_repo() {
 
-    if ! [ -d "$ECOS_CACHE_REPO_ECOS/.git" ]; then
-        mkdir -p "$ECOS_CACHE_REPO_ECOS"
-        git clone "$ECOS_REPO_URL" "$ECOS_CACHE_REPO_ECOS"
+    if ! [ -d "$ECOS_REPO/.git" ]; then
+        mkdir -p "$ECOS_REPO"
+        git clone "$ECOS_REPO_URL" "$ECOS_REPO"
     fi
 
-    if ! [ -d "$ECOS_CACHE_REPO_ECOS/.git" ]; then
-        echo "Error: Cant find $ECOS_CACHE_REPO_ECOS/.git"
+    if ! [ -d "$ECOS_REPO/.git" ]; then
+        echo "Error: Cant find $ECOS_REPO/.git"
         exit 1
     fi
 
-    cd "$ECOS_CACHE_REPO_ECOS" || exit 1
+    cd "$ECOS_REPO" || exit 1
     git fetch --all
     git reset --hard origin/HEAD
     git clean -d -f
@@ -1375,7 +1401,7 @@ ecos_update_cache_repo() {
             fi
 
             #Copy User tweaks
-            cp -r "$ECOS_USER_TWEAKS/$tweak_id" "$ECOS_CACHE_REPO_ECOS/tweaks/$tweak_id"
+            cp -r "$ECOS_USER_TWEAKS/$tweak_id" "$ECOS_REPO/tweaks/$tweak_id"
         done
     fi
 }
@@ -1429,9 +1455,9 @@ ecos_update_system() {
     cd "$HOME" || exit 1
 
     # RESET LOCAL FILES
-    git --git-dir="$ECOS_LOCAL_DOTFILES" --work-tree="$HOME" fetch --all
-    git --git-dir="$ECOS_LOCAL_DOTFILES" --work-tree="$HOME" reset --hard HEAD
-    git --git-dir="$ECOS_LOCAL_DOTFILES" --work-tree="$HOME" pull
+    git --git-dir="$ECOS_DOTFILES" --work-tree="$HOME" fetch --all
+    git --git-dir="$ECOS_DOTFILES" --work-tree="$HOME" reset --hard HEAD
+    git --git-dir="$ECOS_DOTFILES" --work-tree="$HOME" pull
 
     # PACKAGE UPDATE
     print_title 'FETCH PACKAGE UPDATES'
@@ -1508,12 +1534,12 @@ ecos_tui_menu_tweaks() {
     #----------------------------------------
     # READ TWEAK LIST
     #----------------------------------------
-    readarray -d '' tweak_dir_list < <(find "$ECOS_CACHE_REPO_ECOS/tweaks" -mindepth 1 -maxdepth 1 -type d -print0)
+    readarray -d '' tweak_dir_list < <(find "$ECOS_REPO/tweaks" -mindepth 1 -maxdepth 1 -type d -print0)
 
     for i in "${tweak_dir_list[@]}"; do
 
         local tweak_id="$(basename $i)"
-        local tweak_sh="$ECOS_CACHE_REPO_ECOS/tweaks/$tweak_id/${tweak_id}.sh"
+        local tweak_sh="$ECOS_REPO/tweaks/$tweak_id/${tweak_id}.sh"
         local tweak_meta="$ECOS_CACHE_TWEAKS/$tweak_id/${tweak_id}.tweak"
 
         # Check sh file
@@ -1606,7 +1632,7 @@ ecos_exec_tweak() {
 
     local tweak_action="$1"
     local tweak_id="$2"
-    local tweak_res_dir="$ECOS_CACHE_REPO_ECOS/tweaks/$tweak_id"
+    local tweak_res_dir="$ECOS_REPO/tweaks/$tweak_id"
     local tweak_cache_dir="$ECOS_CACHE_TWEAKS/$tweak_id"
     local tweak_sh="$tweak_res_dir/${tweak_id}.sh"
     local tweak_meta="$tweak_cache_dir/${tweak_id}.tweak"
@@ -1675,7 +1701,7 @@ ecos_update_tweaks() {
     readarray -d '' tweak_dir_list < <(find "$ECOS_CACHE_TWEAKS" -mindepth 1 -maxdepth 1 -type d -print0)
     for i in "${tweak_dir_list[@]}"; do
         local tweak_id="$(basename $i)"
-        local tweak_sh="$ECOS_CACHE_REPO_ECOS/$tweak_id/${tweak_id}.sh"
+        local tweak_sh="$ECOS_REPO/$tweak_id/${tweak_id}.sh"
         ecos_exec_tweak "update" "$tweak_id"
     done
 }
