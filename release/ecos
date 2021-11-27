@@ -1,5 +1,5 @@
 #!/bin/bash
-SCRIPT_VERSION=2.1.2
+SCRIPT_VERSION=2.1.3
 
 #/////////////////////////////////////////////////////
 # SCRIPT VARIABLES
@@ -12,6 +12,25 @@ SCRIPT_FILE="$SCRIPT_DIR/$(basename "$0")"
 SCRIPT_TUI_FILE="$SCRIPT_DIR/.$SCRIPT_ID.tui"
 SCRIPT_TUI_WIDTH=68
 SCRIPT_TUI_HEIGHT=24
+
+#/////////////////////////////////////////////////////
+# COLORS
+#/////////////////////////////////////////////////////
+
+COLOR_RED='\033[0;31m'
+COLOR_NULL='\033[0m' # No Color
+
+#/////////////////////////////////////////////////////
+# RELEASE
+#/////////////////////////////////////////////////////
+
+# DEVELOP
+DEVELOP_SCRIPT="$SCRIPT_DIR/ecos"
+DEVELOP_CHANGELOG="$SCRIPT_DIR/assets/changelog.html"
+
+# RELEASE FILE
+RELEASE_SCRIPT="$SCRIPT_DIR/release/ecos"
+RELEASE_CHANGELOG="$SCRIPT_DIR/release/changelog.html"
 
 #/////////////////////////////////////////////////////
 # ECOS VARIABLES
@@ -104,6 +123,14 @@ main() {
     # ---------------------------------------
     if [ "$1" = "--version" ]; then
         echo -e "$SCRIPT_VERSION"
+        exit 0
+    fi
+
+    # ---------------------------------------
+    # RELEASE CORE
+    # ---------------------------------------
+    if [ "$1" = "--release-core" ]; then
+        ecos_core_release
         exit 0
     fi
 
@@ -266,6 +293,66 @@ zenity_show_changelog() {
         exit 0
     fi
     rm -f "$ECOS_STATE_SHOW_CHANGELOG"
+}
+
+#/////////////////////////////////////////////////////
+# ECOS RELEASE
+#/////////////////////////////////////////////////////
+
+ecos_core_release() {
+
+    local show_warning="false"
+    local develop_version="$($DEVELOP_SCRIPT --version)"
+    local release_version="$($RELEASE_SCRIPT --version)"
+
+    echo -e ''
+    echo -e "////////////////////////"
+    echo -e "> RELEASE NEW ECOS CORE"
+    echo -e "////////////////////////"
+    echo -e "VERSION DEVELOP:  $develop_version"
+    echo -e "VERSION RELEASE:  $release_version"
+    echo -e ''
+
+    # Check different version numbers
+    if [ "$develop_version" = "$release_version" ]; then
+        show_warning="true"
+        printf "${COLOR_RED}!! SAME VERSION NUMBERS !!${COLOR_NULL}\n"
+    fi
+
+    # Check different changelog files
+    if diff "$DEVELOP_CHANGELOG" "$RELEASE_CHANGELOG" >/dev/null 2>&1; then
+        show_warning="true"
+        printf "${COLOR_RED}!! NO CHANGELOG UPDATE !!${COLOR_NULL}\n"
+    fi
+
+    # Show warning
+    if [ "$show_warning" = "true" ]; then
+        echo -e ''
+        read -p "CONTINUE ANYWAY? [y/n]: " user_input
+        if [ "$user_input" != "y" ]; then
+            echo -e "Skipped..."
+            exit 0
+        fi
+    fi
+
+    # DEPLOYMENT
+    echo -e ''
+    read -p "DEPLOY ECOS $develop_version? [yes/no]: " user_input
+    if [ "$user_input" = "yes" ]; then
+
+        # Copy dev to release
+        if ! cp -f "$DEVELOP_SCRIPT" "$RELEASE_SCRIPT"; then
+            echo -e "ERROR: cp -f "$DEVELOP_SCRIPT" "$RELEASE_SCRIPT""
+            exit 1
+        fi
+
+        # Git commit
+        cd "$SCRIPT_DIR" || exit 1
+        git add "./release/ecos" && git commit -m "$(./release/ecos --version)"
+        echo -e "ECOS CORE succefully released!"
+    else
+        echo -e "Skipped..."
+    fi
 }
 
 #/////////////////////////////////////////////////////
@@ -1507,7 +1594,7 @@ ecos_update_core() {
             fi
             echo "NEW ECOS CORE UPDATE: $ecos_current_version ---> $ecos_update_version"
         else
-            echo "$($ECOS_CORE --version) | NO ECOS CORE UPDATE AVAILABLE"
+            echo "$($ECOS_CORE --version): NO ECOS CORE UPDATE AVAILABLE"
         fi
     fi
 }
