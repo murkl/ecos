@@ -1408,7 +1408,7 @@ ecos_create_desktop_file() {
     {
         echo "[Desktop Entry]"
         echo "Name=ECOS"
-        echo "Icon=ecos"
+        echo "Icon="$ECOS_ICON_FILE""
         echo 'Exec=bash -c "$HOME/.ecos/bin/ecos --manager"'
         echo "Type=Application"
     } >"$ECOS_DESKTOP_FILE"
