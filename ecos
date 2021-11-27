@@ -1,5 +1,5 @@
 #!/bin/bash
-SCRIPT_VERSION=2.1.0
+SCRIPT_VERSION=2.1.1
 
 #/////////////////////////////////////////////////////
 # SCRIPT VARIABLES
@@ -172,7 +172,7 @@ main() {
     # ---------------------------------------
     # UPDATE ECOS
     # ---------------------------------------
-    if [ "$1" = "--update-ecos" ]; then
+    if [ "$1" = "--update-system" ]; then
         ecos_update_system
         exit 0
     fi
@@ -1631,12 +1631,12 @@ ecos_update_system() {
     paru -Syy
 
     echo -e '\n'
+    echo -e '------------------------------------------'
     read -p "Continue ECOS System Upgrade? [y/n]: " user_input
     if [ "$user_input" != "y" ]; then
         echo "Skipped..."
         exit 0
     fi
-
     echo -e '------------------------------------------'
 
     # PACKAGE UPGRADE
