@@ -1496,7 +1496,9 @@ ecos_tui_install_ecos() {
 
     # Call init script
     echo -e "EXECUTE $ECOS_INIT_SCRIPT"
-    chmod +x "$ECOS_INIT_SCRIPT" && "$ECOS_INIT_SCRIPT" --install
+    chmod +x "$ECOS_INIT_SCRIPT" || exit 1
+    "$ECOS_INIT_SCRIPT" --init
+    "$ECOS_INIT_SCRIPT" --update
 
     # Create dots bin
     local dots_bin="$ECOS_BIN_DIR/dots"
@@ -1535,15 +1537,17 @@ ecos_tui_install_ecos() {
 ecos_update_cache_repo() {
 
     if ! [ -d "$ECOS_REPO/.git" ]; then
+        echo "CLONE ECOS REPO"
         mkdir -p "$ECOS_REPO"
         git clone "$ECOS_REPO_URL" "$ECOS_REPO"
     fi
 
     if ! [ -d "$ECOS_REPO/.git" ]; then
-        echo "Error: Cant find $ECOS_REPO/.git"
+        echo "ERROR CLONE ECOS REPO: Cant find $ECOS_REPO/.git"
         exit 1
     fi
 
+    echo "UPDATE ECOS REPO"
     cd "$ECOS_REPO" || exit 1
     git fetch --all
     git reset --hard origin/HEAD
@@ -1601,6 +1605,9 @@ ecos_update_core() {
                 exit 1
             fi
             echo "NEW ECOS CORE UPDATE: $ecos_current_version --> $ecos_update_version"
+
+            # UPDATE ECOS REPO
+            ecos_update_cache_repo
         else
             echo "$SCRIPT_TITLE $($ECOS_CORE --version): NO CORE UPDATE AVAILABLE (REMOTE: $ecos_update_version)"
         fi
@@ -1616,20 +1623,8 @@ ecos_update_system() {
     print_title 'CHECK ECOS DEPENDENCIES'
     ecos_check_git
     ecos_check_paru
+    ecos_check_zenity
     echo ">>> OK"
-
-    print_title 'UPDATE ECOS REPO'
-    ecos_update_cache_repo
-    echo ">>> OK"
-
-    # DOTFILES UPDATE
-    print_title 'ECOS DOTFILES UPDATE'
-    cd "$HOME" || exit 1
-
-    # RESET LOCAL FILES
-    git --git-dir="$ECOS_DOTFILES" --work-tree="$HOME" fetch --all
-    git --git-dir="$ECOS_DOTFILES" --work-tree="$HOME" reset --hard HEAD
-    git --git-dir="$ECOS_DOTFILES" --work-tree="$HOME" pull
 
     # PACKAGE UPDATE
     print_title 'FETCH PACKAGE UPDATES'
@@ -1639,17 +1634,32 @@ ecos_update_system() {
     print_title 'UPGRADE SYSTEM PACKAGES'
     paru -Qu
     echo ''
-    read -p "Upgrade packages? [y/n]: " user_input
+    read -p "Upgrade ECOS System? [y/n]: " user_input
     if [ "$user_input" = "y" ]; then
         if ! paru -Su --noconfirm; then
             echo -e "ERROR: paru"
             exit 1
         fi
         wait
-
     else
         echo "Skipped..."
+        exit 0
     fi
+
+    # DOTFILES UPDATE
+    print_title 'ECOS DOTFILES UPDATE'
+    cd "$HOME" || exit 1
+
+    # CURRENT INIT VERSION
+    local current_init_version=''
+    if [ -f "$ECOS_INIT_SCRIPT" ]; then
+        current_init_version="$($ECOS_INIT_SCRIPT --version)"
+    fi
+
+    # RESET LOCAL FILES
+    git --git-dir="$ECOS_DOTFILES" --work-tree="$HOME" fetch --all
+    git --git-dir="$ECOS_DOTFILES" --work-tree="$HOME" reset --hard HEAD
+    git --git-dir="$ECOS_DOTFILES" --work-tree="$HOME" pull
 
     # UPDATE TWEAKS
     print_title 'UPDATING ECOS TWEAKS'
@@ -1657,24 +1667,25 @@ ecos_update_system() {
 
     # UPDATE INIT FILE
     if [ -f "$ECOS_INIT_SCRIPT" ]; then
-        latest_changelog_version=""
+
+        # Check existing initialized file
+        local latest_changelog_version=""
         if [ -f "$ECOS_STATE_INITIALIZED" ]; then
             latest_changelog_version=$(<"$ECOS_STATE_INITIALIZED")
         fi
-        if [ "$SCRIPT_VERSION" != "$latest_changelog_version" ]; then
-            print_title 'REINSTALL ECOS INIT FILE'
-            "$ECOS_INIT_SCRIPT" --install
-            echo "$SCRIPT_VERSION" >"$ECOS_STATE_INITIALIZED"
-            touch "$ECOS_STATE_SHOW_CHANGELOG"
-        else
-            print_title 'UPDATING ECOS INIT FILE'
+
+        # Update if initialized file not exists or new init script available
+        local new_init_version="$($ECOS_INIT_SCRIPT --version)"
+        if [ "$SCRIPT_VERSION" != "$latest_changelog_version" ] || [ "$new_init_version" != "$current_init_version" ]; then
+            echo "UPDATE INIT SCRIPT"
             "$ECOS_INIT_SCRIPT" --update
+        else
+            echo "INIT UPDATE SKIPPED..."
         fi
     fi
 
     # UPDATE DESKTOP FILE
-    print_title 'UPDATE ECOS FILES'
-    # Create desktop file
+    print_title 'UPDATE ECOS DESKTOP FILE'
     ecos_create_desktop_file
     echo ">>> OK"
 
