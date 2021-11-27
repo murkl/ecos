@@ -1,28 +1,13 @@
 #!/bin/bash
 SCRIPT_DIR="$(cd "$(dirname "$0")" >/dev/null 2>&1 && pwd)"
 
-# DEV FILE
-DEVELOP_SCRIPT="$SCRIPT_DIR/ecos"
-DEVELOP_CHANGELOG="$SCRIPT_DIR/assets/changelog.html"
-DEVELOP_VERSION="$($DEVELOP_SCRIPT --version)"
-
-# RELEASE FILE
-RELEASE_SCRIPT="$SCRIPT_DIR/release/ecos"
-RELEASE_CHANGELOG="$SCRIPT_DIR/release/changelog.html"
-RELEASE_VERSION="$($RELEASE_SCRIPT --version)"
-
-# WARNING
-SHOW_WARNING="false"
-
-# PRINT COLORS
-COLOR_RED='\033[0;31m'
-COLOR_NULL='\033[0m' # No Color
 
 # //////////////////////////////////
 # INIT
 # //////////////////////////////////
 
-init() {
+ecos_release() {
+
     echo -e ''
     echo -e "////////////////////////"
     echo -e "> RELEASE NEW ECOS CORE"
@@ -31,20 +16,23 @@ init() {
     echo -e "VERSION RELEASE:  $RELEASE_VERSION"
     echo -e ''
 
+    # Vars
+    local show_warning="false"
+
     # Check different version numbers
     if [ "$DEVELOP_VERSION" = "$RELEASE_VERSION" ]; then
-        SHOW_WARNING="true"
+        show_warning="true"
         printf "${COLOR_RED}!! SAME VERSION NUMBERS !!${COLOR_NULL}\n"
     fi
 
     # Check different changelog files
     if diff "$DEVELOP_CHANGELOG" "$RELEASE_CHANGELOG" >/dev/null 2>&1; then
-        SHOW_WARNING="true"
+        show_warning="true"
         printf "${COLOR_RED}!! NO CHANGELOG UPDATE !!${COLOR_NULL}\n"
     fi
 
     # Show warning
-    if [ "$SHOW_WARNING" = "true" ]; then
+    if [ "$show_warning" = "true" ]; then
         echo -e ''
         read -p "CONTINUE ANYWAY? [y/n]: " user_input
         if [ "$user_input" != "y" ]; then
