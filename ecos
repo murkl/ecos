@@ -209,7 +209,7 @@ notify() {
 
 print_zenity_header() {
     local title="$1"
-    local header='<span font_family="monospace" foreground="#669348" font="24"><b>'$SCRIPT_TITLE'</b></span>'
+    local header='<span font_family="monospace" foreground="#A3BE8C" font="24"><b>'$SCRIPT_TITLE'</b></span>'
     local version='<span font_family="monospace" foreground="#494949" font="10">'$SCRIPT_VERSION'</span>'
     local title='<span font_family="monospace" foreground="#494949" font="10"><b>'$title'</b></span>'
     echo -e " $header\n  $version\n\n $title"
@@ -1256,7 +1256,7 @@ ecos_check_git() {
         } >"$HOME/.config/git/config"
 
         echo "Install Git"
-        sudo pacman --noconfirm --needed -Syyu git
+        sudo pacman --noconfirm --needed -Syy git
     fi
 }
 
@@ -1291,7 +1291,7 @@ ecos_check_paru() {
 
 ecos_check_zenity() {
     if ! pacman -Qi zenity >/dev/null; then
-        sudo pacman --noconfirm --needed -Syyu zenity
+        sudo pacman --noconfirm --needed -Syy zenity
     fi
 }
 
