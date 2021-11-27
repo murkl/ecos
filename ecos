@@ -166,6 +166,14 @@ main() {
         exit 0
     fi
 
+    # ---------------------------------------
+    # MANAGER
+    # ---------------------------------------
+    if [ "$1" = "--manager" ]; then
+        zenity_manager
+        exit 0
+    fi
+
     #----------------------------------------
     # CORE TUI | MANAGER TUI
     #----------------------------------------
@@ -188,7 +196,7 @@ main() {
 #/////////////////////////////////////////////////////
 
 zenity() {
-    /usr/bin/zenity --name="$SCRIPT_ID" --width=340 --height=200 --title='' --text='' --window-icon="$ECOS_ICON_FILE" "$@" 2>/dev/null
+    /usr/bin/zenity --name="$SCRIPT_ID" --width=350 --height=250 --title='' --text='' --window-icon="$ECOS_ICON_FILE" "$@" 2>/dev/null
 }
 
 notify() {
@@ -198,6 +206,37 @@ notify() {
 #/////////////////////////////////////////////////////
 # ZENITY MENUS
 #/////////////////////////////////////////////////////
+
+print_zenity_header() {
+    local title="$1"
+    local header='<span font_family="monospace" foreground="#669348" font="24"><b>'$SCRIPT_TITLE'</b></span>'
+    local version='<span font_family="monospace" foreground="#494949" font="10">'$SCRIPT_VERSION'</span>'
+    local title='<span font_family="monospace" foreground="#494949" font="10"><b>'$title'</b></span>'
+    echo -e " $header\n  $version\n\n $title"
+}
+
+zenity_manager() {
+    local menu_entries=()
+    menu_entries+=("Update")
+    menu_entries+=("Tweaks")
+    menu_entries+=("Settings")
+    if ! local zenity_result="$(zenity --list --hide-header --column="" --text="$(print_zenity_header 'Manager')" --cancel-label='Exit' --ok-label='Ok' "${menu_entries[@]}")"; then
+        exit 0
+    fi
+
+    if [ "$zenity_result" = "Update" ]; then
+        notify "Update"
+        return 0
+    fi
+    if [ "$zenity_result" = "Tweaks" ]; then
+        notify "Tweaks"
+        return 0
+    fi
+    if [ "$zenity_result" = "Settings" ]; then
+        notify "Settings"
+        return 0
+    fi
+}
 
 zenity_show_changelog() {
     ecos_check_zenity
@@ -1262,7 +1301,7 @@ ecos_create_desktop_file() {
         echo "[Desktop Entry]"
         echo "Name=ECOS"
         echo "Icon=ecos"
-        echo 'Exec=gnome-terminal -- bash -c $HOME/.ecos/bin/ecos'
+        echo 'Exec=$HOME/.ecos/bin/ecos --manager'
         echo "Type=Application"
     } >"$ECOS_DESKTOP_FILE"
     chmod +x "$ECOS_DESKTOP_FILE"
