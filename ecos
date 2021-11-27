@@ -1509,7 +1509,6 @@ ecos_tui_install_ecos() {
 
     # Create initialized state file
     echo "$SCRIPT_VERSION" >"$ECOS_STATE_INITIALIZED"
-    touch "$ECOS_STATE_SHOW_CHANGELOG"
     echo -e "DONE"
 
     wait
@@ -1556,6 +1555,7 @@ ecos_update_core() {
                 exit 1
             fi
             echo "NEW ECOS CORE UPDATE: $ecos_current_version --> $ecos_update_version"
+            touch "$ECOS_STATE_SHOW_CHANGELOG"
         else
             rm -f "$ecos_update"
             echo "$SCRIPT_TITLE $($ECOS_CORE --version): NO CORE UPDATE AVAILABLE (REMOTE: $ecos_update_version)"
@@ -1691,7 +1691,6 @@ ecos_update_system() {
                 echo "UPDATE INIT SCRIPT"
                 "$ECOS_INIT_SCRIPT" --update
                 echo "$SCRIPT_VERSION" >"$ECOS_STATE_INITIALIZED"
-                touch "$ECOS_STATE_SHOW_CHANGELOG"
                 echo ">>> OK"
             fi
         else
