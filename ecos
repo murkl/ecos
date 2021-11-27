@@ -1626,6 +1626,8 @@ ecos_update_system() {
     ecos_check_zenity
     echo ">>> OK"
 
+    ecos_update_core
+
     # PACKAGE UPDATE
     print_title 'FETCH NEW PACKAGES'
     paru -Syy
@@ -1651,9 +1653,9 @@ ecos_update_system() {
     cd "$HOME" || exit 1
 
     # CURRENT INIT VERSION
-    local current_init_version=''
+    local current_init_script_version=''
     if [ -f "$ECOS_INIT_SCRIPT" ]; then
-        current_init_version="$($ECOS_INIT_SCRIPT --version)"
+        current_init_script_version="$($ECOS_INIT_SCRIPT --version)"
     fi
 
     # RESET LOCAL FILES
@@ -1668,17 +1670,19 @@ ecos_update_system() {
     # UPDATE INIT FILE
     if [ -f "$ECOS_INIT_SCRIPT" ]; then
 
-        # Check existing initialized file
-        local latest_changelog_version=""
+        # Check initialized version
+        local ecos_initialized_version=""
         if [ -f "$ECOS_STATE_INITIALIZED" ]; then
-            latest_changelog_version=$(<"$ECOS_STATE_INITIALIZED")
+            ecos_initialized_version=$(<"$ECOS_STATE_INITIALIZED")
         fi
 
         # Update if initialized file not exists or new init script available
-        local new_init_version="$($ECOS_INIT_SCRIPT --version)"
-        if [ "$SCRIPT_VERSION" != "$latest_changelog_version" ] || [ "$new_init_version" != "$current_init_version" ]; then
+        local new_init_script_version="$($ECOS_INIT_SCRIPT --version)"
+        if [ "$SCRIPT_VERSION" != "$ecos_initialized_version" ] || [ "$new_init_script_version" != "$current_init_script_version" ]; then
             echo "UPDATE INIT SCRIPT"
             "$ECOS_INIT_SCRIPT" --update
+            echo "$SCRIPT_VERSION" >"$ECOS_STATE_INITIALIZED"
+            touch "$ECOS_STATE_SHOW_CHANGELOG"
         else
             echo "INIT UPDATE SKIPPED..."
         fi
