@@ -1537,6 +1537,42 @@ ecos_tui_install_ecos() {
 # UPDATE
 #/////////////////////////////////////////////////////
 
+ecos_update_core() {
+
+    check_internet
+    ecos_init_dirs
+
+    local ecos_update="$ECOS_WORKING_DIR/ecos.upate"
+    if ! curl -s -L "$ECOS_CORE_RELEASE_URL" >"$ecos_update"; then
+        echo "ERROR: ECOS CORE UPDATE DOWNLOAD: $ECOS_CORE_RELEASE_URL"
+        exit 1
+    fi
+    if [ ! -f "$ecos_update" ]; then
+        echo "ERROR: ECOS CORE UPDATE NOT FOUND: $ecos_update"
+        exit 1
+    else
+        if ! chmod +x "$ecos_update"; then
+            echo "ERROR: CHMOD CORE UPDATE: $ecos_update"
+            exit 1
+        fi
+        local ecos_current_version="$($ECOS_CORE --version)"
+        local ecos_update_version="$($ecos_update --version)"
+        if [ "$ecos_current_version" != "$ecos_update_version" ]; then
+            if ! mv "$ecos_update" "$ECOS_CORE"; then
+                echo "ERROR: MOVE CORE: $ecos_update --> $ECOS_CORE"
+                exit 1
+            fi
+            if ! chmod +x "$ECOS_CORE"; then
+                echo "ERROR: CHMOD CORE: $ECOS_CORE"
+                exit 1
+            fi
+            echo "NEW ECOS CORE UPDATE: $ecos_current_version --> $ecos_update_version"
+        else
+            echo "$SCRIPT_TITLE $($ECOS_CORE --version): NO CORE UPDATE AVAILABLE (REMOTE: $ecos_update_version)"
+        fi
+    fi
+}
+
 ecos_update_repo() {
 
     ecos_init_dirs
@@ -1580,44 +1616,6 @@ ecos_update_repo() {
     fi
 }
 
-ecos_update_core() {
-
-    check_internet
-    ecos_init_dirs
-
-    local ecos_update="$ECOS_WORKING_DIR/ecos.upate"
-    if ! curl -s -L "$ECOS_CORE_RELEASE_URL" >"$ecos_update"; then
-        echo "ERROR: ECOS CORE UPDATE DOWNLOAD: $ECOS_CORE_RELEASE_URL"
-        exit 1
-    fi
-    if [ ! -f "$ecos_update" ]; then
-        echo "ERROR: ECOS CORE UPDATE NOT FOUND: $ecos_update"
-        exit 1
-    else
-        if ! chmod +x "$ecos_update"; then
-            echo "ERROR: CHMOD CORE UPDATE: $ecos_update"
-            exit 1
-        fi
-        local ecos_current_version="$($ECOS_CORE --version)"
-        local ecos_update_version="$($ecos_update --version)"
-        if [ "$ecos_current_version" != "$ecos_update_version" ]; then
-            if ! mv "$ecos_update" "$ECOS_CORE"; then
-                echo "ERROR: MOVE CORE: $ecos_update --> $ECOS_CORE"
-                exit 1
-            fi
-            if ! chmod +x "$ECOS_CORE"; then
-                echo "ERROR: CHMOD CORE: $ECOS_CORE"
-                exit 1
-            fi
-            echo "NEW ECOS CORE UPDATE: $ecos_current_version --> $ecos_update_version"
-
-        else
-
-            echo "$SCRIPT_TITLE $($ECOS_CORE --version): NO CORE UPDATE AVAILABLE (REMOTE: $ecos_update_version)"
-        fi
-    fi
-}
-
 ecos_update_system() {
 
     clear
@@ -1642,21 +1640,23 @@ ecos_update_system() {
     print_title 'FETCH NEW PACKAGES'
     paru -Syy
 
-    # PACKAGE UPGRADE
-    print_title 'UPGRADE NEW PACKAGES'
-    paru -Qu
     echo -e '\n'
     read -p "Continue ECOS System Upgrade? [y/n]: " user_input
-    if [ "$user_input" = "y" ]; then
-        if ! paru -Su --noconfirm; then
-            echo -e "ERROR: paru"
-            exit 1
-        fi
-        wait
-    else
+    if [ "$user_input" != "y" ]; then
         echo "Skipped..."
         exit 0
     fi
+
+    # PACKAGE UPGRADE
+    echo -e '\n'
+    print_title 'UPGRADE NEW PACKAGES'
+    paru -Qu
+    if ! paru -Su --noconfirm; then
+        echo -e "ERROR: paru"
+        exit 1
+    fi
+    wait
+    echo ">>> OK"
 
     # DOTFILES UPDATE
     print_title 'ECOS DOTFILES UPDATE'
@@ -1672,10 +1672,12 @@ ecos_update_system() {
     git --git-dir="$ECOS_DOTFILES" --work-tree="$HOME" fetch --all
     git --git-dir="$ECOS_DOTFILES" --work-tree="$HOME" reset --hard HEAD
     git --git-dir="$ECOS_DOTFILES" --work-tree="$HOME" pull
+    echo ">>> OK"
 
     # UPDATE TWEAKS
-    print_title 'UPDATING ECOS TWEAKS'
+    print_title 'UPDATE ECOS TWEAKS'
     ecos_update_tweaks
+    echo ">>> OK"
 
     # UPDATE INIT FILE
     if [ -f "$ECOS_INIT_SCRIPT" ]; then
@@ -1693,8 +1695,10 @@ ecos_update_system() {
             "$ECOS_INIT_SCRIPT" --update
             echo "$SCRIPT_VERSION" >"$ECOS_STATE_INITIALIZED"
             touch "$ECOS_STATE_SHOW_CHANGELOG"
+            echo ">>> OK"
         else
             echo "INIT UPDATE SKIPPED..."
+            echo ">>> OK"
         fi
     fi
 
@@ -1704,7 +1708,7 @@ ecos_update_system() {
     echo ">>> OK"
 
     # FINISH
-    print_title 'ECOS UPDATE FINISHED'
+    print_title '!! ECOS UPDATE FINISHED !!'
     echo ""
     read -p "Press any Key to close..."
     exit 0
