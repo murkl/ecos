@@ -1682,8 +1682,8 @@ ecos_update_system() {
         # Update if initialized file not exists or new init script available
         local new_init_script_version="$($ECOS_INIT_SCRIPT --version)"
         if [ "$SCRIPT_VERSION" != "$ecos_initialized_version" ] || [ "$new_init_script_version" != "$current_init_script_version" ]; then
-
-            read -p "UPDATE INIT? [y/n]: " user_input
+            print_title "UPDATE INIT SCRIPT"
+            read -p "UPDATE INIT SCRIPT? [y/n]: " user_input
             if [ "$user_input" != "y" ]; then
                 echo -e "UPDATE INIT SCRIPT SKIPPED..."
                 echo ">>> OK"
@@ -1695,7 +1695,7 @@ ecos_update_system() {
                 echo ">>> OK"
             fi
         else
-            echo "INIT SCRIPT UP TO DATE. SKIPPED..."
+            print_title "INIT SCRIPT UP TO DATE. SKIPPED..."
             echo ">>> OK"
         fi
     fi
