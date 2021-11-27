@@ -1,5 +1,5 @@
 #!/bin/bash
-SCRIPT_VERSION=2.1.5
+SCRIPT_VERSION=2.1.6
 
 #/////////////////////////////////////////////////////
 # SCRIPT VARIABLES
@@ -1602,7 +1602,7 @@ ecos_update_core() {
             fi
             echo "NEW ECOS CORE UPDATE: $ecos_current_version ---> $ecos_update_version"
         else
-            echo "$($ECOS_CORE --version): NO ECOS CORE UPDATE AVAILABLE"
+            echo "$SCRIPT_TITLE $($ECOS_CORE --version): NO CORE UPDATE AVAILABLE (REMOTE: $ecos_update_version)"
         fi
     fi
 }
