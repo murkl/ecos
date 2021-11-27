@@ -457,8 +457,7 @@ tui_menu_manager() {
     # Update ECOS
     #----------------------------------------
     if [ "$menu_input" = "1" ]; then
-        ecos_update_core
-        "$ECOS_CORE" --update-system
+        ecos_update_system
         exit 0
     fi
 
@@ -1626,7 +1625,9 @@ ecos_update_system() {
     ecos_check_zenity
     echo ">>> OK"
 
+    print_title 'UPDATE ECOS CORE'
     ecos_update_core
+    echo ">>> OK"
 
     # PACKAGE UPDATE
     print_title 'FETCH NEW PACKAGES'
@@ -1708,10 +1709,6 @@ ecos_tui_menu_tweaks() {
 
     ecos_check_git
     ecos_check_paru
-
-    if [ "$1" != '--no-update' ]; then
-        ecos_update_cache_repo
-    fi
 
     local tweaks_array_all=()
     local tweaks_array_enabled=()
@@ -1825,11 +1822,6 @@ ecos_exec_tweak() {
     local tweak_meta="$tweak_cache_dir/${tweak_id}.tweak"
 
     #----------------------------------------
-    # Check & update repo
-    #----------------------------------------
-    ecos_update_cache_repo
-
-    #----------------------------------------
     # Check
     #----------------------------------------
     if [ "$tweak_id" = "" ]; then
@@ -1884,7 +1876,6 @@ ecos_exec_tweak() {
 
 ecos_update_tweaks() {
     local tweak_dir_list=()
-    ecos_update_cache_repo
     readarray -d '' tweak_dir_list < <(find "$ECOS_CACHE_TWEAKS" -mindepth 1 -maxdepth 1 -type d -print0)
     for i in "${tweak_dir_list[@]}"; do
         local tweak_id="$(basename $i)"
