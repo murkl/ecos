@@ -1568,6 +1568,7 @@ ecos_update_core() {
             fi
             echo "NEW ECOS CORE UPDATE: $ecos_current_version --> $ecos_update_version"
         else
+            rm -f "$ecos_update_version"
             echo "$SCRIPT_TITLE $($ECOS_CORE --version): NO CORE UPDATE AVAILABLE (REMOTE: $ecos_update_version)"
         fi
     fi
