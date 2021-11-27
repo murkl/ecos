@@ -38,13 +38,13 @@ ECOS_INIT_SCRIPT="$ECOS_HOME/init"
 ECOS_WORKING_DIR="$ECOS_HOME/.cache"
 ECOS_DOTFILES="$ECOS_WORKING_DIR/dotfiles"
 ECOS_STATE_DIR="$ECOS_WORKING_DIR/state"
-ECOS_STATE_INITIALIZED="$ECOS_STATE_DIR/initialized"
+ECOS_STATE_INITIALIZED="$ECOS_STATE_DIR/ecos_initialized"
 ECOS_STATE_SHOW_CHANGELOG="$ECOS_STATE_DIR/show_changelog"
 ECOS_REPO="$ECOS_WORKING_DIR/repo"
 ECOS_ICON_FILE="$ECOS_REPO/assets/ecos.svg"
 ECOS_CHANGELOG_FILE="$ECOS_REPO/assets/changelog.html"
 ECOS_CACHE_TWEAKS="$ECOS_WORKING_DIR/tweaks"
-ECOS_USER_TWEAKS="$ECOS_HOME/tweaks"
+ECOS_USER_TWEAKS_DIR="$ECOS_HOME/tweaks"
 ECOS_DESKTOP_FILE="$HOME/.local/share/applications/$SCRIPT_ID.desktop"
 
 #/////////////////////////////////////////////////////
@@ -99,31 +99,31 @@ set_lang_de_DE() {
 
 main() {
 
+    # ---------------------------------------
+    # INSTALL CORE
+    # ---------------------------------------
+    if [ "$1" = "--install-core" ]; then
+        tui_menu_install_core
+        exit 0
+    fi
+
     #----------------------------------------
     # CHROOT MODE
     #----------------------------------------
-    if [ "$1" = "--chroot" ] && [ "$2" != "" ] && [ "$3" != "" ]; then
+    if [ "$1" = "--install-chroot" ] && [ "$2" != "" ] && [ "$3" != "" ]; then
         core_install_chroot "$2" "$3"
         exit $?
     fi
 
     # ---------------------------------------
-    # INIT
+    # INSTALL ECOS
     # ---------------------------------------
-    if [ "$1" = "--init" ]; then
+    if [ "$1" = "--install-ecos" ]; then
         if [ ! -f "$ECOS_STATE_INITIALIZED" ]; then
-            tui_menu_init
+            tui_menu_install_ecos
         else
             exit 0
         fi
-    fi
-
-    # ---------------------------------------
-    # EXECUTE TWEAK
-    # ---------------------------------------
-    if [ "$1" = "--tweak" ]; then
-        ecos_exec_tweak "$2" "$3"
-        exit 0
     fi
 
     # ---------------------------------------
@@ -137,7 +137,7 @@ main() {
     # ---------------------------------------
     # UPDATE ECOS
     # ---------------------------------------
-    if [ "$1" = "--update-system" ]; then
+    if [ "$1" = "--update-ecos" ]; then
         ecos_update_system
         exit 0
     fi
@@ -153,6 +153,14 @@ main() {
     fi
 
     # ---------------------------------------
+    # EXECUTE TWEAK
+    # ---------------------------------------
+    if [ "$1" = "--tweak" ]; then
+        ecos_exec_tweak "$2" "$3"
+        exit 0
+    fi
+
+    # ---------------------------------------
     # ECOS CHANGELOG
     # ---------------------------------------
     if [ "$1" = "--changelog" ]; then
@@ -161,15 +169,7 @@ main() {
     fi
 
     # ---------------------------------------
-    # CORE
-    # ---------------------------------------
-    if [ "$1" = "--core" ]; then
-        tui_menu_core_install
-        exit 0
-    fi
-
-    # ---------------------------------------
-    # MANAGER
+    # ECOS MANAGER
     # ---------------------------------------
     if [ "$1" = "--manager" ]; then
         zenity_manager
@@ -182,13 +182,9 @@ main() {
     if [ "$1" = "" ]; then
         # Check if started from live iso
         if [ "$(cat /proc/sys/kernel/hostname)" = "archiso" ]; then
-            tui_menu_core_install
+            tui_menu_install_core
         else
-            if [ ! -f "$ECOS_STATE_INITIALIZED" ]; then
-                tui_menu_welcome
-            else
-                tui_menu_manager
-            fi
+            tui_menu_install_ecos
         fi
     fi
 }
@@ -218,6 +214,7 @@ print_zenity_header() {
 }
 
 zenity_manager() {
+    ecos_check_zenity
     local menu_entries=()
     menu_entries+=("Update")
     menu_entries+=("Tweaks")
@@ -244,6 +241,7 @@ zenity_manager() {
 }
 
 zenity_settings() {
+    ecos_check_zenity
     mkdir -p "$ECOS_CONFIG_DIR"
     touch "$ECOS_CONFIG_FILE"
     if zenity_result=$(zenity --text-info --width=550 --height=300 --title="Settings" --ok-label="Save" --cancel-label="Cancel" --font="monospace" --editable --filename="$ECOS_CONFIG_FILE"); then
@@ -265,7 +263,7 @@ zenity_show_changelog() {
 # TUI MENUS
 #/////////////////////////////////////////////////////
 
-tui_menu_core_install() {
+tui_menu_install_core() {
 
     #----------------------------------------
     # Show TUI menu
@@ -297,12 +295,12 @@ tui_menu_core_install() {
     #----------------------------------------
     if [ "$menu_input" = "3" ]; then
         core_tui_show_logs
-        tui_menu_core_install
+        tui_menu_install_core
         exit 0
     fi
 }
 
-tui_menu_init() {
+tui_menu_install_ecos() {
 
     #----------------------------------------
     # Show TUI menu
@@ -326,7 +324,7 @@ tui_menu_init() {
     if [ "$menu_input" = "2" ]; then
         passwd
         read -p "Press <ENTER> to continue..."
-        tui_menu_init
+        tui_menu_install_ecos
         exit 0
     fi
 
@@ -638,8 +636,8 @@ core_exec_install() {
     # Chroot into new system
     #----------------------------------------
     core_gauge_update 54 "Enter CHROOT Environement"
-    log_txt="arch-chroot /mnt /$SCRIPT_ID --chroot $uefi_mode <ENCRYPTION_PASSWORD>"
-    if ! arch-chroot /mnt "/$SCRIPT_ID" --chroot "$uefi_mode" "$password_encryption"; then
+    log_txt="arch-chroot /mnt /$SCRIPT_ID --install-chroot $uefi_mode <ENCRYPTION_PASSWORD>"
+    if ! arch-chroot /mnt "/$SCRIPT_ID" --install-chroot "$uefi_mode" "$password_encryption"; then
         core_log "e" "$log_txt"
         exit 1
     else
@@ -965,7 +963,7 @@ core_install_chroot() {
     echo 'export ECOS_HOME="$HOME/.ecos"' >>$user_profile
     echo 'export ECOS_CORE="$ECOS_HOME/bin/ecos"' >>$user_profile
     echo 'export PATH="$PATH:$ECOS_HOME/bin"' >>$user_profile
-    echo '$ECOS_CORE --init' >>$user_profile
+    echo '$ECOS_CORE --install-ecos' >>$user_profile
     chmod +x $user_profile
 
     #----------------------------------------
@@ -981,7 +979,7 @@ core_install_chroot() {
     #----------------------------------------
     chown -R "$USERNAME" "/home/$USERNAME"
 
-    #--------------------------------------------------------
+    #----------------------------------------
     # Change passwords
     #----------------------------------------
     core_log "Change passwords"
@@ -993,6 +991,10 @@ core_install_chroot() {
     #----------------------------------------
     # Chroot finished
     #----------------------------------------
+    local state_dir="/home/$USERNAME/.ecos/.cache/state"
+    mkdir -p "$state_dir"
+    echo "$SCRIPT_VERSION|$(date "+%Y-%m-%d-%H:%M:%S")" >"$state_dir/core_initialized"
+
     core_log "CHROOT successfully finished"
 }
 
@@ -1027,7 +1029,6 @@ core_tui_check_disk() {
             BOOT_PARTITION="${DISK}p1"
             ROOT_PARTITION="${DISK}p2"
         fi
-
     fi
 }
 
@@ -1322,14 +1323,20 @@ ecos_create_desktop_file() {
     chmod +x "$ECOS_DESKTOP_FILE"
 }
 
+ecos_init_dirs() {
+    mkdir -p "$ECOS_HOME"
+    mkdir -p "$ECOS_BIN_DIR"
+    mkdir -p "$ECOS_CONFIG_DIR"
+    mkdir -p "$ECOS_USER_TWEAKS_DIR"
+    mkdir -p "$ECOS_WORKING_DIR"
+    mkdir -p "$ECOS_STATE_DIR"
+    mkdir -p "$HOME/.local/share/applications"
+}
+
 ecos_tui_install_ecos() {
 
     check_internet
-
-    # Create dirs
-    mkdir -p "$ECOS_WORKING_DIR"
-    mkdir -p "$ECOS_USER_TWEAKS"
-    mkdir -p "$ECOS_STATE_DIR"
+    ecos_init_dirs
 
     tui_init 0 "Dotfiles URL"
     if ! ECOS_DOTS_DEFAULT_URL=$(whiptail --inputbox "$(cat "$SCRIPT_TUI_FILE")" "$SCRIPT_TUI_HEIGHT" "$SCRIPT_TUI_WIDTH" "$ECOS_DOTS_DEFAULT_URL" 3>&1 1>&2 2>&3); then
@@ -1440,14 +1447,14 @@ ecos_update_cache_repo() {
     git pull
 
     # Add user tweaks
-    if [ -d "$ECOS_USER_TWEAKS" ]; then
+    if [ -d "$ECOS_USER_TWEAKS_DIR" ]; then
 
-        readarray -d '' user_tweaks_list < <(find "$ECOS_USER_TWEAKS" -mindepth 1 -maxdepth 1 -type d -print0)
+        readarray -d '' user_tweaks_list < <(find "$ECOS_USER_TWEAKS_DIR" -mindepth 1 -maxdepth 1 -type d -print0)
 
         for i in "${user_tweaks_list[@]}"; do
 
             local tweak_id="$(basename $i)"
-            local tweak_sh="$ECOS_USER_TWEAKS/$tweak_id/${tweak_id}.sh"
+            local tweak_sh="$ECOS_USER_TWEAKS_DIR/$tweak_id/${tweak_id}.sh"
 
             # Check sh file
             if ! [ -f "$tweak_sh" ]; then
@@ -1455,7 +1462,7 @@ ecos_update_cache_repo() {
             fi
 
             #Copy User tweaks
-            cp -r "$ECOS_USER_TWEAKS/$tweak_id" "$ECOS_REPO/tweaks/$tweak_id"
+            cp -r "$ECOS_USER_TWEAKS_DIR/$tweak_id" "$ECOS_REPO/tweaks/$tweak_id"
         done
     fi
 }
@@ -1463,14 +1470,7 @@ ecos_update_cache_repo() {
 ecos_update_core() {
 
     check_internet
-
-    # Make dirs
-    mkdir -p "$ECOS_HOME"
-    mkdir -p "$ECOS_WORKING_DIR"
-    mkdir -p "$ECOS_BIN_DIR"
-    mkdir -p "$ECOS_USER_TWEAKS"
-    mkdir -p "$ECOS_STATE_DIR"
-    mkdir -p "$HOME/.local/share/applications"
+    ecos_init_dirs
 
     local tmp_ecos="$ECOS_WORKING_DIR/ecos-new"
     if ! curl -s -L "$ECOS_CORE_URL" >"$tmp_ecos"; then
