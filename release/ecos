@@ -1,5 +1,5 @@
 #!/bin/bash
-SCRIPT_VERSION=2.1.8
+SCRIPT_VERSION=2.1.9
 
 #/////////////////////////////////////////////////////
 # SCRIPT VARIABLES
@@ -219,7 +219,13 @@ main() {
         if [ "$(cat /proc/sys/kernel/hostname)" = "archiso" ]; then
             tui_menu_install_core
         else
-            tui_menu_install_ecos
+            if [ ! -f "$ECOS_STATE_INITIALIZED" ]; then
+                tui_menu_install_ecos
+                exit $?
+            else
+                tui_menu_manager
+                exit $?
+            fi
         fi
     fi
 }
@@ -410,7 +416,7 @@ tui_menu_install_ecos() {
     # Show TUI menu
     #----------------------------------------
     tui_init 24 "ECOS INSTALLER"
-    if ! menu_input=$(whiptail --menu --notags "$(cat "$SCRIPT_TUI_FILE")\n\n" "$SCRIPT_TUI_HEIGHT" "$SCRIPT_TUI_WIDTH" 3 "1" "   Install ECOS" "2" "  Change Password" "3" "Manual Installation" 3>&1 1>&2 2>&3); then
+    if ! menu_input=$(whiptail --menu --notags "$(cat "$SCRIPT_TUI_FILE")\n\n" "$SCRIPT_TUI_HEIGHT" "$SCRIPT_TUI_WIDTH" 4 "1" "  Install ECOS" "2" " Install Manual" "3" "Change Password" "4" "Create USB Stick" 3>&1 1>&2 2>&3); then
         exit 0
     fi
 
@@ -423,9 +429,19 @@ tui_menu_install_ecos() {
     fi
 
     #----------------------------------------
-    # Change Password
+    # Manual Install
     #----------------------------------------
     if [ "$menu_input" = "2" ]; then
+        clear
+        echo -e "\nSimply type 'ecos' to open again\n\nInstall your System manually..."
+        exit 0
+    fi
+
+    #----------------------------------------
+    # Change Password
+    #----------------------------------------
+    if [ "$menu_input" = "3" ]; then
+        clear
         passwd
         read -p "Press <ENTER> to continue..."
         tui_menu_install_ecos
@@ -433,11 +449,11 @@ tui_menu_install_ecos() {
     fi
 
     #----------------------------------------
-    # Manual Install
+    # Create USB Stick
     #----------------------------------------
-    if [ "$menu_input" = "3" ]; then
+    if [ "$menu_input" = "4" ]; then
         clear
-        echo -e "\nSimply type 'ecos' to open again\n\nInstall your System manually..."
+        tui_create_usb
         exit 0
     fi
 
@@ -481,33 +497,6 @@ tui_menu_manager() {
     # Create USB Stick
     #----------------------------------------
     if [ "$menu_input" = "4" ]; then
-        tui_create_usb
-        exit 0
-    fi
-}
-
-tui_menu_welcome() {
-
-    #----------------------------------------
-    # Show TUI menu
-    #----------------------------------------
-    tui_init 27 "WELCOME"
-    if ! menu_input=$(whiptail --menu --notags "$(cat "$SCRIPT_TUI_FILE")\n" "$SCRIPT_TUI_HEIGHT" "$SCRIPT_TUI_WIDTH" 2 "1" "  Install ECOS" "2" "Create USB Stick" 3>&1 1>&2 2>&3); then
-        exit 0
-    fi
-
-    #----------------------------------------
-    # Install ECOS
-    #----------------------------------------
-    if [ "$menu_input" = "1" ]; then
-        ecos_tui_install_ecos
-        exit 0
-    fi
-
-    #----------------------------------------
-    # Create USB Stick
-    #----------------------------------------
-    if [ "$menu_input" = "2" ]; then
         tui_create_usb
         exit 0
     fi
@@ -1419,7 +1408,7 @@ ecos_create_desktop_file() {
     {
         echo "[Desktop Entry]"
         echo "Name=ECOS"
-        echo "Icon=ecos"
+        echo "Icon="$ECOS_ICON_FILE""
         echo 'Exec=bash -c "$HOME/.ecos/bin/ecos --manager"'
         echo "Type=Application"
     } >"$ECOS_DESKTOP_FILE"
