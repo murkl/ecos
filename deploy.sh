@@ -3,11 +3,11 @@
 SCRIPT_DIR="$(cd "$(dirname "$0")" >/dev/null 2>&1 && pwd)"
 
 # DEV FILE
-SCRIPT_DEV="$SCRIPT_DIR/ecos-dev"
+SCRIPT_DEV="$SCRIPT_DIR/ecos"
 VERSION_DEV="$($SCRIPT_DEV --version)"
 
 # RELEASE FILE
-SCRIPT_RELEASE="$SCRIPT_DIR/../release/ecos"
+SCRIPT_RELEASE="$SCRIPT_DIR/release/ecos"
 VERSION_RELEASE="$($SCRIPT_RELEASE --version)"
 
 # //////////////////////////////////
@@ -29,9 +29,9 @@ init() {
             echo -e "ERROR: cp -f "$SCRIPT_DEV" "$SCRIPT_RELEASE""
             exit 1
         fi
-        cd './../release' || exit 1
-        git add ./ecos && git commit -m "$(./ecos --version)"
-        echo -e "ECOS succefully deployed!"
+        cd "$SCRIPT_DIR" || exit 1
+        git add "$SCRIPT_RELEASE" && git commit -m "$($SCRIPT_RELEASE --version)"
+        echo -e "ECOS CORE succefully deployed!"
     else
         echo -e "Skipped..."
     fi
