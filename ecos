@@ -219,7 +219,13 @@ main() {
         if [ "$(cat /proc/sys/kernel/hostname)" = "archiso" ]; then
             tui_menu_install_core
         else
-            tui_menu_install_ecos
+            if [ ! -f "$ECOS_STATE_INITIALIZED" ]; then
+                tui_menu_install_ecos
+                exit $?
+            else
+                tui_menu_manager
+                exit $?
+            fi
         fi
     fi
 }
