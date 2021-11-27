@@ -340,7 +340,13 @@ ecos_core_release() {
     read -p "DEPLOY ECOS $develop_version? [yes/no]: " user_input
     if [ "$user_input" = "yes" ]; then
 
-        # Copy dev to release
+        # Copy dev changelog to release
+        if ! cp -f "$DEVELOP_CHANGELOG" "$RELEASE_CHANGELOG"; then
+            echo -e "ERROR: cp -f "$DEVELOP_CHANGELOG" "$RELEASE_CHANGELOG""
+            exit 1
+        fi
+
+        # Copy dev core to release
         if ! cp -f "$DEVELOP_SCRIPT" "$RELEASE_SCRIPT"; then
             echo -e "ERROR: cp -f "$DEVELOP_SCRIPT" "$RELEASE_SCRIPT""
             exit 1
@@ -348,7 +354,8 @@ ecos_core_release() {
 
         # Git commit
         cd "$SCRIPT_DIR" || exit 1
-        git add "./release/ecos" && git commit -m "$(./release/ecos --version)"
+        local commit_msg="$(./release/ecos --version)"
+        git add "./release/ecos" && git add "./release/changelog.html" && git commit -m "$commit_msg"
         echo -e "ECOS CORE succefully released!"
     else
         echo -e "Skipped..."
