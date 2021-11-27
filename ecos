@@ -14,21 +14,23 @@ SCRIPT_TUI_WIDTH=68
 SCRIPT_TUI_HEIGHT=24
 
 #/////////////////////////////////////////////////////
+# COLORS
+#/////////////////////////////////////////////////////
+
+COLOR_RED='\033[0;31m'
+COLOR_NULL='\033[0m' # No Color
+
+#/////////////////////////////////////////////////////
 # RELEASE
 #/////////////////////////////////////////////////////
 
+# DEVELOP
 DEVELOP_SCRIPT="$SCRIPT_DIR/ecos"
 DEVELOP_CHANGELOG="$SCRIPT_DIR/assets/changelog.html"
-DEVELOP_VERSION="$($DEVELOP_SCRIPT --version)"
 
 # RELEASE FILE
 RELEASE_SCRIPT="$SCRIPT_DIR/release/ecos"
 RELEASE_CHANGELOG="$SCRIPT_DIR/release/changelog.html"
-RELEASE_VERSION="$($RELEASE_SCRIPT --version)"
-
-# PRINT COLORS
-COLOR_RED='\033[0;31m'
-COLOR_NULL='\033[0m' # No Color
 
 #/////////////////////////////////////////////////////
 # ECOS VARIABLES
@@ -299,19 +301,20 @@ zenity_show_changelog() {
 
 ecos_core_release() {
 
+    local show_warning="false"
+    local develop_version="$($DEVELOP_SCRIPT --version)"
+    local release_version="$($RELEASE_SCRIPT --version)"
+
     echo -e ''
     echo -e "////////////////////////"
     echo -e "> RELEASE NEW ECOS CORE"
     echo -e "////////////////////////"
-    echo -e "VERSION DEVELOP:  $DEVELOP_VERSION"
-    echo -e "VERSION RELEASE:  $RELEASE_VERSION"
+    echo -e "VERSION DEVELOP:  $develop_version"
+    echo -e "VERSION RELEASE:  $release_version"
     echo -e ''
 
-    # Vars
-    local show_warning="false"
-
     # Check different version numbers
-    if [ "$DEVELOP_VERSION" = "$RELEASE_VERSION" ]; then
+    if [ "$develop_version" = "$release_version" ]; then
         show_warning="true"
         printf "${COLOR_RED}!! SAME VERSION NUMBERS !!${COLOR_NULL}\n"
     fi
@@ -334,7 +337,7 @@ ecos_core_release() {
 
     # DEPLOYMENT
     echo -e ''
-    read -p "DEPLOY ECOS $DEVELOP_VERSION? [yes/no]: " user_input
+    read -p "DEPLOY ECOS $develop_version? [yes/no]: " user_input
     if [ "$user_input" = "yes" ]; then
 
         # Copy dev to release
