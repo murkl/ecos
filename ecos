@@ -200,7 +200,7 @@ zenity() {
 }
 
 notify() {
-    notify-send --icon="$ECOS_ICON_FILE" "$SCRIPT_TITLE" "$1"
+    zenity --notification --text="$1"
 }
 
 #/////////////////////////////////////////////////////
