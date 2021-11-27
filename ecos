@@ -320,8 +320,6 @@ ecos_core_release() {
     fi
 
     # Check different changelog files
-    echo "diff "$DEVELOP_CHANGELOG" "$RELEASE_CHANGELOG""
-    exit
     local diff_result=$(diff "$DEVELOP_CHANGELOG" "$RELEASE_CHANGELOG")
     if [ "$diff_result" = "" ]; then
         show_warning="true"
