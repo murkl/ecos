@@ -1078,9 +1078,16 @@ core_install_chroot() {
     rm -f "/home/$USERNAME/.zshrc"
 
     #----------------------------------------
-    # Set user permissions
+    # Create state file
     #----------------------------------------
-    chown -R "$USERNAME" "/home/$USERNAME"
+    local state_dir="/home/$USERNAME/.ecos/.cache/state"
+    mkdir -p "$state_dir"
+    echo "$SCRIPT_VERSION" >"$state_dir/core_initialized"
+
+    #----------------------------------------
+    # Set correct user permissions
+    #----------------------------------------
+    chown -R "$USERNAME":"$USERNAME" "/home/$USERNAME"
 
     #----------------------------------------
     # Change passwords
@@ -1094,10 +1101,6 @@ core_install_chroot() {
     #----------------------------------------
     # Chroot finished
     #----------------------------------------
-    local state_dir="/home/$USERNAME/.ecos/.cache/state"
-    mkdir -p "$state_dir"
-    echo "$SCRIPT_VERSION" >"$state_dir/core_initialized"
-
     core_log "CHROOT successfully finished"
 }
 
