@@ -1428,7 +1428,7 @@ ecos_init_ecos() {
     mkdir -p "$HOME/.local/share/applications"
 
     # DEFAULT CONFIG PROPERTIES
-    core_check_config_key "$ECOS_CONFIG_FILE" "gnome-terminal -e bash -c" "TERMINAL_EXEC" "$SWAP_SIZE"
+    core_check_config_key "$ECOS_CONFIG_FILE" "TERMINAL_EXEC" "gnome-terminal -e bash -c"
 }
 
 ecos_tui_install_ecos() {
