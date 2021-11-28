@@ -138,7 +138,7 @@ main() {
     fi
 
     # ---------------------------------------
-    # RELEASE CORE
+    # DEV: CORE RELEASE
     # ---------------------------------------
     if [ "$1" = "--core-release" ]; then
         ecos_core_release
@@ -146,7 +146,7 @@ main() {
     fi
 
     # ---------------------------------------
-    # INSTALL CORE
+    # CORE INSTALL
     # ---------------------------------------
     if [ "$1" = "--core-install" ]; then
         tui_menu_install_core
@@ -154,7 +154,7 @@ main() {
     fi
 
     # ---------------------------------------
-    # INSTALL ECOS
+    # ECOS INSTALL
     # ---------------------------------------
     if [ "$1" = "--ecos-install" ]; then
         if [ ! -f "$ECOS_STATE_INITIALIZED" ]; then
@@ -165,7 +165,7 @@ main() {
     fi
 
     # ---------------------------------------
-    # UPDATE CORE
+    # CORE UPDATE
     # ---------------------------------------
     if [ "$1" = "--core-update" ]; then
         ecos_update_core
@@ -173,7 +173,7 @@ main() {
     fi
 
     # ---------------------------------------
-    # UPDATE ECOS
+    # ECOS UPDATE
     # ---------------------------------------
     if [ "$1" = "--ecos-update" ]; then
         ecos_update_system
@@ -187,6 +187,14 @@ main() {
         if [ -f "$ECOS_STATE_SHOW_CHANGELOG" ]; then
             zenity_show_changelog
         fi
+        exit 0
+    fi
+
+    # ---------------------------------------
+    # ECOS TWEAKS
+    # ---------------------------------------
+    if [ "$1" = "--ecos-tweak" ]; then
+        ecos_tui_menu_tweaks "$2" "$3"
         exit 0
     fi
 
@@ -260,6 +268,7 @@ print_zenity_header() {
 zenity_manager() {
     ecos_check_zenity
     ecos_init_ecos
+
     local menu_entries=()
     menu_entries+=("Update")
     menu_entries+=("Tweaks")
@@ -269,13 +278,11 @@ zenity_manager() {
     fi
 
     if [ "$zenity_result" = "Update" ]; then
-        notify "Update"
-        zenity_manager
+        $TERMINAL_EXEC "$ECOS_CORE --ecos-update"
         exit 0
     fi
     if [ "$zenity_result" = "Tweaks" ]; then
-        notify "Tweaks"
-        zenity_manager
+        $TERMINAL_EXEC "$ECOS_CORE --ecos-tweaks"
         exit 0
     fi
     if [ "$zenity_result" = "Settings" ]; then
@@ -1432,6 +1439,9 @@ ecos_init_ecos() {
 
     # DEFAULT CONFIG PROPERTIES
     core_check_config_key "$ECOS_CONFIG_FILE" "TERMINAL_EXEC" "$TERMINAL_EXEC"
+
+    # SOURCE ECOS CONFIG
+    . "$ECOS_CONFIG_FILE"
 }
 
 ecos_tui_install_ecos() {
