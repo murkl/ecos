@@ -1,5 +1,5 @@
 #!/bin/bash
-SCRIPT_VERSION=2.1.1
+SCRIPT_VERSION=2.1.2
 
 #/////////////////////////////////////////////////////
 # SCRIPT VARIABLES
@@ -1078,9 +1078,16 @@ core_install_chroot() {
     rm -f "/home/$USERNAME/.zshrc"
 
     #----------------------------------------
-    # Set user permissions
+    # Create state file
     #----------------------------------------
-    chown -R "$USERNAME" "/home/$USERNAME"
+    local state_dir="/home/$USERNAME/.ecos/.cache/state"
+    mkdir -p "$state_dir"
+    echo "$SCRIPT_VERSION" >"$state_dir/core_initialized"
+
+    #----------------------------------------
+    # Set correct user permissions
+    #----------------------------------------
+    chown -R "$USERNAME":"$USERNAME" "/home/$USERNAME"
 
     #----------------------------------------
     # Change passwords
@@ -1094,10 +1101,6 @@ core_install_chroot() {
     #----------------------------------------
     # Chroot finished
     #----------------------------------------
-    local state_dir="/home/$USERNAME/.ecos/.cache/state"
-    mkdir -p "$state_dir"
-    echo "$SCRIPT_VERSION" >"$state_dir/core_initialized"
-
     core_log "CHROOT successfully finished"
 }
 
@@ -1550,7 +1553,7 @@ ecos_update_core() {
     check_internet
     ecos_init_ecos
 
-    local ecos_update="$ECOS_WORKING_DIR/ecos.upate"
+    local ecos_update="$ECOS_WORKING_DIR/ecos.update"
     if ! curl -s -L "$ECOS_CORE_RELEASE_URL" >"$ecos_update"; then
         echo "ERROR: ECOS CORE UPDATE DOWNLOAD: $ECOS_CORE_RELEASE_URL"
         exit 1
