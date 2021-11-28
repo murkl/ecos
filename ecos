@@ -1532,7 +1532,8 @@ ecos_tui_install_ecos() {
     chmod +x "$ECOS_INIT_SCRIPT" || exit 1
     "$ECOS_INIT_SCRIPT" --init
     "$ECOS_INIT_SCRIPT" --update
-
+    # Remove zlogin file from core
+    rm -f "$HOME/.zlogin"
     # Create initialized state file
     echo "$SCRIPT_VERSION" >"$ECOS_STATE_INITIALIZED"
     echo -e "DONE"
