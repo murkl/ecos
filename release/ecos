@@ -1,5 +1,5 @@
 #!/bin/bash
-SCRIPT_VERSION=2.1.2
+SCRIPT_VERSION=2.1.1
 
 #/////////////////////////////////////////////////////
 # SCRIPT VARIABLES
@@ -1402,15 +1402,16 @@ ecos_check_paru() {
         # Install aur helper
         makepkg -si --noconfirm --needed
 
-        # Remove download dir
-        rm -rf "$paru_build_tmp"
-
         # Symlink to yay
         sudo ln -sf /usr/bin/paru /usr/bin/yay
 
         # Config
         sudo sed -i 's/^#BottomUp/BottomUp/g' /etc/paru.conf
         sudo sed -i 's/^#SudoLoop/SudoLoop/g' /etc/paru.conf
+
+        # Remove download dir
+        cd "$HOME" || exit 1
+        rm -rf "$paru_build_tmp"
     fi
 }
 
@@ -1466,6 +1467,8 @@ ecos_tui_install_ecos() {
 
     clear
     print_header
+
+    cd "$HOME" || exit 1
 
     print_title "CHECK GIT"
     ecos_check_git
@@ -1553,6 +1556,8 @@ ecos_update_core() {
     check_internet
     ecos_init_ecos
 
+    cd "$HOME" || exit 1
+
     local ecos_update="$ECOS_WORKING_DIR/ecos.update"
     if ! curl -s -L "$ECOS_CORE_RELEASE_URL" >"$ecos_update"; then
         echo "ERROR: ECOS CORE UPDATE DOWNLOAD: $ECOS_CORE_RELEASE_URL"
@@ -1589,18 +1594,12 @@ ecos_update_core() {
 ecos_update_repo() {
 
     ecos_init_ecos
+    cd "$HOME" || exit 1
 
     if ! [ -d "$ECOS_REPO/.git" ]; then
         echo "CLONE ECOS REPO"
         mkdir -p "$ECOS_REPO"
-        /usr/bin/git clone "$ECOS_REPO_URL" "$ECOS_REPO" &
-        local pid=$!
-        wait $pid
-    fi
-
-    if ! [ -d "$ECOS_REPO/.git" ]; then
-        echo "ERROR CLONE ECOS REPO: Cant find $ECOS_REPO/.git"
-        exit 1
+        /usr/bin/git clone "$ECOS_REPO_URL" "$ECOS_REPO"
     fi
 
     echo "UPDATE ECOS REPO"
