@@ -306,9 +306,7 @@ zenity_settings() {
 
 zenity_show_changelog() {
     ecos_check_zenity
-    if ! zenity --text-info --width=500 --height=500 --title="$SCRIPT_TITLE" --cancel-label="Close" --ok-label="Ok" --font="monospace" --html --no-interaction --filename="$ECOS_CHANGELOG_FILE"; then
-        exit 0
-    fi
+    zenity --text-info --width=500 --height=500 --title="$SCRIPT_TITLE" --cancel-label="Close" --ok-label="Ok" --font="monospace" --html --no-interaction --filename="$ECOS_CHANGELOG_FILE"
     rm -f "$ECOS_STATE_SHOW_CHANGELOG"
 }
 
