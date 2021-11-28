@@ -1,5 +1,5 @@
 #!/bin/bash
-SCRIPT_VERSION=2.1.2
+SCRIPT_VERSION=2.1.3
 
 #/////////////////////////////////////////////////////
 # SCRIPT VARIABLES
@@ -65,6 +65,8 @@ ECOS_CHANGELOG_FILE="$ECOS_REPO/assets/changelog.html"
 ECOS_CACHE_TWEAKS="$ECOS_WORKING_DIR/tweaks"
 ECOS_USER_TWEAKS_DIR="$ECOS_HOME/tweaks"
 ECOS_DESKTOP_FILE="$HOME/.local/share/applications/$SCRIPT_ID.desktop"
+ECOS_REMOTE_VERSION_FILE='/tmp/ecos.remote'
+ECOS_REMOTE_VERSION=''
 
 # DEFAULT PROPERTIES
 TERMINAL_EXEC='gnome-terminal -e'
@@ -260,10 +262,10 @@ notify() {
 print_zenity_header() {
     local title="$1"
     local version_remote="$2"
-    local header='<span font_family="monospace" foreground="#A3BE8C" font="24"><b>'$SCRIPT_TITLE'</b></span>'
-    local version='<span font_family="monospace" foreground="#494949" font="10">'$SCRIPT_VERSION'</span>'
+    local header='<span font_family="monospace" foreground="#494949" font="35"><b>'$SCRIPT_TITLE'</b></span>'
+    local version='<span font_family="monospace" foreground="#A3BE8C" font="10">'$SCRIPT_VERSION'</span>'
     if [ "$version_remote" != "" ] && [ "$SCRIPT_VERSION" != "$version_remote" ]; then
-        local version='<span font_family="monospace" foreground="#494949" font="10">'$SCRIPT_VERSION' (Update '$version_remote' available)</span>'
+        local version='<span font_family="monospace" foreground="#db7844" font="10"><b>'$SCRIPT_VERSION'</b></span><span font_family="monospace" foreground="#494949" font="10"><b> ➤ </b></span><span font_family="monospace" foreground="#A3BE8C" font="10"><b>'$version_remote'</b></span>'
     fi
     local title='<span font_family="monospace" foreground="#494949" font="10"><b>'$title'</b></span>'
     echo -e " $header\n  $version\n\n $title"
@@ -271,51 +273,41 @@ print_zenity_header() {
 
 zenity_manager() {
     ecos_check_zenity
-    ecos_init_ecos
 
     local pid_file="/tmp/ecos.pids"
-    local ecos_update="/tmp/ecos.update"
-    (
-        # DOWNLOAD CORE
-        if ! curl -s -L "$ECOS_CORE_RELEASE_URL" >"$ecos_update"; then
-            echo "ERROR: ECOS CORE UPDATE DOWNLOAD: $ECOS_CORE_RELEASE_URL"
-            exit 1
+    if [ "$ECOS_REMOTE_VERSION" = '' ]; then
+
+        (
+            if ! ecos_init_ecos; then
+                echo "CANCELED" >"$pid_file"
+            else
+                echo "SUCCESS" >"$pid_file"
+            fi
+        ) &
+        local task_pid="$!"
+
+        # Capture pid and show progress dialog
+        echo "$task_pid" >"$pid_file"
+        local txt_title='<span font_family="monospace" foreground="#494949" font="12"><b>Initialize '$SCRIPT_TITLE' CORE...</b></span>'
+        tail -f /dev/null --pid $task_pid | (zenity --progress --width=300 --height=150 --no-cancel --text="\n\t$txt_title\n" --pulsate --auto-close || (kill_pid "$task_pid" && echo "CANCELED" >"$pid_file"))
+
+        # Finish
+        local pid_state=$(<"$pid_file")
+        if [ "$pid_state" = "SUCCESS" ]; then
+            ECOS_REMOTE_VERSION="$($ECOS_REMOTE_VERSION_FILE --version)"
+            echo "INIT SUCCESS: REMOTE: $ECOS_REMOTE_VERSION"
         fi
-        if ! chmod +x "$ecos_update"; then
-            echo "ERROR: CHMOD CORE UPDATE: $ecos_update"
-            exit 1
+
+        if [ "$pid_state" = "CANCELED" ]; then
+            echo "INIT FAILED"
         fi
-
-        # UPDATE REPO
-        ecos_update_repo
-    ) &
-    local task_pid="$!"
-
-    # Capture pid and show progress dialog
-    echo "$task_pid" >"$pid_file"
-    local txt_title='<span font_family="monospace" foreground="#494949" font="12"><b>Initialize '$SCRIPT_TITLE' CORE...</b></span>'
-    tail -f /dev/null --pid $task_pid | (zenity --progress --width=300 --height=150 --no-cancel --text="\n\t$txt_title\n" --pulsate --auto-close || (kill_pid "$task_pid" && echo "CANCELED" >"$pid_file"))
-
-    # Finish
-    local backup_state=$(<"$pid_file")
-    if [ "$backup_state" = "SUCCESS" ]; then
-        echo "SUCCESS"
-        return 0
     fi
-
-    if [ "$backup_state" = "CANCELED" ]; then
-        echo "CANCELED"
-        return 1
-    fi
-
-    # TODO
-    local remote_core_version="$($ecos_update --version)"
 
     local menu_entries=()
     menu_entries+=("Update")
     menu_entries+=("Tweaks")
     menu_entries+=("Settings")
-    if ! zenity_result="$(zenity --list --hide-header --column="" --text="$(print_zenity_header 'Manager' $remote_core_version)" --cancel-label='Exit' --ok-label='Ok' "${menu_entries[@]}")"; then
+    if ! zenity_result="$(zenity --list --hide-header --column="" --text="$(print_zenity_header 'Manager' $ECOS_REMOTE_VERSION)" --cancel-label='Exit' --ok-label='Ok' "${menu_entries[@]}")"; then
         exit 0
     fi
 
@@ -1498,6 +1490,8 @@ ecos_create_desktop_file() {
 }
 
 ecos_init_ecos() {
+
+    # CREATE DIRS
     mkdir -p "$ECOS_HOME"
     mkdir -p "$ECOS_BIN_DIR"
     mkdir -p "$ECOS_CONFIG_DIR"
@@ -1511,6 +1505,27 @@ ecos_init_ecos() {
 
     # SOURCE ECOS CONFIG
     . "$ECOS_CONFIG_FILE"
+
+    # SET REMOTE ECOS VERSION
+    if [ "$ECOS_REMOTE_VERSION" = '' ]; then
+        echo "DOWNLOAD REMOTE ECOS"
+        local ecos_update="$ECOS_REMOTE_VERSION_FILE"
+
+        if ! curl -s -L "$ECOS_CORE_RELEASE_URL" >"$ECOS_REMOTE_VERSION_FILE"; then
+            echo "ERROR: ECOS DOWNLOAD: $ECOS_CORE_RELEASE_URL"
+            return 1
+        fi
+        if ! chmod +x "$ECOS_REMOTE_VERSION_FILE"; then
+            echo "ERROR: CHMOD: $ECOS_REMOTE_VERSION_FILE"
+            return 1
+        fi
+
+        ECOS_REMOTE_VERSION="$($ECOS_REMOTE_VERSION_FILE --version)"
+        echo "ECOS_REMOTE_VERSION=$ECOS_REMOTE_VERSION"
+    fi
+
+    # UPDATE REPO
+    ecos_update_repo
 }
 
 ecos_tui_install_ecos() {
@@ -1658,7 +1673,6 @@ ecos_update_core() {
 
 ecos_update_repo() {
 
-    ecos_init_ecos
     cd "$HOME" || exit 1
 
     if ! [ -d "$ECOS_REPO/.git" ]; then
