@@ -67,7 +67,7 @@ ECOS_USER_TWEAKS_DIR="$ECOS_HOME/tweaks"
 ECOS_DESKTOP_FILE="$HOME/.local/share/applications/$SCRIPT_ID.desktop"
 
 # DEFAULT PROPERTIES
-TERMINAL_EXEC='gnome-terminal -e bash -c'
+TERMINAL_EXEC='gnome-terminal -e'
 
 #/////////////////////////////////////////////////////
 # CORE VARIABLES
@@ -193,8 +193,8 @@ main() {
     # ---------------------------------------
     # ECOS TWEAKS
     # ---------------------------------------
-    if [ "$1" = "--ecos-tweak" ]; then
-        ecos_tui_menu_tweaks "$2" "$3"
+    if [ "$1" = "--ecos-tweaks" ]; then
+        ecos_tui_menu_tweaks '--no-update'
         exit 0
     fi
 
@@ -278,11 +278,11 @@ zenity_manager() {
     fi
 
     if [ "$zenity_result" = "Update" ]; then
-        $TERMINAL_EXEC "$ECOS_CORE --ecos-update"
+        $TERMINAL_EXEC bash -c "$ECOS_CORE --ecos-update"
         exit 0
     fi
     if [ "$zenity_result" = "Tweaks" ]; then
-        $TERMINAL_EXEC "$ECOS_CORE --ecos-tweaks"
+        gnome-terminal -e "bash -c $ECOS_CORE --ecos-tweaks"
         exit 0
     fi
     if [ "$zenity_result" = "Settings" ]; then
