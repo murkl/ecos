@@ -1,5 +1,5 @@
 #!/bin/bash
-SCRIPT_VERSION=2.1.3
+SCRIPT_VERSION=2.1.1
 
 #/////////////////////////////////////////////////////
 # SCRIPT VARIABLES
@@ -66,6 +66,9 @@ ECOS_CACHE_TWEAKS="$ECOS_WORKING_DIR/tweaks"
 ECOS_USER_TWEAKS_DIR="$ECOS_HOME/tweaks"
 ECOS_DESKTOP_FILE="$HOME/.local/share/applications/$SCRIPT_ID.desktop"
 
+# DEFAULT PROPERTIES
+TERMINAL_EXEC='gnome-terminal -e'
+
 #/////////////////////////////////////////////////////
 # CORE VARIABLES
 #/////////////////////////////////////////////////////
@@ -121,7 +124,7 @@ main() {
     #----------------------------------------
     # CHROOT MODE
     #----------------------------------------
-    if [ "$1" = "--install-chroot" ] && [ "$2" != "" ] && [ "$3" != "" ]; then
+    if [ "$1" = "--chroot-install" ] && [ "$2" != "" ] && [ "$3" != "" ]; then
         core_install_chroot "$2" "$3"
         exit $?
     fi
@@ -135,25 +138,25 @@ main() {
     fi
 
     # ---------------------------------------
-    # RELEASE CORE
+    # DEV: CORE RELEASE
     # ---------------------------------------
-    if [ "$1" = "--release-core" ]; then
+    if [ "$1" = "--core-release" ]; then
         ecos_core_release
         exit 0
     fi
 
     # ---------------------------------------
-    # INSTALL CORE
+    # CORE INSTALL
     # ---------------------------------------
-    if [ "$1" = "--install-core" ]; then
+    if [ "$1" = "--core-install" ]; then
         tui_menu_install_core
         exit 0
     fi
 
     # ---------------------------------------
-    # INSTALL ECOS
+    # ECOS INSTALL
     # ---------------------------------------
-    if [ "$1" = "--install-ecos" ]; then
+    if [ "$1" = "--ecos-install" ]; then
         if [ ! -f "$ECOS_STATE_INITIALIZED" ]; then
             tui_menu_install_ecos
         else
@@ -162,17 +165,17 @@ main() {
     fi
 
     # ---------------------------------------
-    # UPDATE CORE
+    # CORE UPDATE
     # ---------------------------------------
-    if [ "$1" = "--update-core" ]; then
+    if [ "$1" = "--core-update" ]; then
         ecos_update_core
         exit 0
     fi
 
     # ---------------------------------------
-    # UPDATE ECOS
+    # ECOS UPDATE
     # ---------------------------------------
-    if [ "$1" = "--update-system" ]; then
+    if [ "$1" = "--ecos-update" ]; then
         ecos_update_system
         exit 0
     fi
@@ -184,6 +187,14 @@ main() {
         if [ -f "$ECOS_STATE_SHOW_CHANGELOG" ]; then
             zenity_show_changelog
         fi
+        exit 0
+    fi
+
+    # ---------------------------------------
+    # ECOS TWEAKS
+    # ---------------------------------------
+    if [ "$1" = "--ecos-tweaks" ]; then
+        ecos_tui_menu_tweaks '--no-update'
         exit 0
     fi
 
@@ -257,6 +268,7 @@ print_zenity_header() {
 zenity_manager() {
     ecos_check_zenity
     ecos_init_ecos
+
     local menu_entries=()
     menu_entries+=("Update")
     menu_entries+=("Tweaks")
@@ -266,13 +278,11 @@ zenity_manager() {
     fi
 
     if [ "$zenity_result" = "Update" ]; then
-        notify "Update"
-        zenity_manager
+        gnome-terminal -e 'bash -c "'$ECOS_CORE' --ecos-update"'
         exit 0
     fi
     if [ "$zenity_result" = "Tweaks" ]; then
-        notify "Tweaks"
-        zenity_manager
+        gnome-terminal -e 'bash -c "'$ECOS_CORE' --ecos-tweaks"'
         exit 0
     fi
     if [ "$zenity_result" = "Settings" ]; then
@@ -728,8 +738,8 @@ core_exec_install() {
     # Chroot into new system
     #----------------------------------------
     core_gauge_update 54 "Enter CHROOT Environement"
-    log_txt="arch-chroot /mnt /$SCRIPT_ID --install-chroot $uefi_mode <ENCRYPTION_PASSWORD>"
-    if ! arch-chroot /mnt "/$SCRIPT_ID" --install-chroot "$uefi_mode" "$password_encryption"; then
+    log_txt="arch-chroot /mnt /$SCRIPT_ID --chroot-install $uefi_mode <ENCRYPTION_PASSWORD>"
+    if ! arch-chroot /mnt "/$SCRIPT_ID" --chroot-install "$uefi_mode" "$password_encryption"; then
         core_log "e" "$log_txt"
         exit 1
     else
@@ -1055,7 +1065,7 @@ core_install_chroot() {
     echo 'export ECOS_HOME="$HOME/.ecos"' >>$user_profile
     echo 'export ECOS_CORE="$ECOS_HOME/bin/ecos"' >>$user_profile
     echo 'export PATH="$PATH:$ECOS_HOME/bin"' >>$user_profile
-    echo '$ECOS_CORE --install-ecos' >>$user_profile
+    echo '$ECOS_CORE --ecos-install' >>$user_profile
     chmod +x $user_profile
 
     #----------------------------------------
@@ -1428,7 +1438,10 @@ ecos_init_ecos() {
     mkdir -p "$HOME/.local/share/applications"
 
     # DEFAULT CONFIG PROPERTIES
-    core_check_config_key "$ECOS_CONFIG_FILE" "TERMINAL_EXEC" "gnome-terminal -e bash -c"
+    core_check_config_key "$ECOS_CONFIG_FILE" "TERMINAL_EXEC" "$TERMINAL_EXEC"
+
+    # SOURCE ECOS CONFIG
+    . "$ECOS_CONFIG_FILE"
 }
 
 ecos_tui_install_ecos() {
