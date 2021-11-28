@@ -1550,7 +1550,7 @@ ecos_update_core() {
     check_internet
     ecos_init_ecos
 
-    local ecos_update="$ECOS_WORKING_DIR/ecos.upate"
+    local ecos_update="$ECOS_WORKING_DIR/ecos.update"
     if ! curl -s -L "$ECOS_CORE_RELEASE_URL" >"$ecos_update"; then
         echo "ERROR: ECOS CORE UPDATE DOWNLOAD: $ECOS_CORE_RELEASE_URL"
         exit 1
