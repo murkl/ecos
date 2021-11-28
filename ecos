@@ -278,11 +278,11 @@ zenity_manager() {
     fi
 
     if [ "$zenity_result" = "Update" ]; then
-        $TERMINAL_EXEC bash -c "$ECOS_CORE --ecos-update"
+        gnome-terminal -e 'bash -c "'$ECOS_CORE' --ecos-update"'
         exit 0
     fi
     if [ "$zenity_result" = "Tweaks" ]; then
-        gnome-terminal -e "bash -c $ECOS_CORE --ecos-tweaks"
+        gnome-terminal -e 'bash -c "'$ECOS_CORE' --ecos-tweaks"'
         exit 0
     fi
     if [ "$zenity_result" = "Settings" ]; then
