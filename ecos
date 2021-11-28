@@ -65,6 +65,7 @@ ECOS_CHANGELOG_FILE="$ECOS_REPO/assets/changelog.html"
 ECOS_CACHE_TWEAKS="$ECOS_WORKING_DIR/tweaks"
 ECOS_USER_TWEAKS_DIR="$ECOS_HOME/tweaks"
 ECOS_DESKTOP_FILE="$HOME/.local/share/applications/$SCRIPT_ID.desktop"
+ECOS_REMOTE_VERSION_FILE='/tmp/ecos.remote'
 ECOS_REMOTE_VERSION=''
 
 # DEFAULT PROPERTIES
@@ -272,27 +273,16 @@ print_zenity_header() {
 
 zenity_manager() {
     ecos_check_zenity
-    ecos_init_ecos
-    local ecos_update="/tmp/ecos.update"
-    local pid_file="/tmp/ecos.pids"
 
+    local pid_file="/tmp/ecos.pids"
     if [ "$ECOS_REMOTE_VERSION" = '' ]; then
 
         (
-            # DOWNLOAD CORE
-            if ! curl -s -L "$ECOS_CORE_RELEASE_URL" >"$ecos_update"; then
-                echo "ERROR: ECOS CORE UPDATE DOWNLOAD: $ECOS_CORE_RELEASE_URL"
-                exit 1
+            if ! ecos_init_ecos; then
+                echo "CANCELED" >"$pid_file"
+            else
+                echo "SUCCESS" >"$pid_file"
             fi
-            if ! chmod +x "$ecos_update"; then
-                echo "ERROR: CHMOD CORE UPDATE: $ecos_update"
-                exit 1
-            fi
-
-            # UPDATE REPO
-            ecos_update_repo
-
-            echo "SUCCESS" >"$pid_file"
         ) &
         local task_pid="$!"
 
@@ -304,11 +294,12 @@ zenity_manager() {
         # Finish
         local pid_state=$(<"$pid_file")
         if [ "$pid_state" = "SUCCESS" ]; then
-            ECOS_REMOTE_VERSION=$($ecos_update --version)
+            ECOS_REMOTE_VERSION="$($ECOS_REMOTE_VERSION_FILE --version)"
+            echo "INIT SUCCESS: REMOTE: $ECOS_REMOTE_VERSION"
         fi
 
         if [ "$pid_state" = "CANCELED" ]; then
-            ECOS_REMOTE_VERSION=''
+            echo "INIT FAILED"
         fi
     fi
 
@@ -1499,6 +1490,8 @@ ecos_create_desktop_file() {
 }
 
 ecos_init_ecos() {
+
+    # CREATE DIRS
     mkdir -p "$ECOS_HOME"
     mkdir -p "$ECOS_BIN_DIR"
     mkdir -p "$ECOS_CONFIG_DIR"
@@ -1512,6 +1505,27 @@ ecos_init_ecos() {
 
     # SOURCE ECOS CONFIG
     . "$ECOS_CONFIG_FILE"
+
+    # SET REMOTE ECOS VERSION
+    if [ "$ECOS_REMOTE_VERSION" = '' ]; then
+        echo "DOWNLOAD REMOTE ECOS"
+        local ecos_update="$ECOS_REMOTE_VERSION_FILE"
+
+        if ! curl -s -L "$ECOS_CORE_RELEASE_URL" >"$ECOS_REMOTE_VERSION_FILE"; then
+            echo "ERROR: ECOS DOWNLOAD: $ECOS_CORE_RELEASE_URL"
+            return 1
+        fi
+        if ! chmod +x "$ECOS_REMOTE_VERSION_FILE"; then
+            echo "ERROR: CHMOD: $ECOS_REMOTE_VERSION_FILE"
+            return 1
+        fi
+
+        ECOS_REMOTE_VERSION="$($ECOS_REMOTE_VERSION_FILE --version)"
+        echo "ECOS_REMOTE_VERSION=$ECOS_REMOTE_VERSION"
+    fi
+
+    # UPDATE REPO
+    ecos_update_repo
 }
 
 ecos_tui_install_ecos() {
@@ -1659,7 +1673,6 @@ ecos_update_core() {
 
 ecos_update_repo() {
 
-    ecos_init_ecos
     cd "$HOME" || exit 1
 
     if ! [ -d "$ECOS_REPO/.git" ]; then
