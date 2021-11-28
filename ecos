@@ -65,6 +65,7 @@ ECOS_CHANGELOG_FILE="$ECOS_REPO/assets/changelog.html"
 ECOS_CACHE_TWEAKS="$ECOS_WORKING_DIR/tweaks"
 ECOS_USER_TWEAKS_DIR="$ECOS_HOME/tweaks"
 ECOS_DESKTOP_FILE="$HOME/.local/share/applications/$SCRIPT_ID.desktop"
+ECOS_REMOTE_VERSION=''
 
 # DEFAULT PROPERTIES
 TERMINAL_EXEC='gnome-terminal -e'
@@ -272,50 +273,52 @@ print_zenity_header() {
 zenity_manager() {
     ecos_check_zenity
     ecos_init_ecos
-
-    local pid_file="/tmp/ecos.pids"
     local ecos_update="/tmp/ecos.update"
-    (
-        # DOWNLOAD CORE
-        if ! curl -s -L "$ECOS_CORE_RELEASE_URL" >"$ecos_update"; then
-            echo "ERROR: ECOS CORE UPDATE DOWNLOAD: $ECOS_CORE_RELEASE_URL"
-            exit 1
+    local pid_file="/tmp/ecos.pids"
+
+    echo "ECOS_REMOTE_VERSION=$ECOS_REMOTE_VERSION"
+    if [ "$ECOS_REMOTE_VERSION" = '' ]; then
+
+        (
+            # DOWNLOAD CORE
+            if ! curl -s -L "$ECOS_CORE_RELEASE_URL" >"$ecos_update"; then
+                echo "ERROR: ECOS CORE UPDATE DOWNLOAD: $ECOS_CORE_RELEASE_URL"
+                exit 1
+            fi
+            if ! chmod +x "$ecos_update"; then
+                echo "ERROR: CHMOD CORE UPDATE: $ecos_update"
+                exit 1
+            fi
+
+            # UPDATE REPO
+            ecos_update_repo
+
+            echo "SUCCESS" >"$pid_file"
+
+        ) &
+        local task_pid="$!"
+
+        # Capture pid and show progress dialog
+        echo "$task_pid" >"$pid_file"
+        local txt_title='<span font_family="monospace" foreground="#494949" font="12"><b>Initialize '$SCRIPT_TITLE' CORE...</b></span>'
+        tail -f /dev/null --pid $task_pid | (zenity --progress --width=300 --height=150 --no-cancel --text="\n\t$txt_title\n" --pulsate --auto-close || (kill_pid "$task_pid" && echo "CANCELED" >"$pid_file"))
+
+        # Finish
+        local pid_state=$(<"$pid_file")
+        if [ "$pid_state" = "SUCCESS" ]; then
+            ECOS_REMOTE_VERSION=$($ecos_update --version)
         fi
-        if ! chmod +x "$ecos_update"; then
-            echo "ERROR: CHMOD CORE UPDATE: $ecos_update"
-            exit 1
+
+        if [ "$pid_state" = "CANCELED" ]; then
+            ECOS_REMOTE_VERSION=''
         fi
-
-        # UPDATE REPO
-        ecos_update_repo
-    ) &
-    local task_pid="$!"
-
-    # Capture pid and show progress dialog
-    echo "$task_pid" >"$pid_file"
-    local txt_title='<span font_family="monospace" foreground="#494949" font="12"><b>Initialize '$SCRIPT_TITLE' CORE...</b></span>'
-    tail -f /dev/null --pid $task_pid | (zenity --progress --width=300 --height=150 --no-cancel --text="\n\t$txt_title\n" --pulsate --auto-close || (kill_pid "$task_pid" && echo "CANCELED" >"$pid_file"))
-
-    # Finish
-    local backup_state=$(<"$pid_file")
-    if [ "$backup_state" = "SUCCESS" ]; then
-        echo "SUCCESS"
-        return 0
     fi
-
-    if [ "$backup_state" = "CANCELED" ]; then
-        echo "CANCELED"
-        return 1
-    fi
-
-    # TODO
-    local remote_core_version="$($ecos_update --version)"
 
     local menu_entries=()
     menu_entries+=("Update")
     menu_entries+=("Tweaks")
     menu_entries+=("Settings")
-    if ! zenity_result="$(zenity --list --hide-header --column="" --text="$(print_zenity_header 'Manager' $remote_core_version)" --cancel-label='Exit' --ok-label='Ok' "${menu_entries[@]}")"; then
+    if ! zenity_result="$(zenity --list --hide-header --column="" --text="$(print_zenity_header 'Manager' $ECOS_REMOTE_VERSION)" --cancel-label='Exit' --ok-label='Ok' "${menu_entries[@]}")"; then
         exit 0
     fi
 
