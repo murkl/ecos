@@ -1,5 +1,5 @@
 #!/bin/bash
-SCRIPT_VERSION=2.1.2
+SCRIPT_VERSION=2.1.1
 
 #/////////////////////////////////////////////////////
 # SCRIPT VARIABLES
@@ -1154,7 +1154,7 @@ core_tui_check_config() {
             whiptail --textbox "$SCRIPT_TUI_FILE" "$SCRIPT_TUI_HEIGHT" "$SCRIPT_TUI_WIDTH"
             exit 0
         fi
-        core_replace_config_value "$CORE_CONFIG_FILE" "$CORE_CONFIG_FILE" "USERNAME" "$USERNAME"
+        core_replace_config_value "$CORE_CONFIG_FILE" "USERNAME" "$USERNAME"
     fi
 
     #----------------------------------------
@@ -1222,7 +1222,7 @@ core_tui_check_config() {
     #----------------------------------------
     # Add default values
     #----------------------------------------
-    core_check_config_key "$CORE_CONFIG_FILE" "$CORE_CONFIG_FILE" "SWAP_SIZE" "$SWAP_SIZE"
+    core_check_config_key "$CORE_CONFIG_FILE" "SWAP_SIZE" "$SWAP_SIZE"
     core_check_config_key "$CORE_CONFIG_FILE" "CUSTOM_PACKAGES" "$CUSTOM_PACKAGES"
 
     #----------------------------------------
