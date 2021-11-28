@@ -259,8 +259,12 @@ notify() {
 
 print_zenity_header() {
     local title="$1"
+    local version_remote="$2"
     local header='<span font_family="monospace" foreground="#A3BE8C" font="24"><b>'$SCRIPT_TITLE'</b></span>'
     local version='<span font_family="monospace" foreground="#494949" font="10">'$SCRIPT_VERSION'</span>'
+    if [ "$version_remote" != "" ] && [ "$SCRIPT_VERSION" != "$version_remote" ]; then
+        local version='<span font_family="monospace" foreground="#494949" font="10">'$SCRIPT_VERSION' (Update '$version_remote' available)</span>'
+    fi
     local title='<span font_family="monospace" foreground="#494949" font="10"><b>'$title'</b></span>'
     echo -e " $header\n  $version\n\n $title"
 }
@@ -269,11 +273,49 @@ zenity_manager() {
     ecos_check_zenity
     ecos_init_ecos
 
+    local pid_file="/tmp/ecos.pids"
+    local ecos_update="/tmp/ecos.update"
+    (
+        # DOWNLOAD CORE
+        if ! curl -s -L "$ECOS_CORE_RELEASE_URL" >"$ecos_update"; then
+            echo "ERROR: ECOS CORE UPDATE DOWNLOAD: $ECOS_CORE_RELEASE_URL"
+            exit 1
+        fi
+        if ! chmod +x "$ecos_update"; then
+            echo "ERROR: CHMOD CORE UPDATE: $ecos_update"
+            exit 1
+        fi
+
+        # UPDATE REPO
+        ecos_update_repo
+    ) &
+    local task_pid="$!"
+
+    # Capture pid and show progress dialog
+    echo "$task_pid" >"$pid_file"
+    local txt_title='<span font_family="monospace" foreground="#494949" font="12"><b>Initialize '$SCRIPT_TITLE' CORE...</b></span>'
+    tail -f /dev/null --pid $task_pid | (zenity --progress --width=300 --height=150 --no-cancel --text="\n\t$txt_title\n" --pulsate --auto-close || (kill_pid "$task_pid" && echo "CANCELED" >"$pid_file"))
+
+    # Finish
+    local backup_state=$(<"$pid_file")
+    if [ "$backup_state" = "SUCCESS" ]; then
+        echo "SUCCESS"
+        return 0
+    fi
+
+    if [ "$backup_state" = "CANCELED" ]; then
+        echo "CANCELED"
+        return 1
+    fi
+
+    # TODO
+    local remote_core_version="$($ecos_update --version)"
+
     local menu_entries=()
     menu_entries+=("Update")
     menu_entries+=("Tweaks")
     menu_entries+=("Settings")
-    if ! zenity_result="$(zenity --list --hide-header --column="" --text="$(print_zenity_header 'Manager')" --cancel-label='Exit' --ok-label='Ok' "${menu_entries[@]}")"; then
+    if ! zenity_result="$(zenity --list --hide-header --column="" --text="$(print_zenity_header 'Manager' $remote_core_version)" --cancel-label='Exit' --ok-label='Ok' "${menu_entries[@]}")"; then
         exit 0
     fi
 
@@ -308,6 +350,30 @@ zenity_show_changelog() {
     ecos_check_zenity
     zenity --text-info --width=500 --height=500 --title="$SCRIPT_TITLE" --cancel-label="Close" --ok-label="Ok" --font="monospace" --html --no-interaction --filename="$ECOS_CHANGELOG_FILE"
     rm -f "$ECOS_STATE_SHOW_CHANGELOG"
+}
+
+#/////////////////////////////////////////////////////
+# KILL PID
+#/////////////////////////////////////////////////////
+
+kill_pid() {
+    local pid_kill="$1"
+    print_children_pid() {
+        local children_pid
+        children_pid="$(pgrep -P "$1")"
+        for pid in $children_pid; do
+            print_children_pid "$pid"
+        done
+        if [ "$children_pid" != "" ]; then
+            printf "$children_pid "
+        fi
+    }
+    local pid_array=()
+    pid_array+=("$pid_kill")
+    pid_array+=($(print_children_pid "$pid_kill"))
+    for pid in ${pid_array[@]}; do
+        kill -9 "$pid"
+    done
 }
 
 #/////////////////////////////////////////////////////
