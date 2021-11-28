@@ -1593,7 +1593,9 @@ ecos_update_repo() {
     if ! [ -d "$ECOS_REPO/.git" ]; then
         echo "CLONE ECOS REPO"
         mkdir -p "$ECOS_REPO"
-        git clone "$ECOS_REPO_URL" "$ECOS_REPO"
+        /usr/bin/git clone "$ECOS_REPO_URL" "$ECOS_REPO" &
+        local pid=$!
+        wait $pid
     fi
 
     if ! [ -d "$ECOS_REPO/.git" ]; then
@@ -1603,10 +1605,10 @@ ecos_update_repo() {
 
     echo "UPDATE ECOS REPO"
     cd "$ECOS_REPO" || exit 1
-    git fetch --all
-    git reset --hard origin/HEAD
-    git clean -d -f
-    git pull
+    /usr/bin/git fetch --all
+    /usr/bin/git reset --hard origin/HEAD
+    /usr/bin/git clean -d -f
+    /usr/bin/git pull
 
     # Add user tweaks
     if [ -d "$ECOS_USER_TWEAKS_DIR" ]; then
