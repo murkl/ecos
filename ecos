@@ -1665,11 +1665,11 @@ ecos_update_core() {
                 echo "ERROR: CHMOD CORE: $ECOS_CORE"
                 exit 1
             fi
-            echo "NEW ECOS CORE UPDATE: $ecos_current_version --> $ecos_update_version"
+            echo "$SCRIPT_TITLE CORE UPDATED ($ecos_current_version --> $ecos_update_version)"
             touch "$ECOS_STATE_SHOW_CHANGELOG"
         else
             rm -f "$ecos_update"
-            echo "$SCRIPT_TITLE $($ECOS_CORE --version): NO CORE UPDATE AVAILABLE (REMOTE: $ecos_update_version)"
+            echo "$SCRIPT_TITLE CORE $($ECOS_CORE --version) UP TO DATE"
         fi
     fi
 }
@@ -1684,7 +1684,6 @@ ecos_update_repo() {
         /usr/bin/git clone "$ECOS_REPO_URL" "$ECOS_REPO"
     fi
 
-    echo "UPDATE ECOS REPO"
     cd "$ECOS_REPO" || exit 1
     /usr/bin/git fetch --all
     /usr/bin/git reset --hard origin/HEAD
