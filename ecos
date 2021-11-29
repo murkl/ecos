@@ -1765,11 +1765,6 @@ ecos_update_system() {
     git --git-dir="$ECOS_DOTFILES" --work-tree="$HOME" pull
     echo ">>> OK"
 
-    # UPDATE TWEAKS
-    print_title 'UPDATE ECOS TWEAKS'
-    ecos_update_tweaks
-    echo ">>> OK"
-
     # UPDATE INIT FILE
     print_title "DOTFILE INIT SCRIPT"
     if [ -f "$ECOS_INIT_SCRIPT" ]; then
@@ -1804,6 +1799,11 @@ ecos_update_system() {
         echo ">>> OK"
 
     fi
+
+    # UPDATE TWEAKS
+    print_title 'UPDATE ECOS TWEAKS'
+    ecos_update_tweaks
+    echo ">>> OK"
 
     # UPDATE DESKTOP FILE
     print_title 'UPDATE ECOS DESKTOP FILE'
