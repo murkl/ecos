@@ -1,5 +1,5 @@
 #!/bin/bash
-SCRIPT_VERSION=2.1.1
+SCRIPT_VERSION=2.1.2
 
 #/////////////////////////////////////////////////////
 # SCRIPT VARIABLES
@@ -59,6 +59,7 @@ ECOS_DOTFILES="$ECOS_WORKING_DIR/dotfiles"
 ECOS_STATE_DIR="$ECOS_WORKING_DIR/state"
 ECOS_STATE_INITIALIZED="$ECOS_STATE_DIR/ecos_initialized"
 ECOS_STATE_SHOW_CHANGELOG="$ECOS_STATE_DIR/ecos_show_changelog"
+ECOS_STATE_LATEST_INIT="$ECOS_STATE_DIR/ecos_latest_init"
 ECOS_REPO="$ECOS_WORKING_DIR/repo"
 ECOS_ICON_FILE="$ECOS_REPO/assets/ecos.svg"
 ECOS_CHANGELOG_FILE="$ECOS_REPO/assets/changelog.html"
@@ -262,12 +263,14 @@ notify() {
 print_zenity_header() {
     local title="$1"
     local version_remote="$2"
-    local header='<span font_family="monospace" foreground="#494949" font="35"><b>'$SCRIPT_TITLE'</b></span>'
-    local version='<span font_family="monospace" foreground="#A3BE8C" font="10">'$SCRIPT_VERSION'</span>'
+    local header='<span font_family="monospace" foreground="#494949" font="32"><b>'$SCRIPT_TITLE'</b></span>'
+    local version_txt='<span font_family="monospace" foreground="#494949" font="10"><b>Version: </b></span>'
+    local version='<span font_family="monospace" foreground="#A3BE8C" font="11">'$SCRIPT_VERSION'</span>'
     if [ "$version_remote" != "" ] && [ "$SCRIPT_VERSION" != "$version_remote" ]; then
         local version='<span font_family="monospace" foreground="#db7844" font="10"><b>'$SCRIPT_VERSION'</b></span><span font_family="monospace" foreground="#494949" font="10"><b> ➤ </b></span><span font_family="monospace" foreground="#A3BE8C" font="10"><b>'$version_remote'</b></span>'
     fi
     local title='<span font_family="monospace" foreground="#494949" font="10"><b>'$title'</b></span>'
+    #echo -e " $header\n $version_txt $version\n\n $title"
     echo -e " $header\n  $version\n\n $title"
 }
 
@@ -1611,6 +1614,7 @@ ecos_tui_install_ecos() {
     chmod +x "$ECOS_INIT_SCRIPT" || exit 1
     "$ECOS_INIT_SCRIPT" --init
     "$ECOS_INIT_SCRIPT" --update
+    echo "$($ECOS_INIT_SCRIPT --version)" >"$ECOS_STATE_LATEST_INIT"
     # Remove zlogin file from core
     rm -f "$HOME/.zlogin"
     # Create initialized state file
@@ -1662,11 +1666,11 @@ ecos_update_core() {
                 echo "ERROR: CHMOD CORE: $ECOS_CORE"
                 exit 1
             fi
-            echo "NEW ECOS CORE UPDATE: $ecos_current_version --> $ecos_update_version"
+            echo "$SCRIPT_TITLE CORE UPDATED ($ecos_current_version --> $ecos_update_version)"
             touch "$ECOS_STATE_SHOW_CHANGELOG"
         else
             rm -f "$ecos_update"
-            echo "$SCRIPT_TITLE $($ECOS_CORE --version): NO CORE UPDATE AVAILABLE (REMOTE: $ecos_update_version)"
+            echo "$SCRIPT_TITLE CORE $($ECOS_CORE --version) UP TO DATE"
         fi
     fi
 }
@@ -1681,7 +1685,6 @@ ecos_update_repo() {
         /usr/bin/git clone "$ECOS_REPO_URL" "$ECOS_REPO"
     fi
 
-    echo "UPDATE ECOS REPO"
     cd "$ECOS_REPO" || exit 1
     /usr/bin/git fetch --all
     /usr/bin/git reset --hard origin/HEAD
@@ -1756,51 +1759,52 @@ ecos_update_system() {
     print_title 'ECOS DOTFILES UPDATE'
     cd "$HOME" || exit 1
 
-    # CURRENT INIT VERSION
-    local current_init_script_version=''
-    if [ -f "$ECOS_INIT_SCRIPT" ]; then
-        current_init_script_version="$($ECOS_INIT_SCRIPT --version)"
-    fi
-
     # RESET LOCAL FILES
     git --git-dir="$ECOS_DOTFILES" --work-tree="$HOME" fetch --all
     git --git-dir="$ECOS_DOTFILES" --work-tree="$HOME" reset --hard HEAD
     git --git-dir="$ECOS_DOTFILES" --work-tree="$HOME" pull
     echo ">>> OK"
 
+    # UPDATE INIT FILE
+    print_title "DOTFILE INIT SCRIPT"
+    if [ -f "$ECOS_INIT_SCRIPT" ]; then
+
+        local current_init_version="$($ECOS_INIT_SCRIPT --version)"
+
+        # Read latest init version
+        local latest_init_date=''
+        if [ -f "$ECOS_STATE_LATEST_INIT" ]; then
+            latest_init_date="$(<$ECOS_STATE_LATEST_INIT)"
+        fi
+
+        # If latest init version not exists or new init script version
+        if [ "$latest_init_date" = '' ] || [ "$latest_init_date" != "$current_init_version" ]; then
+
+            read -p "EXECUTE INIT SCRIPT? [y/n]: " user_input
+            if [ "$user_input" != "y" ]; then
+                echo -e "USER SKIPPED..."
+                echo ">>> OK"
+            else
+                echo "EXECUTE INIT SCRIPT"
+                "$ECOS_INIT_SCRIPT" --init
+                echo "$($ECOS_INIT_SCRIPT --version)" >"$ECOS_STATE_LATEST_INIT"
+                echo ">>> OK"
+            fi
+        else
+            echo "INIT SCRIPT UP TO DATE. SKIPPED..."
+        fi
+
+        # UPDATE INIT SCRIPT
+        echo "UPDATING..."
+        "$ECOS_INIT_SCRIPT" --update
+        echo ">>> OK"
+
+    fi
+
     # UPDATE TWEAKS
     print_title 'UPDATE ECOS TWEAKS'
     ecos_update_tweaks
     echo ">>> OK"
-
-    # UPDATE INIT FILE
-    if [ -f "$ECOS_INIT_SCRIPT" ]; then
-
-        # Check initialized version
-        local ecos_initialized_version=""
-        if [ -f "$ECOS_STATE_INITIALIZED" ]; then
-            ecos_initialized_version=$(<"$ECOS_STATE_INITIALIZED")
-        fi
-
-        # Update if initialized file not exists or new init script available
-        local new_init_script_version="$($ECOS_INIT_SCRIPT --version)"
-        if [ "$SCRIPT_VERSION" != "$ecos_initialized_version" ] || [ "$new_init_script_version" != "$current_init_script_version" ]; then
-            print_title "UPDATE INIT SCRIPT"
-            read -p "UPDATE INIT SCRIPT? [y/n]: " user_input
-            if [ "$user_input" != "y" ]; then
-                echo -e "UPDATE INIT SCRIPT SKIPPED..."
-                echo ">>> OK"
-            else
-                echo "UPDATE INIT SCRIPT"
-                "$ECOS_INIT_SCRIPT" --update
-                echo "$SCRIPT_VERSION" >"$ECOS_STATE_INITIALIZED"
-                echo ">>> OK"
-            fi
-        else
-            print_title "INIT SCRIPT UP TO DATE. SKIPPED..."
-            echo ">>> OK"
-        fi
-    fi
 
     # UPDATE DESKTOP FILE
     print_title 'UPDATE ECOS DESKTOP FILE'
