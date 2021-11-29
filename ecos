@@ -1,5 +1,5 @@
 #!/bin/bash
-SCRIPT_VERSION=2.1.1
+SCRIPT_VERSION=2.1.2
 
 #/////////////////////////////////////////////////////
 # SCRIPT VARIABLES
@@ -262,12 +262,14 @@ notify() {
 print_zenity_header() {
     local title="$1"
     local version_remote="$2"
-    local header='<span font_family="monospace" foreground="#494949" font="35"><b>'$SCRIPT_TITLE'</b></span>'
-    local version='<span font_family="monospace" foreground="#A3BE8C" font="10">'$SCRIPT_VERSION'</span>'
+    local header='<span font_family="monospace" foreground="#494949" font="32"><b>'$SCRIPT_TITLE'</b></span>'
+    local version_txt='<span font_family="monospace" foreground="#494949" font="10"><b>Version: </b></span>'
+    local version='<span font_family="monospace" foreground="#A3BE8C" font="11">'$SCRIPT_VERSION'</span>'
     if [ "$version_remote" != "" ] && [ "$SCRIPT_VERSION" != "$version_remote" ]; then
         local version='<span font_family="monospace" foreground="#db7844" font="10"><b>'$SCRIPT_VERSION'</b></span><span font_family="monospace" foreground="#494949" font="10"><b> ➤ </b></span><span font_family="monospace" foreground="#A3BE8C" font="10"><b>'$version_remote'</b></span>'
     fi
     local title='<span font_family="monospace" foreground="#494949" font="10"><b>'$title'</b></span>'
+    #echo -e " $header\n $version_txt $version\n\n $title"
     echo -e " $header\n  $version\n\n $title"
 }
 
