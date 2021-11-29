@@ -59,6 +59,7 @@ ECOS_DOTFILES="$ECOS_WORKING_DIR/dotfiles"
 ECOS_STATE_DIR="$ECOS_WORKING_DIR/state"
 ECOS_STATE_INITIALIZED="$ECOS_STATE_DIR/ecos_initialized"
 ECOS_STATE_SHOW_CHANGELOG="$ECOS_STATE_DIR/ecos_show_changelog"
+ECOS_STATE_LATEST_INIT="$ECOS_STATE_DIR/ecos_latest_init"
 ECOS_REPO="$ECOS_WORKING_DIR/repo"
 ECOS_ICON_FILE="$ECOS_REPO/assets/ecos.svg"
 ECOS_CHANGELOG_FILE="$ECOS_REPO/assets/changelog.html"
@@ -1758,12 +1759,6 @@ ecos_update_system() {
     print_title 'ECOS DOTFILES UPDATE'
     cd "$HOME" || exit 1
 
-    # CURRENT INIT VERSION
-    local current_init_script_version=''
-    if [ -f "$ECOS_INIT_SCRIPT" ]; then
-        current_init_script_version="$($ECOS_INIT_SCRIPT --version)"
-    fi
-
     # RESET LOCAL FILES
     git --git-dir="$ECOS_DOTFILES" --work-tree="$HOME" fetch --all
     git --git-dir="$ECOS_DOTFILES" --work-tree="$HOME" reset --hard HEAD
@@ -1776,32 +1771,38 @@ ecos_update_system() {
     echo ">>> OK"
 
     # UPDATE INIT FILE
+    print_title "DOTFILE INIT SCRIPT"
     if [ -f "$ECOS_INIT_SCRIPT" ]; then
 
-        # Check initialized version
-        local ecos_initialized_version=""
-        if [ -f "$ECOS_STATE_INITIALIZED" ]; then
-            ecos_initialized_version=$(<"$ECOS_STATE_INITIALIZED")
+        local current_init_version="$($ECOS_INIT_SCRIPT --version)"
+
+        # Read latest init version
+        local latest_init_date=''
+        if [ -f "$ECOS_STATE_LATEST_INIT" ]; then
+            latest_init_date="$(<$ECOS_STATE_LATEST_INIT)"
         fi
 
-        # Update if initialized file not exists or new init script available
-        local new_init_script_version="$($ECOS_INIT_SCRIPT --version)"
-        if [ "$SCRIPT_VERSION" != "$ecos_initialized_version" ] || [ "$new_init_script_version" != "$current_init_script_version" ]; then
-            print_title "UPDATE INIT SCRIPT"
-            read -p "UPDATE INIT SCRIPT? [y/n]: " user_input
+        # If latest init version not exists or new init script version
+        if [ "$latest_init_date" = '' ] || [ "$latest_init_date" != "$current_init_version" ]; then
+
+            read -p "EXECUTE INIT SCRIPT? [y/n]: " user_input
             if [ "$user_input" != "y" ]; then
-                echo -e "UPDATE INIT SCRIPT SKIPPED..."
+                echo -e "USER SKIPPED..."
                 echo ">>> OK"
             else
-                echo "UPDATE INIT SCRIPT"
-                "$ECOS_INIT_SCRIPT" --update
-                echo "$SCRIPT_VERSION" >"$ECOS_STATE_INITIALIZED"
+                echo "EXECUTE INIT SCRIPT"
+                echo "$($ECOS_INIT_SCRIPT --version)" >"$ECOS_STATE_LATEST_INIT"
                 echo ">>> OK"
             fi
         else
-            print_title "INIT SCRIPT UP TO DATE. SKIPPED..."
-            echo ">>> OK"
+            echo "INIT SCRIPT UP TO DATE. SKIPPED..."
         fi
+
+        # UPDATE INIT SCRIPT
+        echo "UPDATING..."
+        "$ECOS_INIT_SCRIPT" --update
+        echo ">>> OK"
+
     fi
 
     # UPDATE DESKTOP FILE
