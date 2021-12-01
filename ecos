@@ -263,15 +263,14 @@ notify() {
 print_zenity_header() {
     local title="$1"
     local version_remote="$2"
-    local header='<span font_family="monospace" foreground="#494949" font="32"><b>'$SCRIPT_TITLE'</b></span>'
+    local header='<span font_family="monospace" foreground="#494949" font="18"><b>'$SCRIPT_TITLE' Manager</b></span>'
     local version_txt='<span font_family="monospace" foreground="#494949" font="10"><b>Version: </b></span>'
-    local version='<span font_family="monospace" foreground="#A3BE8C" font="11">'$SCRIPT_VERSION'</span>'
+    local version='<span font_family="monospace" foreground="#729a4f" font="11">'$SCRIPT_VERSION'</span>'
     if [ "$version_remote" != "" ] && [ "$SCRIPT_VERSION" != "$version_remote" ]; then
         local version='<span font_family="monospace" foreground="#db7844" font="10"><b>'$SCRIPT_VERSION'</b></span><span font_family="monospace" foreground="#494949" font="10"><b> ➤ </b></span><span font_family="monospace" foreground="#A3BE8C" font="10"><b>'$version_remote'</b></span>'
     fi
     local title='<span font_family="monospace" foreground="#494949" font="10"><b>'$title'</b></span>'
-    #echo -e " $header\n $version_txt $version\n\n $title"
-    echo -e " $header\n  $version\n\n $title"
+    echo "\n$header\n$version\n\n$title"
 }
 
 zenity_manager() {
@@ -310,7 +309,7 @@ zenity_manager() {
     menu_entries+=("Update")
     menu_entries+=("Tweaks")
     menu_entries+=("Settings")
-    if ! zenity_result="$(zenity --list --hide-header --column="" --text="$(print_zenity_header 'Manager' $ECOS_REMOTE_VERSION)" --cancel-label='Exit' --ok-label='Ok' "${menu_entries[@]}")"; then
+    if ! zenity_result="$(zenity --list --hide-header --column="" --text="$(print_zenity_header 'Menu' $ECOS_REMOTE_VERSION)" --cancel-label='Exit' --ok-label='Ok' "${menu_entries[@]}")"; then
         exit 0
     fi
 
