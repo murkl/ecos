@@ -1733,6 +1733,7 @@ ecos_update_system() {
 
     # PACKAGE UPDATE
     print_title 'FETCH NEW PACKAGES'
+    echo -e '\n'
     paru -Syy
     echo ">>> OK"
 
