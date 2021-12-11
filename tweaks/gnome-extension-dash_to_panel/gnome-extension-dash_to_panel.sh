@@ -3,7 +3,6 @@ TWEAK_RES_DIR="$2"
 TWEAK_CACHE_DIR="$3"
 
 install() {
-    remove
     mkdir -p "$HOME/.local/share/gnome-shell/extensions/"
     rm -rf "$TWEAK_CACHE_DIR/repo"
     git clone "https://github.com/home-sweet-gnome/dash-to-panel.git" "$TWEAK_CACHE_DIR/repo"
@@ -30,9 +29,7 @@ remove() {
 update() {
     cd "$TWEAK_CACHE_DIR/repo" || exit 1
     git pull
-    remove
     make install
-    gnome-extensions enable "dash-to-panel@jderose9.github.com"
 }
 
 if [ "$1" = "--install" ]; then install "$@"; fi
