@@ -17,7 +17,9 @@ install() {
     fi
 
     if [ "$whiptail_result" = 'nouveau' ]; then
-        echo "Sorry not implemented!"
+        paru --noconfirm --needed --sudoloop -S mesa lib32-mesa xf86-video-nouveau
+        sudo sed -i "s/MODULES=()/MODULES=(nouveau)/g" "/etc/mkinitcpio.conf"
+        sudo mkinitcpio -p linux
         exit 1
     fi
 
@@ -93,6 +95,9 @@ X-GNOME-Autostart-Phase=DisplayServer' >/tmp/optimus.desktop
 remove() {
     # opencl-nvidia-390xx lib32-opencl-nvidia-390xx lib32-virtualgl
     paru --noconfirm --sudoloop -Rsn nvidia-390xx-dkms nvidia-390xx-settings nvidia-390xx-utils lib32-nvidia-390xx-utils
+    paru --noconfirm --sudoloop -Rsn xf86-video-nouveau
+
+    sudo sed -i "s/MODULES=(nouveau)/MODULES=()/g" "/etc/mkinitcpio.conf"
 
     sudo sed -i "s/vt.global_cursor_default=0 nvidia-drm.modeset=1 rw/vt.global_cursor_default=0 rw/g" "/boot/loader/entries/arch.conf"
     sudo mkinitcpio -p linux
