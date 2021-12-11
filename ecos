@@ -1734,19 +1734,25 @@ ecos_update_system() {
     # PACKAGE UPDATE
     print_title 'FETCH NEW PACKAGES'
     paru -Syy
+    echo ">>> OK"
 
+    # LIST PACKAGES
     echo -e '\n'
     echo -e '------------------------------------------'
+    if ! paru -Qu; then
+        echo -e 'No Package Updates available'
+    fi
+    echo -e '------------------------------------------'
+    echo -e '\n'
+
     read -p "Continue ECOS System Upgrade? [y/n]: " user_input
     if [ "$user_input" != "y" ]; then
         echo "Skipped..."
         exit 0
     fi
-    echo -e '------------------------------------------'
 
     # PACKAGE UPGRADE
     print_title 'UPGRADE NEW PACKAGES'
-    paru -Qu
     if ! paru -Su --noconfirm; then
         echo -e "ERROR: paru"
         exit 1
