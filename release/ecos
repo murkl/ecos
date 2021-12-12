@@ -1,5 +1,5 @@
 #!/bin/bash
-SCRIPT_VERSION=2.1.2
+SCRIPT_VERSION=2.1.4
 
 #/////////////////////////////////////////////////////
 # SCRIPT VARIABLES
@@ -62,7 +62,7 @@ ECOS_STATE_SHOW_CHANGELOG="$ECOS_STATE_DIR/ecos_show_changelog"
 ECOS_STATE_LATEST_INIT="$ECOS_STATE_DIR/ecos_latest_init"
 ECOS_REPO="$ECOS_WORKING_DIR/repo"
 ECOS_ICON_FILE="$ECOS_REPO/assets/ecos.svg"
-ECOS_CHANGELOG_FILE="$ECOS_REPO/assets/changelog.html"
+ECOS_CHANGELOG_FILE="$ECOS_REPO/release/changelog.html"
 ECOS_CACHE_TWEAKS="$ECOS_WORKING_DIR/tweaks"
 ECOS_USER_TWEAKS_DIR="$ECOS_HOME/tweaks"
 ECOS_DESKTOP_FILE="$HOME/.local/share/applications/$SCRIPT_ID.desktop"
@@ -263,15 +263,14 @@ notify() {
 print_zenity_header() {
     local title="$1"
     local version_remote="$2"
-    local header='<span font_family="monospace" foreground="#494949" font="32"><b>'$SCRIPT_TITLE'</b></span>'
+    local header='<span font_family="monospace" foreground="#494949" font="18"><b>'$SCRIPT_TITLE' Manager</b></span>'
     local version_txt='<span font_family="monospace" foreground="#494949" font="10"><b>Version: </b></span>'
-    local version='<span font_family="monospace" foreground="#A3BE8C" font="11">'$SCRIPT_VERSION'</span>'
+    local version='<span font_family="monospace" foreground="#729a4f" font="11">'$SCRIPT_VERSION'</span>'
     if [ "$version_remote" != "" ] && [ "$SCRIPT_VERSION" != "$version_remote" ]; then
         local version='<span font_family="monospace" foreground="#db7844" font="10"><b>'$SCRIPT_VERSION'</b></span><span font_family="monospace" foreground="#494949" font="10"><b> ➤ </b></span><span font_family="monospace" foreground="#A3BE8C" font="10"><b>'$version_remote'</b></span>'
     fi
     local title='<span font_family="monospace" foreground="#494949" font="10"><b>'$title'</b></span>'
-    #echo -e " $header\n $version_txt $version\n\n $title"
-    echo -e " $header\n  $version\n\n $title"
+    echo "\n$header\n$version\n\n$title"
 }
 
 zenity_manager() {
@@ -310,7 +309,7 @@ zenity_manager() {
     menu_entries+=("Update")
     menu_entries+=("Tweaks")
     menu_entries+=("Settings")
-    if ! zenity_result="$(zenity --list --hide-header --column="" --text="$(print_zenity_header 'Manager' $ECOS_REMOTE_VERSION)" --cancel-label='Exit' --ok-label='Ok' "${menu_entries[@]}")"; then
+    if ! zenity_result="$(zenity --list --hide-header --column="" --text="$(print_zenity_header 'Menu' $ECOS_REMOTE_VERSION)" --cancel-label='Exit' --ok-label='Ok' "${menu_entries[@]}")"; then
         exit 0
     fi
 
@@ -1734,20 +1733,27 @@ ecos_update_system() {
 
     # PACKAGE UPDATE
     print_title 'FETCH NEW PACKAGES'
+    echo -e '\n'
     paru -Syy
+    echo ">>> OK"
 
+    # LIST PACKAGES
     echo -e '\n'
     echo -e '------------------------------------------'
+    if ! paru -Qu; then
+        echo -e 'No Package Updates available'
+    fi
+    echo -e '------------------------------------------'
+    echo -e '\n'
+
     read -p "Continue ECOS System Upgrade? [y/n]: " user_input
     if [ "$user_input" != "y" ]; then
         echo "Skipped..."
         exit 0
     fi
-    echo -e '------------------------------------------'
 
     # PACKAGE UPGRADE
     print_title 'UPGRADE NEW PACKAGES'
-    paru -Qu
     if ! paru -Su --noconfirm; then
         echo -e "ERROR: paru"
         exit 1
