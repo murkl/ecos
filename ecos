@@ -1720,7 +1720,7 @@ ecos_update_system() {
     ecos_check_zenity
     echo ">>> OK"
 
-    print_title 'UPDATE ECOS CORE'
+    print_title 'INIT ECOS CORE'
     ecos_update_core
     echo ">>> OK"
 
@@ -1728,20 +1728,19 @@ ecos_update_system() {
     ecos_update_repo
     echo ">>> OK"
 
-    # PACKAGE UPDATE
-    print_title 'FETCH NEW PACKAGES'
-    echo -e '\n'
+    # FETCH PACKAGES
+    print_title 'FETCH PACMAN/AUR PACKAGES'
     paru -Syy
     echo ">>> OK"
 
     # LIST PACKAGES
-    echo -e '\n'
-    echo -e '------------------------------------------'
+    print_title 'FETCH PACMAN/AUR PACKAGES'
     if ! paru -Qu; then
+        echo -e '\n'
         echo -e 'No Package Updates available'
     fi
-    echo -e '------------------------------------------'
     echo -e '\n'
+    echo -e '------------------------------------------'
 
     read -p "Continue ECOS System Upgrade? [y/n]: " user_input
     if [ "$user_input" != "y" ]; then
@@ -1750,7 +1749,7 @@ ecos_update_system() {
     fi
 
     # PACKAGE UPGRADE
-    print_title 'UPGRADE NEW PACKAGES'
+    print_title 'UPADE PACMAN/AUR PACKAGES'
     if ! paru -Su --noconfirm; then
         echo -e "ERROR: paru"
         exit 1
@@ -1759,7 +1758,7 @@ ecos_update_system() {
     echo ">>> OK"
 
     # DOTFILES UPDATE
-    print_title 'ECOS DOTFILES UPDATE'
+    print_title 'UPDATE ECOS DOTFILES'
     cd "$HOME" || exit 1
 
     # RESET LOCAL FILES
@@ -1769,7 +1768,7 @@ ecos_update_system() {
     echo ">>> OK"
 
     # UPDATE INIT FILE
-    print_title "DOTFILE INIT SCRIPT"
+    print_title "EXECUTE INIT SCRIPT"
     if [ -f "$ECOS_INIT_SCRIPT" ]; then
 
         local current_init_version="$($ECOS_INIT_SCRIPT --version)"
@@ -1788,7 +1787,6 @@ ecos_update_system() {
                 echo -e "USER SKIPPED..."
                 echo ">>> OK"
             else
-                echo "EXECUTE INIT SCRIPT"
                 "$ECOS_INIT_SCRIPT" --init
                 echo "$($ECOS_INIT_SCRIPT --version)" >"$ECOS_STATE_LATEST_INIT"
                 echo ">>> OK"
@@ -1815,7 +1813,7 @@ ecos_update_system() {
     echo ">>> OK"
 
     # FINISH
-    print_title '!! ECOS UPDATE FINISHED !!'
+    print_title '$COLOR_RED !! ECOS UPDATE FINISHED !! $COLOR_NULL'
     echo ""
     read -p "Press any Key to close..."
     exit 0
