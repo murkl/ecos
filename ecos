@@ -1750,7 +1750,7 @@ ecos_update_system() {
     # LIST PACKAGES
     print_title 'FETCH PACMAN/AUR PACKAGES'
     if ! paru -Qu; then
-        echo -e '>>> No Package Updates available'
+        echo -e ">>> ${COLOR_GREEN}No Package Updates available${COLOR_NULL}"
     fi
 
     print_title 'ECOS SYSTEM UPGRADE'
@@ -1762,12 +1762,11 @@ ecos_update_system() {
 
     # PACKAGE UPGRADE
     print_title 'UPADE PACMAN/AUR PACKAGES'
-    if ! paru -Su --noconfirm; then
-        echo -e "ERROR: paru"
-        exit 1
+    if ! paru -Su --noconfirm && wait; then
+        echo -e " >>> ${COLOR_RED}ERROR${COLOR_NULL}"
+    else
+        echo ">>> OK"
     fi
-    wait
-    echo ">>> OK"
 
     # DOTFILES UPDATE
     print_title 'UPDATE ECOS DOTFILES'
