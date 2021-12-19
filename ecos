@@ -1512,20 +1512,20 @@ ecos_init_ecos() {
 
     # SET REMOTE ECOS VERSION
     if [ "$ECOS_REMOTE_VERSION" = '' ]; then
-        echo "DOWNLOAD REMOTE ECOS"
         local ecos_update="$ECOS_REMOTE_VERSION_FILE"
 
         if ! curl -s -L "$ECOS_CORE_RELEASE_URL" >"$ECOS_REMOTE_VERSION_FILE"; then
-            echo "ERROR: ECOS DOWNLOAD: $ECOS_CORE_RELEASE_URL"
+            echo "ERROR: DOWNLOAD ECOS: $ECOS_CORE_RELEASE_URL"
             return 1
         fi
         if ! chmod +x "$ECOS_REMOTE_VERSION_FILE"; then
-            echo "ERROR: CHMOD: $ECOS_REMOTE_VERSION_FILE"
+            echo "ERROR: CHMOD ECOS: $ECOS_REMOTE_VERSION_FILE"
             return 1
         fi
 
         ECOS_REMOTE_VERSION="$($ECOS_REMOTE_VERSION_FILE --version)"
-        echo "ECOS_REMOTE_VERSION=$ECOS_REMOTE_VERSION"
+        echo "ECOS LOCAL:   $SCRIPT_VERSION"
+        echo "ECOS REMOTE:  $ECOS_REMOTE_VERSION"
     fi
 }
 
