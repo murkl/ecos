@@ -1667,7 +1667,7 @@ ecos_update_core() {
                 echo "ERROR: CHMOD CORE: $ECOS_CORE"
                 exit 1
             fi
-            echo "$SCRIPT_TITLE CORE UPDATED ($ecos_current_version --> $ecos_update_version)"
+            echo -e "$SCRIPT_TITLE CORE UPDATED: ${COLOR_RED}$ecos_current_version${COLOR_NULL} --> ${COLOR_GREEN}$ecos_update_version${COLOR_NULL}"
             touch "$ECOS_STATE_SHOW_CHANGELOG"
         else
             rm -f "$ecos_update"
