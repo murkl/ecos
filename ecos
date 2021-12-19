@@ -19,6 +19,7 @@ SCRIPT_TUI_HEIGHT=24
 
 COLOR_RED='\033[0;31m'
 COLOR_GREEN='\033[1;32m'
+COLOR_BLUE='\033[1;34m'
 COLOR_PURPLE='\033[1;35m'
 COLOR_NULL='\033[0m' # No Color
 
@@ -1738,15 +1739,13 @@ ecos_update_system() {
     # LIST PACKAGES
     print_title 'FETCH PACMAN/AUR PACKAGES'
     if ! paru -Qu; then
-        echo -e '\n'
-        echo -e 'No Package Updates available'
+        echo -e '>>> No Package Updates available'
     fi
-    echo -e '\n'
-    echo -e '------------------------------------------'
 
-    read -p "Continue ECOS System Upgrade? [y/n]: " user_input
+    print_title 'ECOS SYSTEM UPGRADE'
+    read -p "${COLOR_RED}Continue? [y/n]:${COLOR_NULL} " user_input
     if [ "$user_input" != "y" ]; then
-        echo "Skipped..."
+        echo ">>> Skipped..."
         exit 0
     fi
 
@@ -2214,9 +2213,9 @@ print_header() {
 
 print_title() {
     echo -e "\n"
-    echo -e ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>"
-    echo -e "> $1"
-    echo -e ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>"
+    echo -e "${COLOR_GREEN}>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>${COLOR_NULL}"
+    echo -e "${COLOR_GREEN}>>${COLOR_NULL}  ${COLOR_BLUE}${1}${COLOR_NULL}"
+    echo -e "${COLOR_GREEN}>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>${COLOR_NULL}"
 }
 
 check_internet() {
