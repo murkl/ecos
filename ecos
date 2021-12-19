@@ -1886,7 +1886,7 @@ ecos_tui_menu_tweaks() {
         selected_tweaks_array=("${tweaks_array_disabled[@]}")
     fi
     if [ "$tweak_action_input" = "update" ]; then
-        tweak_status='on'
+        tweak_status='off'
         selected_tweaks_array=("${tweaks_array_enabled[@]}")
     fi
     if [ "$tweak_action_input" = "remove" ]; then
