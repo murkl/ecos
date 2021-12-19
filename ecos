@@ -280,7 +280,7 @@ zenity_manager() {
     if [ "$ECOS_REMOTE_VERSION" = '' ]; then
 
         (
-            if ! ecos_init_ecos; then
+            if ! ecos_init_ecos && ecos_update_repo; then
                 echo "CANCELED" >"$pid_file"
             else
                 echo "SUCCESS" >"$pid_file"
@@ -1525,15 +1525,13 @@ ecos_init_ecos() {
         ECOS_REMOTE_VERSION="$($ECOS_REMOTE_VERSION_FILE --version)"
         echo "ECOS_REMOTE_VERSION=$ECOS_REMOTE_VERSION"
     fi
-
-    # UPDATE REPO
-    ecos_update_repo
 }
 
 ecos_tui_install_ecos() {
 
     check_internet
     ecos_init_ecos
+    ecos_update_repo
 
     tui_init 0 "Dotfiles URL"
     if ! ECOS_DOTS_DEFAULT_URL=$(whiptail --inputbox "$(cat "$SCRIPT_TUI_FILE")" "$SCRIPT_TUI_HEIGHT" "$SCRIPT_TUI_WIDTH" "$ECOS_DOTS_DEFAULT_URL" 3>&1 1>&2 2>&3); then
@@ -1669,7 +1667,6 @@ ecos_update_core() {
             touch "$ECOS_STATE_SHOW_CHANGELOG"
         else
             rm -f "$ecos_update"
-            echo "$SCRIPT_TITLE CORE $($ECOS_CORE --version) UP TO DATE"
         fi
     fi
 }
