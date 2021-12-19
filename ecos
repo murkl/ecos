@@ -2203,21 +2203,21 @@ tui_add() {
 
 print_header() {
     echo -e "
-            ${COLOR_PURPLE}
-            ███████╗ ██████╗ ██████╗ ███████╗
-            ██╔════╝██╔════╝██╔═══██╗██╔════╝
-            █████╗  ██║     ██║   ██║███████╗
-            ██╔══╝  ██║     ██║   ██║╚════██║
-            ███████╗╚██████╗╚██████╔╝███████║
-            ╚══════╝ ╚═════╝ ╚═════╝ ╚══════╝${COLOR_NULL}
-                                      ${COLOR_PURPLE}v.${SCRIPT_VERSION}${COLOR_NULL}"
+        ${COLOR_GREEN}
+        ███████╗ ██████╗ ██████╗ ███████╗
+        ██╔════╝██╔════╝██╔═══██╗██╔════╝
+        █████╗  ██║     ██║   ██║███████╗
+        ██╔══╝  ██║     ██║   ██║╚════██║
+        ███████╗╚██████╗╚██████╔╝███████║
+        ╚══════╝ ╚═════╝ ╚═════╝ ╚══════╝${COLOR_NULL}
+                                  ${COLOR_YELLOW}v.${SCRIPT_VERSION}${COLOR_NULL}"
 }
 
 print_title() {
     echo -e "\n"
-    echo -e "${COLOR_GREEN}>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>${COLOR_NULL}"
-    echo -e "${COLOR_GREEN}>>>${COLOR_NULL}   ${COLOR_BLUE}${1}${COLOR_NULL}"
-    echo -e "${COLOR_GREEN}>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>${COLOR_NULL}"
+    echo -e "${COLOR_BLUE}>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>${COLOR_NULL}"
+    echo -e "${COLOR_BLUE}>>>${COLOR_NULL}  ${COLOR_PURPLE}${1}${COLOR_NULL}"
+    echo -e "${COLOR_BLUE}>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>${COLOR_NULL}"
 }
 
 check_internet() {
