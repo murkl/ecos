@@ -1,5 +1,5 @@
 #!/bin/bash
-SCRIPT_VERSION=2.1.5
+SCRIPT_VERSION=2.1.6
 
 #/////////////////////////////////////////////////////
 # SCRIPT VARIABLES
@@ -318,12 +318,13 @@ zenity_manager() {
     fi
 
     if [ "$zenity_result" = "Update" ]; then
-        gnome-terminal -e 'bash -c "'$ECOS_CORE' --ecos-update"'
+
+        ${TERMINAL_EXEC} 'bash -c "'$ECOS_CORE' --ecos-update"'
         exit 0
     fi
     if [ "$zenity_result" = "Tweaks" ]; then
         ecos_update_repo
-        gnome-terminal -e 'bash -c "'$ECOS_CORE' --ecos-tweaks"'
+        ${TERMINAL_EXEC} 'bash -c "'$ECOS_CORE' --ecos-tweaks"'
         exit 0
     fi
     if [ "$zenity_result" = "Settings" ]; then
@@ -346,8 +347,17 @@ zenity_settings() {
 
 zenity_show_changelog() {
     ecos_check_zenity
-    zenity --text-info --width=500 --height=500 --title="$SCRIPT_TITLE" --cancel-label="Close" --ok-label="Ok" --font="monospace" --html --no-interaction --filename="$ECOS_CHANGELOG_FILE"
-    rm -f "$ECOS_STATE_SHOW_CHANGELOG"
+    if ! zenity --text-info --width=500 --height=500 --title="$SCRIPT_TITLE" --cancel-label="Close" --ok-label="Update ECOS System" --font="monospace" --html --no-interaction --filename="$ECOS_CHANGELOG_FILE"; then
+        echo "Update skipped..."
+        exit 1
+    fi
+
+    # UPDATE
+    ${TERMINAL_EXEC} "bash -c 'ecos --ecos-update'"
+
+    # ECHO SEEN
+    echo "SEEN" >"$ECOS_STATE_SHOW_CHANGELOG"
+
 }
 
 #/////////////////////////////////////////////////////
@@ -1667,7 +1677,7 @@ ecos_update_core() {
                 echo "ERROR: CHMOD CORE: $ECOS_CORE"
                 exit 1
             fi
-            echo "$SCRIPT_TITLE CORE UPDATED ($ecos_current_version --> $ecos_update_version)"
+            echo -e "$SCRIPT_TITLE CORE UPDATED: ${COLOR_RED}$ecos_current_version${COLOR_NULL} --> ${COLOR_GREEN}$ecos_update_version${COLOR_NULL}"
             touch "$ECOS_STATE_SHOW_CHANGELOG"
         else
             rm -f "$ecos_update"
@@ -1740,7 +1750,7 @@ ecos_update_system() {
     # LIST PACKAGES
     print_title 'FETCH PACMAN/AUR PACKAGES'
     if ! paru -Qu; then
-        echo -e '>>> No Package Updates available'
+        echo -e ">>> ${COLOR_GREEN}No Package Updates available${COLOR_NULL}"
     fi
 
     print_title 'ECOS SYSTEM UPGRADE'
@@ -1752,12 +1762,11 @@ ecos_update_system() {
 
     # PACKAGE UPGRADE
     print_title 'UPADE PACMAN/AUR PACKAGES'
-    if ! paru -Su --noconfirm; then
-        echo -e "ERROR: paru"
-        exit 1
+    if ! paru -Su --noconfirm && wait; then
+        echo -e " >>> ${COLOR_RED}ERROR${COLOR_NULL}"
+    else
+        echo ">>> OK"
     fi
-    wait
-    echo ">>> OK"
 
     # DOTFILES UPDATE
     print_title 'UPDATE ECOS DOTFILES'
@@ -1767,6 +1776,11 @@ ecos_update_system() {
     git --git-dir="$ECOS_DOTFILES" --work-tree="$HOME" fetch --all
     git --git-dir="$ECOS_DOTFILES" --work-tree="$HOME" reset --hard HEAD
     git --git-dir="$ECOS_DOTFILES" --work-tree="$HOME" pull
+    echo ">>> OK"
+
+    # UPDATE DESKTOP FILE
+    print_title 'UPDATE ECOS DESKTOP FILE'
+    ecos_create_desktop_file
     echo ">>> OK"
 
     # UPDATE INIT FILE
@@ -1809,9 +1823,14 @@ ecos_update_system() {
     ecos_update_tweaks
     echo ">>> OK"
 
-    # UPDATE DESKTOP FILE
-    print_title 'UPDATE ECOS DESKTOP FILE'
-    ecos_create_desktop_file
+    print_title 'UPDATE ECOS STATE'
+    # Delete ECOS_STATE_SHOW_CHANGELOG if state is seen
+    if [ -f "$ECOS_STATE_SHOW_CHANGELOG" ]; then
+        local changelog_state="$(<$ECOS_STATE_SHOW_CHANGELOG)"
+        if [ "SEEN" = "$changelog_state" ]; then
+            rm -f "$ECOS_STATE_SHOW_CHANGELOG"
+        fi
+    fi
     echo ">>> OK"
 
     # FINISH
