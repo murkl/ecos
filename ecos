@@ -1525,8 +1525,8 @@ ecos_init_ecos() {
         fi
 
         ECOS_REMOTE_VERSION="$($ECOS_REMOTE_VERSION_FILE --version)"
-        echo "ECOS LOCAL:   $SCRIPT_VERSION"
-        echo "ECOS REMOTE:  $ECOS_REMOTE_VERSION"
+        echo "ECOS LOCAL VERSION:   $SCRIPT_VERSION"
+        echo "ECOS REMOTE VERSION:  $ECOS_REMOTE_VERSION"
     fi
 }
 
@@ -1743,7 +1743,7 @@ ecos_update_system() {
     fi
 
     print_title 'ECOS SYSTEM UPGRADE'
-    read -p "${COLOR_RED}Continue? [y/n]:${COLOR_NULL} " user_input
+    read -p "Continue? [y/n]: " user_input
     if [ "$user_input" != "y" ]; then
         echo ">>> Skipped..."
         exit 0
