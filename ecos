@@ -318,12 +318,13 @@ zenity_manager() {
     fi
 
     if [ "$zenity_result" = "Update" ]; then
-        gnome-terminal -e 'bash -c "'$ECOS_CORE' --ecos-update"'
+
+        ${TERMINAL_EXEC} 'bash -c "'$ECOS_CORE' --ecos-update"'
         exit 0
     fi
     if [ "$zenity_result" = "Tweaks" ]; then
         ecos_update_repo
-        gnome-terminal -e 'bash -c "'$ECOS_CORE' --ecos-tweaks"'
+        ${TERMINAL_EXEC} 'bash -c "'$ECOS_CORE' --ecos-tweaks"'
         exit 0
     fi
     if [ "$zenity_result" = "Settings" ]; then
@@ -346,8 +347,17 @@ zenity_settings() {
 
 zenity_show_changelog() {
     ecos_check_zenity
-    zenity --text-info --width=500 --height=500 --title="$SCRIPT_TITLE" --cancel-label="Close" --ok-label="Ok" --font="monospace" --html --no-interaction --filename="$ECOS_CHANGELOG_FILE"
-    rm -f "$ECOS_STATE_SHOW_CHANGELOG"
+    if ! zenity --text-info --width=500 --height=500 --title="$SCRIPT_TITLE" --cancel-label="Close" --ok-label="Update ECOS" --font="monospace" --html --no-interaction --filename="$ECOS_CHANGELOG_FILE"; then
+        echo "Update skipped..."
+        exit 1
+    fi
+
+    # UPDATE
+    ${TERMINAL_EXEC} "bash -c 'ecos --ecos-update'"
+
+    # ECHO SEEN
+    echo "SEEN" >"$ECOS_STATE_SHOW_CHANGELOG"
+
 }
 
 #/////////////////////////////////////////////////////
@@ -1769,6 +1779,11 @@ ecos_update_system() {
     git --git-dir="$ECOS_DOTFILES" --work-tree="$HOME" pull
     echo ">>> OK"
 
+    # UPDATE DESKTOP FILE
+    print_title 'UPDATE ECOS DESKTOP FILE'
+    ecos_create_desktop_file
+    echo ">>> OK"
+
     # UPDATE INIT FILE
     print_title "EXECUTE INIT SCRIPT"
     if [ -f "$ECOS_INIT_SCRIPT" ]; then
@@ -1809,9 +1824,14 @@ ecos_update_system() {
     ecos_update_tweaks
     echo ">>> OK"
 
-    # UPDATE DESKTOP FILE
-    print_title 'UPDATE ECOS DESKTOP FILE'
-    ecos_create_desktop_file
+    print_title 'UPDATE ECOS STATE'
+    # Delete ECOS_STATE_SHOW_CHANGELOG if state is seen
+    if [ -f "$ECOS_STATE_SHOW_CHANGELOG" ]; then
+        local changelog_state="$(<$ECOS_STATE_SHOW_CHANGELOG)"
+        if [ "SEEN" = "$changelog_state" ]; then
+            rm -f "$ECOS_STATE_SHOW_CHANGELOG"
+        fi
+    fi
     echo ">>> OK"
 
     # FINISH
