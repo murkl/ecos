@@ -18,6 +18,8 @@ SCRIPT_TUI_HEIGHT=24
 #/////////////////////////////////////////////////////
 
 COLOR_RED='\033[0;31m'
+COLOR_GREEN='\033[1;32m'
+COLOR_PURPLE='\033[1;35m'
 COLOR_NULL='\033[0m' # No Color
 
 #/////////////////////////////////////////////////////
@@ -1813,7 +1815,7 @@ ecos_update_system() {
     echo ">>> OK"
 
     # FINISH
-    print_title '$COLOR_RED !! ECOS UPDATE FINISHED !! $COLOR_NULL'
+    print_title '$COLOR_GREEN !! ECOS UPDATE FINISHED !! $COLOR_NULL'
     echo ""
     read -p "Press any Key to close..."
     exit 0
