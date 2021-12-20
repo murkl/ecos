@@ -2029,7 +2029,12 @@ ecos_exec_tweak() {
 ecos_update_tweaks() {
     local tweak_dir_list=()
     readarray -d '' tweak_dir_list < <(find "$ECOS_CACHE_TWEAKS" -mindepth 1 -maxdepth 1 -type d -print0)
-    for i in "${tweak_dir_list[@]}"; do
+
+    # Sort array
+    IFS=$'\n' tweak_dir_list_sorted=($(sort <<<"${tweak_dir_list[*]}"))
+    unset IFS
+
+    for i in "${tweak_dir_list_sorted[@]}"; do
         local tweak_id="$(basename $i)"
         local tweak_sh="$ECOS_REPO/$tweak_id/${tweak_id}.sh"
         ecos_exec_tweak "update" "$tweak_id"
