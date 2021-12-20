@@ -1,5 +1,5 @@
 #!/bin/bash
-SCRIPT_VERSION=2.1.9
+SCRIPT_VERSION=2.2.0
 
 #/////////////////////////////////////////////////////
 # SCRIPT VARIABLES
@@ -386,7 +386,7 @@ zenity_show_changelog() {
     fi
 
     # UPDATE
-    ${TERMINAL_EXEC} "bash -c 'ecos --ecos-update'"
+    zenity_process_update
 }
 
 #/////////////////////////////////////////////////////
