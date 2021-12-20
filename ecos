@@ -357,7 +357,10 @@ zenity_settings() {
 }
 
 zenity_show_changelog() {
-    ecos_check_zenity
+
+    # ECHO SEEN
+    echo "SEEN" >"$ECOS_STATE_SHOW_CHANGELOG"
+
     if ! zenity --text-info --width=500 --height=500 --title="$SCRIPT_TITLE" --cancel-label="Close" --ok-label="Update ECOS System" --font="monospace" --html --no-interaction --filename="$ECOS_CHANGELOG_FILE"; then
         echo "Update skipped..."
         exit 1
@@ -365,9 +368,6 @@ zenity_show_changelog() {
 
     # UPDATE
     ${TERMINAL_EXEC} "bash -c 'ecos --ecos-update'"
-
-    # ECHO SEEN
-    echo "SEEN" >"$ECOS_STATE_SHOW_CHANGELOG"
 
 }
 
