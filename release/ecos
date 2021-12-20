@@ -1,5 +1,5 @@
 #!/bin/bash
-SCRIPT_VERSION=2.1.6
+SCRIPT_VERSION=2.1.7
 
 #/////////////////////////////////////////////////////
 # SCRIPT VARIABLES
@@ -1646,7 +1646,6 @@ ecos_tui_install_ecos() {
     echo "$($ECOS_INIT_SCRIPT --version)" >"$ECOS_STATE_LATEST_INIT"
     echo -e ">> DONE"
 
-
     # Remove zlogin file from core
     print_title 'CLEAN UP'
     rm -f "$HOME/.zlogin"
@@ -1809,7 +1808,7 @@ ecos_update_system() {
         # If latest init version not exists or new init script version
         if [ "$latest_init_date" = '' ] || [ "$latest_init_date" != "$current_init_version" ]; then
 
-            read -p "Execute ~/.ecos/init Script? [y/n]: " user_input
+            read -p "Update Dotfiles Script? [y/n]: " user_input
             if [ "$user_input" != "y" ]; then
                 echo -e ">>> USER SKIPPED..."
             else
