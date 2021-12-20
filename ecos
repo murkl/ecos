@@ -299,13 +299,19 @@ zenity_manager() {
 
         # Finish
         local pid_state=$(<"$pid_file")
+
+        if [ "$pid_state" = "CANCELED" ]; then
+            echo "INIT FAILED"
+            return 1
+        fi
+
         if [ "$pid_state" = "SUCCESS" ]; then
             ECOS_REMOTE_VERSION="$($ECOS_REMOTE_VERSION_FILE --version)"
             echo "INIT SUCCESS: REMOTE: $ECOS_REMOTE_VERSION"
         fi
 
-        if [ "$pid_state" = "CANCELED" ]; then
-            echo "INIT FAILED"
+        if [ "$ECOS_REMOTE_VERSION" != "$SCRIPT_VERSION" ]; then
+            notify "ECOS $ECOS_REMOTE_VERSION Update available"
         fi
     fi
 
