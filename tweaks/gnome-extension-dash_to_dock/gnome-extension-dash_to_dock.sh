@@ -7,6 +7,8 @@ EXTENSION_REPO="https://github.com/micheleg/dash-to-dock.git"
 EXTENSION_DCONF="/org/gnome/shell/extensions/dash-to-dock/"
 
 install() {
+    rm -rf "$HOME/.local/share/gnome-shell/extensions"/${EXTENSION_NAME}*
+
     mkdir -p "$HOME/.local/share/gnome-shell/extensions/"
     rm -rf "$TWEAK_CACHE_DIR/repo"
 
