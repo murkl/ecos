@@ -1,5 +1,5 @@
 #!/bin/bash
-SCRIPT_VERSION=2.1.6
+SCRIPT_VERSION=2.1.5
 
 #/////////////////////////////////////////////////////
 # SCRIPT VARIABLES
@@ -191,7 +191,7 @@ main() {
     # ECOS AUTOSTART
     # ---------------------------------------
     if [ "$1" = "--autostart" ]; then
-        ecos_notify_update
+        (sleep 10 && ecos_notify_update) &
         if [ -f "$ECOS_STATE_SHOW_CHANGELOG" ]; then
             zenity_show_changelog
         fi
@@ -292,7 +292,7 @@ zenity_manager() {
     local pid_file="/tmp/ecos.pids"
     if [ "$ECOS_REMOTE_VERSION" = '' ]; then
         (
-            if ! ecos_notify_update && ecos_init_ecos && ecos_update_repo; then
+            if ! ecos_init_ecos && ecos_update_repo; then
                 echo "CANCELED" >"$pid_file"
             else
                 echo "SUCCESS" >"$pid_file"
@@ -357,7 +357,10 @@ zenity_settings() {
 }
 
 zenity_show_changelog() {
-    ecos_check_zenity
+
+    # ECHO SEEN
+    echo "SEEN" >"$ECOS_STATE_SHOW_CHANGELOG"
+
     if ! zenity --text-info --width=500 --height=500 --title="$SCRIPT_TITLE" --cancel-label="Close" --ok-label="Update ECOS System" --font="monospace" --html --no-interaction --filename="$ECOS_CHANGELOG_FILE"; then
         echo "Update skipped..."
         exit 1
@@ -365,9 +368,6 @@ zenity_show_changelog() {
 
     # UPDATE
     ${TERMINAL_EXEC} "bash -c 'ecos --ecos-update'"
-
-    # ECHO SEEN
-    echo "SEEN" >"$ECOS_STATE_SHOW_CHANGELOG"
 
 }
 
@@ -1855,7 +1855,7 @@ ecos_notify_update() {
 
     ecos_init_ecos
 
-    if [ "$ECOS_REMOTE_VERSION" != "$SCRIPT_VERSION" ]; then
+    if [ "$ECOS_REMOTE_VERSION" != "$SCRIPT_VERSION" ] && [ "$ECOS_REMOTE_VERSION" != "" ]; then
         notify "New $SCRIPT_TITLE $ECOS_REMOTE_VERSION Update available"
     fi
 }
