@@ -1,5 +1,5 @@
 #!/bin/bash
-SCRIPT_VERSION=2.1.8
+SCRIPT_VERSION=2.1.9
 
 #/////////////////////////////////////////////////////
 # SCRIPT VARIABLES
@@ -329,8 +329,7 @@ zenity_manager() {
     fi
 
     if [ "$zenity_result" = "Update" ]; then
-
-        ${TERMINAL_EXEC} 'bash -c "'$ECOS_CORE' --ecos-update"'
+        zenity_process_update
         exit 0
     fi
     if [ "$zenity_result" = "Tweaks" ]; then
@@ -342,6 +341,26 @@ zenity_manager() {
         zenity_settings
         zenity_manager
         exit 0
+    fi
+}
+
+zenity_process_update() {
+    local LOG_FILE="/tmp/ecos_log_file"
+    local STATE_FILE="/tmp/ecos_state_file"
+
+    ${TERMINAL_EXEC} 'bash -c "'$ECOS_CORE' --ecos-update"' &
+    # Capture pid and show progress dialog
+    local task_pid="$!"
+    echo "$task_pid" >"$STATE_FILE"
+    local txt_title='\t\t\t\t<span font_family="monospace" foreground="#494949" font="12"><b>'$SCRIPT_TITLE'</b></span>'
+    tail -f /dev/null --pid $task_pid | (zenity --progress --width=320 --height=180 --cancel-label="Cancel" --text="$txt_title\n\n\t\t\t\t <b>Update</b>\n" --pulsate --auto-close || (kill_pid "$task_pid" && echo "CANCELED" >"$STATE_FILE"))
+
+    # Finish
+    local process_state=$(<"$STATE_FILE")
+
+    if [ "$process_state" = "CANCELED" ]; then
+        notify "Update canceled"
+        return 1
     fi
 }
 
