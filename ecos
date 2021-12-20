@@ -1575,74 +1575,88 @@ ecos_tui_install_ecos() {
 
     print_title "CHECK GIT"
     ecos_check_git
-    echo -e "DONE"
+    echo -e ">> DONE"
 
     print_title "CHECK PARU"
     ecos_check_paru
-    echo -e "DONE"
+    echo -e ">> DONE"
 
     print_title "INSTALL ECOS CORE"
     ecos_update_core
-    echo -e "DONE"
+    echo -e ">> DONE"
 
     print_title "INSTALL ECOS REPO"
     ecos_update_repo
-    echo -e "DONE"
+    echo -e ">> DONE"
 
+    # Removing existing init
+    print_title "REMOVE EXISTING DOTFILES"
+    if [ ! -f "$ECOS_INIT_SCRIPT" ]; then
+        echo -e ">> $ECOS_INIT_SCRIPT NOT FOUND"
+    else
+        "$ECOS_INIT_SCRIPT" --remove
+        echo -e ">> DONE"
+    fi
+
+    # Clone dotfiles
     print_title "CLONE DOTFILES"
     rm -rf "$ECOS_DOTFILES"
     mkdir -p "$ECOS_DOTFILES"
     cd "$HOME" || exit 1
 
-    # Removing existing init
-    if [ -f "$ECOS_INIT_SCRIPT" ]; then
-        "$ECOS_INIT_SCRIPT" --remove
-    fi
-
-    # Clone dotfiles
     /usr/bin/git clone --bare "$ECOS_DOTS_DEFAULT_URL" "$ECOS_DOTFILES"
 
     # Reset dotfiles
     /usr/bin/git --git-dir="$ECOS_DOTFILES" --work-tree="$HOME" fetch --all
     /usr/bin/git --git-dir="$ECOS_DOTFILES" --work-tree="$HOME" reset --hard HEAD
     /usr/bin/git --git-dir="$ECOS_DOTFILES" --work-tree="$HOME" config --local status.showUntrackedFiles no
-
-    echo -e "DONE"
+    echo -e ">> DONE"
 
     print_title "INIT DOTFILES"
     if [ ! -f "$ECOS_INIT_SCRIPT" ]; then
         echo "ERROR: $ECOS_INIT_SCRIPT not found"
         exit 1
     fi
+    echo -e ">> DONE"
 
     # Create dots bin
+    print_title "CREATE DOTS BIN"
     local dots_bin="$ECOS_BIN_DIR/dots"
     mkdir -p "$ECOS_BIN_DIR"
     echo '#!/bin/sh' >"$dots_bin"
     echo 'git --git-dir="'$ECOS_DOTFILES'" --work-tree="$HOME" "$@"' >>"$dots_bin"
     chmod +x "$dots_bin"
+    echo -e ">> DONE"
 
     # Silent Boot
+    print_title "ENABLE SILENT BOOT"
     echo '# Disable the last login message on startup with this file' >"$HOME/.hushlogin"
+    echo -e ">> DONE"
 
     # Create Desktop file
     print_title 'CREATE ECOS DESKTOP FILE'
     ecos_create_desktop_file
-    echo -e "DONE"
+    echo -e ">> DONE"
 
     # Call init script
+    print_title 'INIT DOTFILES SCRIPT'
     echo -e "EXECUTE $ECOS_INIT_SCRIPT"
     chmod +x "$ECOS_INIT_SCRIPT" || exit 1
     "$ECOS_INIT_SCRIPT" --init
-    "$ECOS_INIT_SCRIPT" --update
     echo "$($ECOS_INIT_SCRIPT --version)" >"$ECOS_STATE_LATEST_INIT"
-    # Remove zlogin file from core
-    rm -f "$HOME/.zlogin"
-    # Create initialized state file
-    echo "$SCRIPT_VERSION" >"$ECOS_STATE_INITIALIZED"
-    echo -e "DONE"
+    echo -e ">> DONE"
 
-    wait
+
+    # Remove zlogin file from core
+    print_title 'CLEAN UP'
+    rm -f "$HOME/.zlogin"
+    echo -e ">> DONE"
+
+    # Create initialized state file
+    print_title 'ECOS STATE'
+    wait && echo "$SCRIPT_VERSION" >"$ECOS_STATE_INITIALIZED"
+    echo -e ">> DONE"
+
     tui_init 0 "ECOS Installation finished"
     tui_add 0 "Reboot now?"
     if (whiptail --yesno "$(cat "$SCRIPT_TUI_FILE")" "$SCRIPT_TUI_HEIGHT" "$SCRIPT_TUI_WIDTH"); then
