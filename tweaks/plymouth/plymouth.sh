@@ -101,7 +101,7 @@ remove() {
 }
 
 update() {
-    echo "Nothing to update"
+    return 0
 }
 
 if [ "$1" = "--install" ]; then install "$@"; fi
