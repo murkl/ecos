@@ -386,7 +386,7 @@ zenity_show_changelog() {
     fi
 
     # UPDATE
-    ${TERMINAL_EXEC} "bash -c 'ecos --ecos-update'"
+    zenity_process_update
 }
 
 #/////////////////////////////////////////////////////
