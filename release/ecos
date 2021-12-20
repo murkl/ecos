@@ -1,5 +1,5 @@
 #!/bin/bash
-SCRIPT_VERSION=2.1.7
+SCRIPT_VERSION=2.1.5
 
 #/////////////////////////////////////////////////////
 # SCRIPT VARIABLES
@@ -191,9 +191,18 @@ main() {
     # ECOS AUTOSTART
     # ---------------------------------------
     if [ "$1" = "--autostart" ]; then
+        ecos_notify_update
         if [ -f "$ECOS_STATE_SHOW_CHANGELOG" ]; then
             zenity_show_changelog
         fi
+        exit 0
+    fi
+
+    # ---------------------------------------
+    # UPDATE NOTIFY
+    # ---------------------------------------
+    if [ "$1" = "--notify-update" ]; then
+        ecos_notify_update
         exit 0
     fi
 
@@ -282,9 +291,8 @@ zenity_manager() {
 
     local pid_file="/tmp/ecos.pids"
     if [ "$ECOS_REMOTE_VERSION" = '' ]; then
-
         (
-            if ! ecos_init_ecos && ecos_update_repo; then
+            if ! ecos_notify_update && ecos_init_ecos && ecos_update_repo; then
                 echo "CANCELED" >"$pid_file"
             else
                 echo "SUCCESS" >"$pid_file"
@@ -299,14 +307,17 @@ zenity_manager() {
 
         # Finish
         local pid_state=$(<"$pid_file")
+
+        if [ "$pid_state" = "CANCELED" ]; then
+            echo "INIT FAILED"
+            return 1
+        fi
+
         if [ "$pid_state" = "SUCCESS" ]; then
             ECOS_REMOTE_VERSION="$($ECOS_REMOTE_VERSION_FILE --version)"
             echo "INIT SUCCESS: REMOTE: $ECOS_REMOTE_VERSION"
         fi
 
-        if [ "$pid_state" = "CANCELED" ]; then
-            echo "INIT FAILED"
-        fi
     fi
 
     local menu_entries=()
@@ -1838,6 +1849,15 @@ ecos_update_system() {
     echo ""
     read -p "Press any Key to close..."
     exit 0
+}
+
+ecos_notify_update() {
+
+    ecos_init_ecos
+
+    if [ "$ECOS_REMOTE_VERSION" != "$SCRIPT_VERSION" ]; then
+        notify "New $SCRIPT_TITLE $ECOS_REMOTE_VERSION Update available"
+    fi
 }
 
 #/////////////////////////////////////////////////////
