@@ -14,6 +14,20 @@
   </p>
 </div>
 
+# Features
+
+- TUI Installer
+- All-in-One File Script
+- Sandbox ECOS Home Dir
+- Based on official Arch Linux
+- Minimal Package Dependencies
+- Encrypted & Auto Login
+- Choose between GNOME and BSPWM
+- Touchpad Support
+- Optimized for Desktop & Notebook
+- Languages: English, German
+- Custom Dotfiles Support
+
 # Prerequisites
 
 - Disable Secure Boot
