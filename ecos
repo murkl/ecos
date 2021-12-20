@@ -1769,14 +1769,10 @@ ecos_update_system() {
 
     # PACKAGE UPGRADE
     print_title 'UPADE PACMAN/AUR PACKAGES'
-    if ! paru -Su --noconfirm && wait; then
-        echo -e " >>> ${COLOR_RED}ERROR${COLOR_NULL}"
-    else
-        echo ">>> OK"
-    fi
+    paru -Su --noconfirm
 
     # DOTFILES UPDATE
-    print_title 'UPDATE ECOS DOTFILES'
+    print_title 'UPDATE DOTFILES REPO'
     cd "$HOME" || exit 1
 
     # RESET LOCAL FILES
@@ -1784,13 +1780,8 @@ ecos_update_system() {
     git --git-dir="$ECOS_DOTFILES" --work-tree="$HOME" reset --hard HEAD
     git --git-dir="$ECOS_DOTFILES" --work-tree="$HOME" pull
 
-    # UPDATE DESKTOP FILE
-    print_title 'UPDATE ECOS DESKTOP FILE'
-    ecos_create_desktop_file
-    echo ">>> OK"
-
     # UPDATE INIT FILE
-    print_title "EXECUTE INIT SCRIPT"
+    print_title "INIT DOTFILES SCRIPT"
     if [ -f "$ECOS_INIT_SCRIPT" ]; then
 
         local current_init_version="$($ECOS_INIT_SCRIPT --version)"
@@ -1804,26 +1795,25 @@ ecos_update_system() {
         # If latest init version not exists or new init script version
         if [ "$latest_init_date" = '' ] || [ "$latest_init_date" != "$current_init_version" ]; then
 
-            read -p "EXECUTE INIT SCRIPT? [y/n]: " user_input
+            read -p "Execute ~/.ecos/init Script? [y/n]: " user_input
             if [ "$user_input" != "y" ]; then
-                echo -e "USER SKIPPED..."
-                echo ">>> OK"
+                echo -e ">>> USER SKIPPED..."
             else
                 "$ECOS_INIT_SCRIPT" --init
                 echo "$($ECOS_INIT_SCRIPT --version)" >"$ECOS_STATE_LATEST_INIT"
-                echo ">>> OK"
+                echo ">>> DONE"
             fi
         else
-            echo "INIT SCRIPT UP TO DATE. SKIPPED..."
+            echo ">>> UP TO DATE. SKIPPED..."
         fi
-
-        # UPDATE INIT SCRIPT
-        echo "UPDATING..."
-        "$ECOS_INIT_SCRIPT" --update
     fi
 
+    # UPDATE DESKTOP FILE
+    print_title 'UPDATE ECOS DESKTOP FILE'
+    ecos_create_desktop_file
+    echo ">>> OK"
+
     # UPDATE TWEAKS
-    print_title 'UPDATE ECOS TWEAKS'
     ecos_update_tweaks
 
     # FINISH
@@ -1977,41 +1967,50 @@ ecos_exec_tweak() {
     #----------------------------------------
     # Execute Tweak
     #----------------------------------------
-    if [ "$tweak_action" = "install" ] || [ "$tweak_action" = "remove" ] || [ "$tweak_action" = "update" ]; then
-        print_title "TWEAK: ${COLOR_YELLOW}$tweak_id${COLOR_NULL} ${COLOR_GREEN}${tweak_action}${COLOR_NULL}"
-        if ! [ -f "$tweak_sh" ]; then
-            echo "Error: $tweak_id not exists ($tweak_sh)"
-            return 1
-        fi
 
-        # Create tweak cache dir
-        mkdir -p "$tweak_cache_dir"
+    local action_title=''
+    if [ "$tweak_action" = "install" ]; then action_title='INSTALL'; fi
+    if [ "$tweak_action" = "update" ]; then action_title='UPDATE'; fi
+    if [ "$tweak_action" = "remove" ]; then action_title='REMOVE'; fi
 
-        chmod +x "$tweak_sh"
-        cd "$tweak_cache_dir" || exit 1
-
-        # Execute tweak
-        if ECOS_HOME="$ECOS_HOME" "$tweak_sh" "--$tweak_action" "$tweak_res_dir" "$tweak_cache_dir"; then
-
-            # Install or update on success
-            if [ "$tweak_action" = "install" ] || [ "$tweak_action" = "update" ]; then
-                echo "$(date "+%Y-%m-%d-%H:%M:%S")" >"$tweak_meta"
-                echo -e "Successfully installed/updated"
-            fi
-
-            # Remove on success
-            if [ "$tweak_action" = "remove" ]; then
-                rm -rf "$tweak_cache_dir"
-                echo -e "Successfully removed"
-            fi
-        else
-            # Remove dir if error during execution
-            rm -rf "$tweak_cache_dir"
-            echo -e "Failed"
-        fi
-    else
+    if [ "$action_title" = "" ]; then
         echo "Error: TWEAK_ACTION=$tweak_action not supported"
+        return 1
     fi
+
+    print_title "$action_title TWEAK: ${COLOR_GREEN}$tweak_id${COLOR_NULL}"
+    if ! [ -f "$tweak_sh" ]; then
+        echo "Error: $tweak_id not exists ($tweak_sh)"
+        return 1
+    fi
+
+    # Create tweak cache dir
+    mkdir -p "$tweak_cache_dir"
+
+    chmod +x "$tweak_sh"
+    cd "$tweak_cache_dir" || exit 1
+
+    # Execute tweak
+    if ECOS_HOME="$ECOS_HOME" "$tweak_sh" "--$tweak_action" "$tweak_res_dir" "$tweak_cache_dir"; then
+
+        # Install or update on success
+        if [ "$tweak_action" = "install" ] || [ "$tweak_action" = "update" ]; then
+            echo "$(date "+%Y-%m-%d-%H:%M:%S")" >"$tweak_meta"
+        fi
+
+        # Remove on success
+        if [ "$tweak_action" = "remove" ]; then
+            rm -rf "$tweak_cache_dir"
+        fi
+
+        # Finish
+        echo -e ">>> Done"
+    else
+        # Remove dir if error during execution
+        rm -rf "$tweak_cache_dir"
+        echo -e ">>> Failed"
+    fi
+
 }
 
 ecos_update_tweaks() {
@@ -2224,20 +2223,20 @@ tui_add() {
 
 print_header() {
     echo -e "
-        ${COLOR_GREEN}
+        ${COLOR_PURPLE}
         ███████╗ ██████╗ ██████╗ ███████╗
         ██╔════╝██╔════╝██╔═══██╗██╔════╝
         █████╗  ██║     ██║   ██║███████╗
         ██╔══╝  ██║     ██║   ██║╚════██║
         ███████╗╚██████╗╚██████╔╝███████║
         ╚══════╝ ╚═════╝ ╚═════╝ ╚══════╝${COLOR_NULL}
-                                  ${COLOR_YELLOW}v.${SCRIPT_VERSION}${COLOR_NULL}"
+                                  ${COLOR_GREEN}v.${SCRIPT_VERSION}${COLOR_NULL}"
 }
 
 print_title() {
     echo -e "\n"
     echo -e "${COLOR_BLUE}>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>${COLOR_NULL}"
-    echo -e "${COLOR_BLUE}>>>${COLOR_NULL}  ${COLOR_PURPLE}${1}${COLOR_NULL}"
+    echo -e "${COLOR_BLUE}>>>${COLOR_NULL} ${COLOR_PURPLE}${1}${COLOR_NULL}"
     echo -e "${COLOR_BLUE}>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>${COLOR_NULL}"
 }
 
