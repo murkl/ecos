@@ -292,7 +292,7 @@ zenity_manager() {
     local pid_file="/tmp/ecos.pids"
     if [ "$ECOS_REMOTE_VERSION" = '' ]; then
         (
-            if ! ecos_notify_update && ecos_init_ecos && ecos_update_repo; then
+            if ! ecos_init_ecos && ecos_update_repo; then
                 echo "CANCELED" >"$pid_file"
             else
                 echo "SUCCESS" >"$pid_file"
