@@ -1,5 +1,5 @@
 #!/bin/bash
-SCRIPT_VERSION=2.1.7
+SCRIPT_VERSION=2.1.5
 
 #/////////////////////////////////////////////////////
 # SCRIPT VARIABLES
@@ -1736,12 +1736,13 @@ ecos_update_system() {
 
     clear
     print_header
-    check_internet
 
     print_title 'CHECK ECOS DEPENDENCIES'
+    check_internet
     ecos_check_git
     ecos_check_paru
     ecos_check_zenity
+    echo ">>> OK"
 
     print_title 'INIT ECOS CORE'
     ecos_update_core
