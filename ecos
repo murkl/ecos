@@ -1,5 +1,5 @@
 #!/bin/bash
-SCRIPT_VERSION=2.1.6
+SCRIPT_VERSION=2.1.7
 
 #/////////////////////////////////////////////////////
 # SCRIPT VARIABLES
@@ -1742,20 +1742,16 @@ ecos_update_system() {
     ecos_check_git
     ecos_check_paru
     ecos_check_zenity
-    echo ">>> OK"
 
     print_title 'INIT ECOS CORE'
     ecos_update_core
-    echo ">>> OK"
 
     print_title 'UPDATE ECOS REPO'
     ecos_update_repo
-    echo ">>> OK"
 
     # FETCH PACKAGES
     print_title 'FETCH PACMAN/AUR PACKAGES'
     paru -Syy
-    echo ">>> OK"
 
     # LIST PACKAGES
     print_title 'FETCH PACMAN/AUR PACKAGES'
@@ -1786,7 +1782,6 @@ ecos_update_system() {
     git --git-dir="$ECOS_DOTFILES" --work-tree="$HOME" fetch --all
     git --git-dir="$ECOS_DOTFILES" --work-tree="$HOME" reset --hard HEAD
     git --git-dir="$ECOS_DOTFILES" --work-tree="$HOME" pull
-    echo ">>> OK"
 
     # UPDATE DESKTOP FILE
     print_title 'UPDATE ECOS DESKTOP FILE'
@@ -1824,14 +1819,11 @@ ecos_update_system() {
         # UPDATE INIT SCRIPT
         echo "UPDATING..."
         "$ECOS_INIT_SCRIPT" --update
-        echo ">>> OK"
-
     fi
 
     # UPDATE TWEAKS
     print_title 'UPDATE ECOS TWEAKS'
     ecos_update_tweaks
-    echo ">>> OK"
 
     # FINISH
     print_title "${COLOR_GREEN} !! ECOS UPDATE FINISHED !! ${COLOR_NULL}"
