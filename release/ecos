@@ -1,5 +1,5 @@
 #!/bin/bash
-SCRIPT_VERSION=2.1.6
+SCRIPT_VERSION=2.1.7
 
 #/////////////////////////////////////////////////////
 # SCRIPT VARIABLES
@@ -1976,7 +1976,7 @@ ecos_exec_tweak() {
     # Execute Tweak
     #----------------------------------------
     if [ "$tweak_action" = "install" ] || [ "$tweak_action" = "remove" ] || [ "$tweak_action" = "update" ]; then
-        print_title "${COLOR_YELLOW}TWEAK: $tweak_id ($tweak_action)${COLOR_NULL}"
+        print_title "TWEAK: ${COLOR_YELLOW}$tweak_id${COLOR_NULL} ${COLOR_GREEN}${tweak_action}${COLOR_NULL}"
         if ! [ -f "$tweak_sh" ]; then
             echo "Error: $tweak_id not exists ($tweak_sh)"
             return 1
