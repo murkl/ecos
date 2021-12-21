@@ -4,11 +4,14 @@
 TWEAK_RES_DIR="$2"
 TWEAK_CACHE_DIR="$3"
 
+# https://github.com/RaphaelRochet/arch-update/releases
+URL="https://github.com/RaphaelRochet/arch-update/releases/download/v45/arch-update@RaphaelRochet.zip"
+
 install() {
     rm -rf "$HOME/.local/share/gnome-shell/extensions"/arch-update@RaphaelRochet*
 
     mkdir -p "$HOME/.local/share/gnome-shell/extensions/"
-    curl -Ls "https://github.com/RaphaelRochet/arch-update/releases/download/v45/arch-update@RaphaelRochet.zip" -o "$TWEAK_CACHE_DIR/arch-update@RaphaelRochet.zip"
+    curl -Ls "$URL" -o "$TWEAK_CACHE_DIR/arch-update@RaphaelRochet.zip"
     unzip "$TWEAK_CACHE_DIR/arch-update@RaphaelRochet.zip" -d "$HOME/.local/share/gnome-shell/extensions/arch-update@RaphaelRochet"
 
     # Configuration
