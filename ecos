@@ -402,7 +402,7 @@ zenity_settings() {
     ecos_check_zenity
     mkdir -p "$ECOS_CONFIG_DIR"
     touch "$ECOS_CONFIG_FILE"
-    if zenity_result=$(zenity --text-info --width=550 --height=300 --title="Settings" --ok-label="Save" --cancel-label="Cancel" --font="monospace" --editable --filename="$ECOS_CONFIG_FILE"); then
+    if zenity_result=$(zenity --text-info --width=720 --height=380 --title="Settings" --ok-label="Save" --cancel-label="Cancel" --font="monospace" --editable --filename="$ECOS_CONFIG_FILE"); then
         echo "$zenity_result" >"$ECOS_CONFIG_FILE"
         notify "Settings saved"
     fi
