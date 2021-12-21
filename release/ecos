@@ -1,5 +1,5 @@
 #!/bin/bash
-SCRIPT_VERSION=2.2.0
+SCRIPT_VERSION=2.2.1
 
 #/////////////////////////////////////////////////////
 # SCRIPT VARIABLES
@@ -262,7 +262,7 @@ main() {
 #/////////////////////////////////////////////////////
 
 zenity() {
-    /usr/bin/zenity --name="$SCRIPT_ID" --width=350 --height=250 --title='' --text='' --window-icon="$ECOS_ICON_FILE" "$@" 2>/dev/null
+    /usr/bin/zenity --name="$SCRIPT_ID" --width=350 --height=280 --title='' --text='' --window-icon="$ECOS_ICON_FILE" "$@" 2>/dev/null
 }
 
 notify() {
@@ -322,6 +322,7 @@ zenity_manager() {
 
     local menu_entries=()
     menu_entries+=("Update")
+    menu_entries+=("Dotfiles")
     menu_entries+=("Tweaks")
     menu_entries+=("Settings")
     if ! zenity_result="$(zenity --list --hide-header --column="" --text="$(print_zenity_header 'Menu' $ECOS_REMOTE_VERSION)" --cancel-label='Exit' --ok-label='Ok' "${menu_entries[@]}")"; then
@@ -330,6 +331,11 @@ zenity_manager() {
 
     if [ "$zenity_result" = "Update" ]; then
         zenity_process_update
+        exit 0
+    fi
+    if [ "$zenity_result" = "Dotfiles" ]; then
+        zenity_dotfiles
+        zenity_manager
         exit 0
     fi
     if [ "$zenity_result" = "Tweaks" ]; then
@@ -341,6 +347,37 @@ zenity_manager() {
         zenity_settings
         zenity_manager
         exit 0
+    fi
+}
+
+zenity_dotfiles() {
+    local menu_entries=()
+    menu_entries+=("Edit Init Script")
+    menu_entries+=("Reset Dotfiles")
+    menu_entries+=("Clone Dotfiles Repo")
+    if ! zenity_result="$(zenity --list --hide-header --column="" --text="$(print_zenity_header 'Dotfiles' $ECOS_REMOTE_VERSION)" --cancel-label='Back' --ok-label='Ok' "${menu_entries[@]}")"; then
+        return 0
+    fi
+
+    if [ "$zenity_result" = "Edit Init Script" ]; then
+        if zenity_result=$(zenity --text-info --width=1200 --height=600 --title="Init Script" --ok-label="Save" --cancel-label="Cancel" --font="monospace" --editable --filename="$ECOS_INIT_SCRIPT"); then
+            echo "$zenity_result" >"$ECOS_INIT_SCRIPT"
+            notify "Init Script saved"
+        fi
+        zenity_dotfiles
+        return 0
+    fi
+    if [ "$zenity_result" = "Reset Dotfiles" ]; then
+        notify "In Development..."
+        zenity_dotfiles
+        # TODO
+        return 0
+    fi
+    if [ "$zenity_result" = "Clone Dotfiles Repo" ]; then
+        notify "In Development..."
+        zenity_dotfiles
+        # TODO
+        return 0
     fi
 }
 
@@ -368,7 +405,7 @@ zenity_settings() {
     ecos_check_zenity
     mkdir -p "$ECOS_CONFIG_DIR"
     touch "$ECOS_CONFIG_FILE"
-    if zenity_result=$(zenity --text-info --width=550 --height=300 --title="Settings" --ok-label="Save" --cancel-label="Cancel" --font="monospace" --editable --filename="$ECOS_CONFIG_FILE"); then
+    if zenity_result=$(zenity --text-info --width=720 --height=380 --title="Settings" --ok-label="Save" --cancel-label="Cancel" --font="monospace" --editable --filename="$ECOS_CONFIG_FILE"); then
         echo "$zenity_result" >"$ECOS_CONFIG_FILE"
         notify "Settings saved"
     fi
