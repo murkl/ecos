@@ -355,8 +355,8 @@ zenity_dotfiles() {
     menu_entries+=("Edit Init Script")
     menu_entries+=("Reset Dotfiles")
     menu_entries+=("Clone Dotfiles Repo")
-    if ! zenity_result="$(zenity --list --hide-header --column="" --text="$(print_zenity_header 'Dotfiles' $ECOS_REMOTE_VERSION)" --cancel-label='Exit' --ok-label='Ok' "${menu_entries[@]}")"; then
-        exit 0
+    if ! zenity_result="$(zenity --list --hide-header --column="" --text="$(print_zenity_header 'Dotfiles' $ECOS_REMOTE_VERSION)" --cancel-label='Back' --ok-label='Ok' "${menu_entries[@]}")"; then
+        return 0
     fi
 
     if [ "$zenity_result" = "Edit Init Script" ]; then
@@ -364,15 +364,18 @@ zenity_dotfiles() {
             echo "$zenity_result" >"$ECOS_INIT_SCRIPT"
             notify "Init Script saved"
         fi
+        zenity_dotfiles
         return 0
     fi
     if [ "$zenity_result" = "Reset Dotfiles" ]; then
         notify "In Development..."
+        zenity_dotfiles
         # TODO
         return 0
     fi
     if [ "$zenity_result" = "Clone Dotfiles Repo" ]; then
         notify "In Development..."
+        zenity_dotfiles
         # TODO
         return 0
     fi
