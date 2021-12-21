@@ -262,7 +262,7 @@ main() {
 #/////////////////////////////////////////////////////
 
 zenity() {
-    /usr/bin/zenity --name="$SCRIPT_ID" --width=350 --height=250 --title='' --text='' --window-icon="$ECOS_ICON_FILE" "$@" 2>/dev/null
+    /usr/bin/zenity --name="$SCRIPT_ID" --width=350 --height=280 --title='' --text='' --window-icon="$ECOS_ICON_FILE" "$@" 2>/dev/null
 }
 
 notify() {
@@ -322,6 +322,7 @@ zenity_manager() {
 
     local menu_entries=()
     menu_entries+=("Update")
+    menu_entries+=("Dotfiles")
     menu_entries+=("Tweaks")
     menu_entries+=("Settings")
     if ! zenity_result="$(zenity --list --hide-header --column="" --text="$(print_zenity_header 'Menu' $ECOS_REMOTE_VERSION)" --cancel-label='Exit' --ok-label='Ok' "${menu_entries[@]}")"; then
@@ -330,6 +331,11 @@ zenity_manager() {
 
     if [ "$zenity_result" = "Update" ]; then
         zenity_process_update
+        exit 0
+    fi
+    if [ "$zenity_result" = "Dotfiles" ]; then
+        zenity_dotfiles
+        zenity_manager
         exit 0
     fi
     if [ "$zenity_result" = "Tweaks" ]; then
@@ -341,6 +347,26 @@ zenity_manager() {
         zenity_settings
         zenity_manager
         exit 0
+    fi
+}
+
+zenity_dotfiles() {
+    local menu_entries=()
+    menu_entries+=("Init Script")
+    menu_entries+=("Reset Dotfiles")
+    menu_entries+=("Clone Dotfiles Repo")
+    if ! zenity_result="$(zenity --list --hide-header --column="" --text="$(print_zenity_header 'Dotfiles' $ECOS_REMOTE_VERSION)" --cancel-label='Exit' --ok-label='Ok' "${menu_entries[@]}")"; then
+        exit 0
+    fi
+
+    if [ "$zenity_result" = "Init Script" ]; then
+        return 0
+    fi
+    if [ "$zenity_result" = "Reset Dotfiles" ]; then
+        return 0
+    fi
+    if [ "$zenity_result" = "Clone Dotfiles Repo" ]; then
+        return 0
     fi
 }
 
