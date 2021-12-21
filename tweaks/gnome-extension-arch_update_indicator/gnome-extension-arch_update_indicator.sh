@@ -30,7 +30,8 @@ remove() {
 }
 
 update() {
-    return 0
+    remove
+    install
 }
 
 if [ "$1" = "--install" ]; then install "$@"; fi
