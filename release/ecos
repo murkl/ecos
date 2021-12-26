@@ -1,5 +1,5 @@
 #!/bin/bash
-SCRIPT_VERSION=2.2.1
+SCRIPT_VERSION=2.2.2
 
 #/////////////////////////////////////////////////////
 # SCRIPT VARIABLES
@@ -70,6 +70,7 @@ ECOS_CHANGELOG_FILE="$ECOS_REPO/release/changelog.html"
 ECOS_CACHE_TWEAKS="$ECOS_WORKING_DIR/tweaks"
 ECOS_USER_TWEAKS_DIR="$ECOS_HOME/tweaks"
 ECOS_DESKTOP_FILE="$HOME/.local/share/applications/$SCRIPT_ID.desktop"
+ECOS_AUTOSTART_FILE="$HOME/.config/autostart/$SCRIPT_ID.desktop"
 ECOS_REMOTE_VERSION_FILE='/tmp/ecos.remote'
 ECOS_REMOTE_VERSION=''
 
@@ -191,7 +192,7 @@ main() {
     # ECOS AUTOSTART
     # ---------------------------------------
     if [ "$1" = "--autostart" ]; then
-        (sleep 10 && ecos_notify_update) &
+        (sleep 10 && ecos_notify_update >/dev/null) &
         if [ -f "$ECOS_STATE_SHOW_CHANGELOG" ]; then
             zenity_show_changelog
         fi
@@ -1571,6 +1572,18 @@ ecos_create_desktop_file() {
     chmod +x "$ECOS_DESKTOP_FILE"
 }
 
+ecos_create_autostart_file() {
+    mkdir -p "$HOME/.config/autostart/"
+    {
+        echo "[Desktop Entry]"
+        echo "Name=ECOS"
+        echo "Icon="$ECOS_ICON_FILE""
+        echo 'Exec=bash -c "$HOME/.ecos/bin/ecos --autostart"'
+        echo "Type=Application"
+    } >"$ECOS_AUTOSTART_FILE"
+    chmod +x "$ECOS_AUTOSTART_FILE"
+}
+
 ecos_init_ecos() {
 
     # CREATE DIRS
@@ -1692,6 +1705,11 @@ ecos_tui_install_ecos() {
     # Create Desktop file
     print_title 'CREATE ECOS DESKTOP FILE'
     ecos_create_desktop_file
+    echo -e ">> DONE"
+
+    # Create Autostart file
+    print_title 'ENABLE ECOS AUTOSTART'
+    ecos_create_autostart_file
     echo -e ">> DONE"
 
     # Call init script
@@ -1881,6 +1899,11 @@ ecos_update_system() {
     print_title 'UPDATE ECOS DESKTOP FILE'
     ecos_create_desktop_file
     echo ">>> OK"
+
+    # Create Autostart file
+    print_title 'ENABLE ECOS AUTOSTART'
+    ecos_create_autostart_file
+    echo -e ">> DONE"
 
     # UPDATE TWEAKS
     ecos_update_tweaks
