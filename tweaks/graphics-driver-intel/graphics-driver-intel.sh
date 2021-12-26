@@ -22,13 +22,14 @@ install() {
         paru --noconfirm --needed --sudoloop -S mesa vulkan-intel vulkan-tools
         paru --noconfirm --needed --sudoloop -S lib32-mesa lib32-vulkan-intel
         sudo sed -i "s/MODULES=()/MODULES=(intel_agp i915)/g" "/etc/mkinitcpio.conf"
+        # Font and screen corruption in GTK applications (missing glyphs after suspend/resume)
         echo 'COGL_ATLAS_DEFAULT_BLIT_MODE=framebuffer' | sudo tee -a "/etc/environment"
         local conf='
 Section "Device"
     Identifier  "Intel Graphics"
     Driver      "intel"
     Option      "DRI" "3"
-    Option      "AccelMethod" "uxa"
+    #Option      "AccelMethod" "uxa"
     #Option      "TearFree" "true" # Will not work with AccelMethod=uxa
 EndSection'
         echo "$conf" | sudo tee -a "/etc/X11/xorg.conf.d/20-intel.conf"
