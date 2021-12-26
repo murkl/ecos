@@ -1318,7 +1318,7 @@ core_tui_check_config() {
     #----------------------------------------
     if [ "$DUALBOOT" = "" ]; then
         tui_init 27 "Dualboot"
-        if ! DUALBOOT=$(whiptail --menu --notags "$(cat "$SCRIPT_TUI_FILE")\n" "$SCRIPT_TUI_HEIGHT" "$SCRIPT_TUI_WIDTH" 2 "disabled" "Disabled" "windows10" "Windows 10" 3>&1 1>&2 2>&3); then
+        if ! DUALBOOT=$(whiptail --menu --notags "$(cat "$SCRIPT_TUI_FILE")\n" "$SCRIPT_TUI_HEIGHT" "$SCRIPT_TUI_WIDTH" 2 "default" "Default" "windows10" "Windows 10" 3>&1 1>&2 2>&3); then
             exit 0
         fi
 
