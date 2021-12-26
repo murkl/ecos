@@ -100,6 +100,7 @@ VCONSOLE_KEYMAP=''
 X11_KEYBOARD_LAYOUT=''
 X11_KEYBOARD_VARIANT=''
 CUSTOM_PACKAGES=''
+DUALBOOT=''
 
 #/////////////////////////////////////////////////////
 # CORE LANGUAGES
@@ -1303,13 +1304,25 @@ core_tui_check_config() {
     # Check workstation
     #----------------------------------------
     if [ "$WORKSTATION" = "" ]; then
-        tui_init 20 "Choose Workstation"
+        tui_init 22 "Choose Workstation"
         if ! WORKSTATION=$(whiptail --menu --notags "$(cat "$SCRIPT_TUI_FILE")\n" "$SCRIPT_TUI_HEIGHT" "$SCRIPT_TUI_WIDTH" 2 "desktop" "Desktop" "notebook" "Notebook" 3>&1 1>&2 2>&3); then
             exit 0
         fi
 
         core_replace_config_value "$CORE_CONFIG_FILE" "HOSTNAME" "$USERNAME-$WORKSTATION"
         core_replace_config_value "$CORE_CONFIG_FILE" "WORKSTATION" "$WORKSTATION"
+    fi
+
+    #----------------------------------------
+    # Check Dualboot
+    #----------------------------------------
+    if [ "$DUALBOOT" = "" ]; then
+        tui_init 27 "Dualboot"
+        if ! DUALBOOT=$(whiptail --menu --notags "$(cat "$SCRIPT_TUI_FILE")\n" "$SCRIPT_TUI_HEIGHT" "$SCRIPT_TUI_WIDTH" 2 "disabled" "Disabled" "windows10" "Windows 10" 3>&1 1>&2 2>&3); then
+            exit 0
+        fi
+
+        core_replace_config_value "$CORE_CONFIG_FILE" "DUALBOOT" "$DUALBOOT"
     fi
 
     #----------------------------------------
