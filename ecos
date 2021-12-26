@@ -1631,6 +1631,10 @@ ecos_init_ecos() {
         echo "ECOS LOCAL VERSION:   $SCRIPT_VERSION"
         echo "ECOS REMOTE VERSION:  $ECOS_REMOTE_VERSION"
     fi
+
+    # CHECK DOTS
+
+    # CHECK CORE
 }
 
 ecos_tui_install_ecos() {
