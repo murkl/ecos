@@ -1,4 +1,6 @@
 #!/bin/bash
+# dconf dump /org/gnome/shell/extensions/dash-to-dock/ > dconf.dump
+
 TWEAK_RES_DIR="$2"
 TWEAK_CACHE_DIR="$3"
 
@@ -18,7 +20,6 @@ install() {
     make install
 
     # Configuration
-    # dconf dump /org/gnome/shell/extensions/dash-to-dock/ > dconf.dump
     dconf reset -f "$EXTENSION_DCONF"
     dconf load "$EXTENSION_DCONF" <"$TWEAK_RES_DIR/dconf.dump"
 
