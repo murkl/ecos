@@ -10,6 +10,28 @@
 # glxinfo | grep NVIDIA
 # glxgears
 
+# ----------------------------------------------------------
+
+# NVIDIA Geforce GT 730
+# Driver: 470.94
+
+# https://www.reddit.com/r/linux_gaming/comments/rtsxey/pacman_install_nvidia_driver_470/
+# https://github.com/frogging-family/nvidia-all
+
+# git clone https://github.com/frogging-family/nvidia-all && cd nvidia-all
+# sed -i 's/dkms=""/dkms="true"/g' customization.cfg
+# makepkg -si
+
+# DRM kernel mode setting
+# sudo vim /boot/loader/entries/arch.conf
+# nvidia-drm.modeset=1
+
+# Early Loading
+# MODULES=(nvidia nvidia_modeset nvidia_uvm nvidia_drm)
+# sudo mkinitcpio -p linux
+
+# ----------------------------------------------------------
+
 install() {
 
     if ! local whiptail_result=$(whiptail --menu --notags "NVIDIA GRAPHICS DRIVER" 0 0 4 "nouveau" "NVIDIA (nouveau)" "nvidia" "NVIDIA (nvidia)" "nvidia-390xx" "NVIDIA 390xx" "nvidia-390xx-bumblebee" "NVIDIA 390xx + Bumblebee" 3>&1 1>&2 2>&3); then
