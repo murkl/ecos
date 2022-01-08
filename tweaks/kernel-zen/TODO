@@ -1,0 +1,9 @@
+paci linux-zen linux-zen-headers
+
+
+boot/loade/loader.conf
+
+default @saved
+timeout 2
+editor  yes
+console-mode auto
