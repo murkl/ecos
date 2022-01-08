@@ -81,7 +81,7 @@ install() {
     # Rebuild
     #----------------------------------------
     echo 'REBUILD'
-    if ! sudo mkinitcpio -p linux; then
+    if ! sudo mkinitcpio -P; then
         # On error
         echo 'ERROR'
         echo "Error installing plymouth: rolling back..."
@@ -97,7 +97,7 @@ remove() {
     sudo sed -i "s/keymap plymouth plymouth-encrypt filesystems/keymap encrypt filesystems/g" "$MKINIT_CONF"
     sudo mv -f "$SPINNER_CONF".bak "$SPINNER_CONF"
     sudo mv -f "$WATERMARK_FILE".bak "$WATERMARK_FILE"
-    sudo mkinitcpio -p linux
+    sudo mkinitcpio -P
 }
 
 update() {

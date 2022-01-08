@@ -40,20 +40,20 @@ TWEAK_CACHE_DIR="$3"
 
 # Early Loading
 # MODULES=(nvidia nvidia_modeset nvidia_uvm nvidia_drm)
-# sudo mkinitcpio -p linux
+# sudo mkinitcpio -P
 
 # ----------------------------------------------------------
 
 install() {
 
-    if ! local whiptail_result=$(whiptail --menu --notags "NVIDIA GRAPHICS DRIVER" 0 0 4 "nouveau" "NVIDIA (nouveau)" "nvidia" "NVIDIA (nvidia)" "nvidia-390xx" "NVIDIA 390xx" "nvidia-390xx-bumblebee" "NVIDIA 390xx + Bumblebee" 3>&1 1>&2 2>&3); then
+    if ! local whiptail_result=$(whiptail --menu --notags "NVIDIA GRAPHICS DRIVER" 0 0 4 "nouveau" "NVIDIA (nouveau)" "nvidia" "NVIDIA (nvidia)" "nvidia-390xx" "NVIDIA 390xx" "nvidia-390xx-bumblebee" "Intel HD + NVIDIA 390xx (Bumblebee)" 3>&1 1>&2 2>&3); then
         exit 1
     fi
 
     if [ "$whiptail_result" = 'nouveau' ]; then
         paru --noconfirm --needed --sudoloop -S mesa lib32-mesa xf86-video-nouveau
         sudo sed -i "s/MODULES=()/MODULES=(nouveau)/g" "/etc/mkinitcpio.conf"
-        sudo mkinitcpio -p linux
+        sudo mkinitcpio -P
         exit 0
     fi
 
@@ -68,14 +68,6 @@ install() {
             exit 1
         fi
 
-        # Early Loading
-        sudo sed -i "s/MODULES=()/MODULES=(nvidia nvidia_modeset nvidia_uvm nvidia_drm)/g" "/etc/mkinitcpio.conf"
-
-        # DRM kernel mode setting (nvidia-drm.modeset=1)
-        sudo sed -i "s/vt.global_cursor_default=0 rw/vt.global_cursor_default=0 nvidia-drm.modeset=1 rw/g" "/boot/loader/entries/arch.conf"
-
-        # Rebuild
-        sudo mkinitcpio -p linux
         exit 0
     fi
 
@@ -110,6 +102,13 @@ install() {
             sudo sed -i 's/#BusID "PCI:01:00:0"/BusID "PCI:01:00:0"/g' "/etc/bumblebee/xorg.conf.nvidia"
 
             sudo systemctl enable bumblebeed.service
+
+            # Early Loading
+            sudo sed -i "s/MODULES=()/MODULES=(i915)/g" "/etc/mkinitcpio.conf"
+
+            # Rebuild
+            sudo mkinitcpio -P
+
             exit 0
         fi
 
@@ -123,7 +122,7 @@ install() {
             sudo sed -i "s/vt.global_cursor_default=0 rw/vt.global_cursor_default=0 nvidia-drm.modeset=1 rw/g" "/boot/loader/entries/arch.conf"
 
             # Rebuild
-            sudo mkinitcpio -p linux
+            sudo mkinitcpio -P
 
             echo 'Section "OutputClass"
     Identifier "intel"
@@ -161,11 +160,12 @@ remove() {
     paru --noconfirm --sudoloop -Rsn nvidia-390xx-dkms nvidia-390xx-settings nvidia-390xx-utils lib32-nvidia-390xx-utils opencl-nvidia-390xx lib32-opencl-nvidia-390xx lib32-virtualgl
     paru --noconfirm --sudoloop -Rsn xf86-video-nouveau
 
+    sudo sed -i "s/MODULES=(i915)/MODULES=()/g" "/etc/mkinitcpio.conf"
     sudo sed -i "s/MODULES=(nouveau)/MODULES=()/g" "/etc/mkinitcpio.conf"
     sudo sed -i "s/MODULES=(nvidia nvidia_modeset nvidia_uvm nvidia_drm)/MODULES=()/g" "/etc/mkinitcpio.conf"
 
     sudo sed -i "s/vt.global_cursor_default=0 nvidia-drm.modeset=1 rw/vt.global_cursor_default=0 rw/g" "/boot/loader/entries/arch.conf"
-    sudo mkinitcpio -p linux
+    sudo mkinitcpio -P
 
     sudo rm -f /etc/X11/xorg.conf.d/30-nvidia-ignoreabi.conf
 

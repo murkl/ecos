@@ -1059,7 +1059,7 @@ core_install_chroot() {
         fi
 
         sed -i 's^FILES=()^FILES=('$crypt_key')^g' /etc/mkinitcpio.conf
-        core_exec_command_wrap mkinitcpio -p linux
+        core_exec_command_wrap mkinitcpio -P
 
         # Mdify before execute grub-install!
         echo 'GRUB_ENABLE_CRYPTODISK=y' >/etc/default/grub
@@ -1082,7 +1082,7 @@ core_install_chroot() {
     # Rebuild initrc
     #----------------------------------------
     core_gauge_update 85 "Rebuild Initial Ramdisk"
-    core_exec_command_wrap mkinitcpio -p linux
+    core_exec_command_wrap mkinitcpio -P
 
     #----------------------------------------
     # Create new user
