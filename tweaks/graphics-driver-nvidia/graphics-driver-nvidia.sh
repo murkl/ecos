@@ -1,5 +1,8 @@
 #!/bin/bash
 
+TWEAK_RES_DIR="$2"
+TWEAK_CACHE_DIR="$3"
+
 # https://wiki.archlinux.org/title/NVIDIA
 # https://wiki.archlinux.org/title/NVIDIA_Optimus
 
@@ -46,8 +49,28 @@ install() {
     fi
 
     if [ "$whiptail_result" = 'nvidia' ]; then
-        echo "Sorry not implemented!"
-        exit 1
+
+        rm -rf "$TWEAK_CACHE_DIR/repo"
+        git clone "https://github.com/frogging-family/nvidia-all" "$TWEAK_CACHE_DIR/repo"
+        cd "$TWEAK_CACHE_DIR/repo" || exit 1
+        sed -i 's/dkms=""/dkms="true"/g' customization.cfg
+        if ! makepkg -si; then
+            echo "Error makepkg"
+            exit 1
+        fi
+
+        # Early Loading
+        sudo sed -i "s/MODULES=()/MODULES=(nvidia nvidia_modeset nvidia_uvm nvidia_drm)/g" "/etc/mkinitcpio.conf"
+        nvidia nvidia_modeset nvidia_uvm nvidia_drm
+
+        # DRM kernel mode setting (nvidia-drm.modeset=1)
+        sudo cp -f "/boot/loader/entries/arch.conf" "/boot/loader/entries/arch.conf.bak.nvidia-390xx"
+        sudo sed -i "s/vt.global_cursor_default=0 rw/vt.global_cursor_default=0 nvidia-drm.modeset=1 rw/g" "/boot/loader/entries/arch.conf"
+
+        # Rebuild
+        sudo mkinitcpio -p linux
+
+        exit 0
     fi
 
     if [ "$whiptail_result" = 'nvidia-390xx' ] || [ "$whiptail_result" = 'nvidia-390xx-bumblebee' ]; then
@@ -74,7 +97,6 @@ install() {
 
         # Early Loading
         sudo sed -i "s/MODULES=()/MODULES=(nvidia nvidia_modeset nvidia_uvm nvidia_drm)/g" "/etc/mkinitcpio.conf"
-        nvidia nvidia_modeset nvidia_uvm nvidia_drm
 
         # DRM kernel mode setting (nvidia-drm.modeset=1)
         sudo cp -f "/boot/loader/entries/arch.conf" "/boot/loader/entries/arch.conf.bak.nvidia-390xx"
