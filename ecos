@@ -1926,6 +1926,7 @@ ecos_update_system() {
     ecos_update_tweaks
 
     # FINISH
+    echo -e "\n\n\n\n\n\n\n\n\n\n"
     print_title "${COLOR_GREEN} !! ECOS UPDATE FINISHED !! ${COLOR_NULL}"
     echo ""
     read -p "Press any Key to close..."
