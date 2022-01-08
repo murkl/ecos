@@ -11,16 +11,16 @@ TWEAK_CACHE_DIR="$3"
 # lspci -k | grep -A 2 -E "(VGA|3D)"
 
 # NVIDIA BUMBLEBEE
-# optirun <APP>
+# optirun -b primus <APP>
 
 # TEST NVIDIA
 # glxinfo | grep NVIDIA
 # glxgears
 
 # TEST NVIDIA BUMBLEBEE
-# optirun glxgears -info
-# optirun glxspheres64
-# optirun glxspheres32
+# optirun -b primus glxgears -info
+# optirun -b primus glxspheres64
+# optirun -b primus glxspheres32
 
 # ----------------------------------------------------------
 
@@ -95,7 +95,7 @@ install() {
         # BUMBLEBEE
         if [ "$BUMBLEBEE_ENABLED" = "true" ]; then
             # optional: lib32-virtualgl
-            paru --noconfirm --needed --sudoloop -S mesa bumblebee xf86-video-intel lib32-virtualgl
+            paru --noconfirm --needed --sudoloop -S mesa bumblebee xf86-video-intel lib32-virtualgl primus lib32-primus
             sudo gpasswd -a $USER bumblebee
 
             # Workaround for: [ERROR]Cannot access secondary GPU - error: [XORG] (EE) No devices detected.
@@ -171,7 +171,7 @@ remove() {
 
     # Bumblebee
     sudo systemctl disable bumblebeed.service
-    paru --noconfirm --sudoloop -Rsn bumblebee xf86-video-intel
+    paru --noconfirm --sudoloop -Rsn bumblebee xf86-video-intel primus lib32-primus
 
     # Nvidia Only
     sudo rm -f /etc/X11/xorg.conf.d/10-nvidia-drm-outputclass.conf
