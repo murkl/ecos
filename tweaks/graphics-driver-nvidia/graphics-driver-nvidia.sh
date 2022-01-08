@@ -99,7 +99,7 @@ install() {
             sudo gpasswd -a $USER bumblebee
 
             # Workaround for: [ERROR]Cannot access secondary GPU - error: [XORG] (EE) No devices detected.
-            sudo sed -i 's/#BusID "PCI:01:00:0"/BusID "PCI:01:00:0"/g' "/etc/bumblebee/xorg.conf.nvidia"
+            sudo sed -i 's/#   BusID "PCI:01:00:0"/    BusID "PCI:01:00:0"/g' "/etc/bumblebee/xorg.conf.nvidia"
 
             sudo systemctl enable bumblebeed.service
 
