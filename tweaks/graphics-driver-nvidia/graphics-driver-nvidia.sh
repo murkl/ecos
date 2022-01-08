@@ -3,15 +3,24 @@
 TWEAK_RES_DIR="$2"
 TWEAK_CACHE_DIR="$3"
 
+# RESOURCES
 # https://wiki.archlinux.org/title/NVIDIA
 # https://wiki.archlinux.org/title/NVIDIA_Optimus
 
-# List Drivers:
+# SHOW GRAPHIC CARD INFO:
 # lspci -k | grep -A 2 -E "(VGA|3D)"
 
-# Test NVIDIA
+# NVIDIA BUMBLEBEE
+# optirun <APP>
+
+# TEST NVIDIA
 # glxinfo | grep NVIDIA
 # glxgears
+
+# TEST NVIDIA BUMBLEBEE
+# optirun glxgears -info
+# optirun glxspheres64
+# optirun glxspheres32
 
 # ----------------------------------------------------------
 
@@ -105,13 +114,17 @@ install() {
         # Rebuild
         sudo mkinitcpio -p linux
 
+        # BUMBLEBEE
         if [ "$BUMBLEBEE_ENABLED" = "true" ]; then
-            paru --noconfirm --needed --sudoloop -S bumblebee xf86-video-intel
-            #paru --noconfirm --needed --sudoloop -S lib32-virtualgl
+            # optional: lib32-virtualgl
+            paru --noconfirm --needed --sudoloop -S mesa bumblebee xf86-video-intel lib32-virtualgl
             sudo gpasswd -a $USER bumblebee
             sudo systemctl enable bumblebeed.service
-        else
-            # NVDIA Driver Only (https://wiki.archlinux.org/title/NVIDIA_Optimus#Use_NVIDIA_graphics_only)
+        fi
+
+        # NVDIA Driver Only (https://wiki.archlinux.org/title/NVIDIA_Optimus#Use_NVIDIA_graphics_only)
+        if [ "$BUMBLEBEE_ENABLED" = "false" ]; then
+
             echo 'Section "OutputClass"
     Identifier "intel"
     MatchDriver "i915"
