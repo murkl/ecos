@@ -120,6 +120,7 @@ install() {
             paru --noconfirm --needed --sudoloop -S mesa bumblebee xf86-video-intel lib32-virtualgl
             sudo gpasswd -a $USER bumblebee
             sudo systemctl enable bumblebeed.service
+            exit 0
         fi
 
         # NVDIA Driver Only (https://wiki.archlinux.org/title/NVIDIA_Optimus#Use_NVIDIA_graphics_only)
@@ -151,6 +152,7 @@ NoDisplay=true
 X-GNOME-Autostart-Phase=DisplayServer' >/tmp/optimus.desktop
             sudo cp -f /tmp/optimus.desktop /usr/share/gdm/greeter/autostart/optimus.desktop
             sudo cp -f /tmp/optimus.desktop /etc/xdg/autostart/optimus.desktop
+            exit 0
         fi
     fi
 }
