@@ -82,7 +82,7 @@ install() {
         exit 0
     fi
 
-    if [ "$whiptail_result" = 'nvidia-390xx' ] || [ "$whiptail_result" = 'nvidia-390xx-bumblebee' ]; then
+    if [ "$whiptail_result" = "nvidia-390xx" ] || [ "$whiptail_result" = "nvidia-390xx-bumblebee" ]; then
 
         local BUMBLEBEE_ENABLED="false"
         if [ "$whiptail_result" = "nvidia-390xx" ]; then BUMBLEBEE_ENABLED="false"; fi
