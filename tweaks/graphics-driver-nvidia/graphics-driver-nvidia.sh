@@ -54,7 +54,7 @@ install() {
         paru --noconfirm --needed --sudoloop -S mesa lib32-mesa xf86-video-nouveau
         sudo sed -i "s/MODULES=()/MODULES=(nouveau)/g" "/etc/mkinitcpio.conf"
         sudo mkinitcpio -p linux
-        exit 1
+        exit 0
     fi
 
     if [ "$whiptail_result" = 'nvidia' ]; then
@@ -70,7 +70,6 @@ install() {
 
         # Early Loading
         sudo sed -i "s/MODULES=()/MODULES=(nvidia nvidia_modeset nvidia_uvm nvidia_drm)/g" "/etc/mkinitcpio.conf"
-        nvidia nvidia_modeset nvidia_uvm nvidia_drm
 
         # DRM kernel mode setting (nvidia-drm.modeset=1)
         sudo cp -f "/boot/loader/entries/arch.conf" "/boot/loader/entries/arch.conf.bak.nvidia-390xx"
@@ -78,7 +77,6 @@ install() {
 
         # Rebuild
         sudo mkinitcpio -p linux
-
         exit 0
     fi
 
