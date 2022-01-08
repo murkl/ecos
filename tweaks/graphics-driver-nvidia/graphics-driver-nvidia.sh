@@ -65,16 +65,22 @@ install() {
         paru --noconfirm --needed --sudoloop -S linux-headers xorg-xrandr mesa mesa-demos
 
         # Install NVIDIA Driver
-        # opencl-nvidia-390xx
-        paru --noconfirm --needed --sudoloop -S nvidia-390xx-dkms nvidia-390xx-settings
+        # optional: opencl-nvidia-390xx
+        paru --noconfirm --needed --sudoloop -S nvidia-390xx-dkms nvidia-390xx-settings opencl-nvidia-390xx
 
         # 32 Bit Support
-        # lib32-opencl-nvidia-390xx lib32-virtualgl
-        paru --noconfirm --needed --sudoloop -S lib32-nvidia-390xx-utils
+        # optional: lib32-opencl-nvidia-390xx lib32-virtualgl
+        paru --noconfirm --needed --sudoloop -S lib32-nvidia-390xx-utils lib32-opencl-nvidia-390xx lib32-virtualgl
 
-        # Add Kernel parameter (nvidia-drm.modeset=1)
+        # Early Loading
+        sudo sed -i "s/MODULES=()/MODULES=(nvidia nvidia_modeset nvidia_uvm nvidia_drm)/g" "/etc/mkinitcpio.conf"
+        nvidia nvidia_modeset nvidia_uvm nvidia_drm
+
+        # DRM kernel mode setting (nvidia-drm.modeset=1)
         sudo cp -f "/boot/loader/entries/arch.conf" "/boot/loader/entries/arch.conf.bak.nvidia-390xx"
         sudo sed -i "s/vt.global_cursor_default=0 rw/vt.global_cursor_default=0 nvidia-drm.modeset=1 rw/g" "/boot/loader/entries/arch.conf"
+
+        # Rebuild
         sudo mkinitcpio -p linux
 
         if [ "$BUMBLEBEE_ENABLED" = "true" ]; then
@@ -115,11 +121,12 @@ X-GNOME-Autostart-Phase=DisplayServer' >/tmp/optimus.desktop
 }
 
 remove() {
-    # opencl-nvidia-390xx lib32-opencl-nvidia-390xx lib32-virtualgl
-    paru --noconfirm --sudoloop -Rsn nvidia-390xx-dkms nvidia-390xx-settings nvidia-390xx-utils lib32-nvidia-390xx-utils
+    # optional: opencl-nvidia-390xx lib32-opencl-nvidia-390xx lib32-virtualgl
+    paru --noconfirm --sudoloop -Rsn nvidia-390xx-dkms nvidia-390xx-settings nvidia-390xx-utils lib32-nvidia-390xx-utils opencl-nvidia-390xx lib32-opencl-nvidia-390xx lib32-virtualgl
     paru --noconfirm --sudoloop -Rsn xf86-video-nouveau
 
     sudo sed -i "s/MODULES=(nouveau)/MODULES=()/g" "/etc/mkinitcpio.conf"
+    sudo sed -i "s/MODULES=(nvidia nvidia_modeset nvidia_uvm nvidia_drm)/MODULES=()/g" "/etc/mkinitcpio.conf"
 
     sudo sed -i "s/vt.global_cursor_default=0 nvidia-drm.modeset=1 rw/vt.global_cursor_default=0 rw/g" "/boot/loader/entries/arch.conf"
     sudo mkinitcpio -p linux
