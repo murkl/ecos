@@ -35,7 +35,7 @@
 install() {
 
     if ! local whiptail_result=$(whiptail --menu --notags "NVIDIA GRAPHICS DRIVER" 0 0 4 "nouveau" "NVIDIA (nouveau)" "nvidia" "NVIDIA (nvidia)" "nvidia-390xx" "NVIDIA 390xx" "nvidia-390xx-bumblebee" "NVIDIA 390xx + Bumblebee" 3>&1 1>&2 2>&3); then
-        exit 0
+        exit 1
     fi
 
     if [ "$whiptail_result" = 'nouveau' ]; then
