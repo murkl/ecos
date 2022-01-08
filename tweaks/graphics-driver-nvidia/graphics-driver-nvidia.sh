@@ -104,16 +104,6 @@ install() {
         # optional: lib32-opencl-nvidia-390xx lib32-virtualgl
         paru --noconfirm --needed --sudoloop -S lib32-nvidia-390xx-utils lib32-opencl-nvidia-390xx lib32-virtualgl
 
-        # Early Loading
-        sudo sed -i "s/MODULES=()/MODULES=(nvidia nvidia_modeset nvidia_uvm nvidia_drm)/g" "/etc/mkinitcpio.conf"
-
-        # DRM kernel mode setting (nvidia-drm.modeset=1)
-        sudo cp -f "/boot/loader/entries/arch.conf" "/boot/loader/entries/arch.conf.bak.nvidia-390xx"
-        sudo sed -i "s/vt.global_cursor_default=0 rw/vt.global_cursor_default=0 nvidia-drm.modeset=1 rw/g" "/boot/loader/entries/arch.conf"
-
-        # Rebuild
-        sudo mkinitcpio -p linux
-
         # BUMBLEBEE
         if [ "$BUMBLEBEE_ENABLED" = "true" ]; then
             # optional: lib32-virtualgl
@@ -125,6 +115,16 @@ install() {
 
         # NVDIA Driver Only (https://wiki.archlinux.org/title/NVIDIA_Optimus#Use_NVIDIA_graphics_only)
         if [ "$BUMBLEBEE_ENABLED" = "false" ]; then
+
+            # Early Loading
+            sudo sed -i "s/MODULES=()/MODULES=(nvidia nvidia_modeset nvidia_uvm nvidia_drm)/g" "/etc/mkinitcpio.conf"
+
+            # DRM kernel mode setting (nvidia-drm.modeset=1)
+            sudo cp -f "/boot/loader/entries/arch.conf" "/boot/loader/entries/arch.conf.bak.nvidia-390xx"
+            sudo sed -i "s/vt.global_cursor_default=0 rw/vt.global_cursor_default=0 nvidia-drm.modeset=1 rw/g" "/boot/loader/entries/arch.conf"
+
+            # Rebuild
+            sudo mkinitcpio -p linux
 
             echo 'Section "OutputClass"
     Identifier "intel"
