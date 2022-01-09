@@ -198,12 +198,6 @@ zenity_main_menu() {
             echo "INIT FAILED"
             return 1
         fi
-
-        if [ "$pid_state" = "SUCCESS" ]; then
-            ECOS_REMOTE_VERSION="$($ECOS_REMOTE_VERSION_FILE --version)"
-            echo "INIT SUCCESS: REMOTE: $ECOS_REMOTE_VERSION"
-        fi
-
     fi
 
     local menu_entries=()
