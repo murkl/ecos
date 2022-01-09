@@ -1001,7 +1001,7 @@ tui_create_usb() {
         exit 0
     fi
 
-    local local_iso_dir="$ECOS_WORKING_DIR/arch-iso"
+    local local_iso_dir="/tmp/arch-iso"
     local iso_url="$ECOS_ARCH_ISO_ROOT_URL/$ECOS_ARCH_ISO_FILE"
     local sha1_url="$ECOS_ARCH_ISO_ROOT_URL/$ECOS_ARCH_ISO_SHA1"
     local local_iso_file="$local_iso_dir/$ECOS_ARCH_ISO_FILE"
