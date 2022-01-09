@@ -146,6 +146,7 @@ tui_main_menu() {
     #----------------------------------------
     if [ "$menu_input" = "2" ]; then
         tui_open_recovery
+        tui_main_menu
         exit 0
     fi
 
