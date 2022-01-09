@@ -741,7 +741,7 @@ exec_install_chroot() {
     echo '#!/bin/sh' >$user_profile
     echo 'export ECOS_HOME="$HOME/.ecos"' >>$user_profile
     echo 'export ECOS_CORE="$ECOS_HOME/repo/ecos"' >>$user_profile
-    echo '$ECOS_CORE --install-ecos' >>$user_profile
+    echo '$ECOS_CORE --install' >>$user_profile
     chmod +x $user_profile
 
     #----------------------------------------

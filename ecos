@@ -85,6 +85,29 @@ main() {
     fi
 
     # ---------------------------------------
+    # ECOS INSTALL
+    # ---------------------------------------
+    if [ "$1" = "--install" ]; then
+        tui_install_ecos
+    fi
+
+    # ---------------------------------------
+    # ECOS UPDATE
+    # ---------------------------------------
+    if [ "$1" = "--update" ]; then
+        update_ecos_system
+        exit 0
+    fi
+
+    # ---------------------------------------
+    # UPDATE NOTIFY
+    # ---------------------------------------
+    if [ "$1" = "--update-notify" ]; then
+        notify_ecos_update
+        exit 0
+    fi
+
+    # ---------------------------------------
     # ECOS AUTOSTART
     # ---------------------------------------
     if [ "$1" = "--autostart" ]; then
@@ -92,14 +115,6 @@ main() {
         if [ -f "$ECOS_STATE_SHOW_CHANGELOG" ]; then
             zenity_show_changelog
         fi
-        exit 0
-    fi
-
-    # ---------------------------------------
-    # UPDATE NOTIFY
-    # ---------------------------------------
-    if [ "$1" = "--notify-update" ]; then
-        notify_ecos_update
         exit 0
     fi
 
@@ -116,21 +131,6 @@ main() {
     # ---------------------------------------
     if [ "$1" = "--tweak" ]; then
         exec_tweak "$2" "$3"
-        exit 0
-    fi
-
-    # ---------------------------------------
-    # FORCE: ECOS INSTALL
-    # ---------------------------------------
-    if [ "$1" = "--install-ecos" ]; then
-        tui_install_ecos
-    fi
-
-    # ---------------------------------------
-    # FORCE: ECOS UPDATE
-    # ---------------------------------------
-    if [ "$1" = "--update-ecos" ]; then
-        update_ecos_system
         exit 0
     fi
 
@@ -558,7 +558,7 @@ create_desktop_file() {
         echo "[Desktop Entry]"
         echo "Name=ECOS"
         echo "Icon="$ECOS_ICON_FILE""
-        echo 'Exec=bash -c "$HOME/.ecos/bin/ecos"'
+        echo 'Exec=bash -c "$HOME/.ecos/repo/ecos"'
         echo "Type=Application"
     } >"$ECOS_DESKTOP_FILE"
     chmod +x "$ECOS_DESKTOP_FILE"
@@ -570,7 +570,7 @@ create_autostart_file() {
         echo "[Desktop Entry]"
         echo "Name=ECOS"
         echo "Icon="$ECOS_ICON_FILE""
-        echo 'Exec=bash -c "$HOME/.ecos/bin/ecos --autostart"'
+        echo 'Exec=bash -c "$HOME/.ecos/repo/ecos --autostart"'
         echo "Type=Application"
     } >"$ECOS_AUTOSTART_FILE"
     chmod +x "$ECOS_AUTOSTART_FILE"
@@ -584,7 +584,7 @@ zenity_update_progress() {
     local LOG_FILE="/tmp/ecos_log_file"
     local STATE_FILE="/tmp/ecos_state_file"
 
-    ${TERMINAL_EXEC} 'bash -c "'$ECOS_CORE' --update-ecos"' &
+    ${TERMINAL_EXEC} 'bash -c "'$ECOS_CORE' --update"' &
     # Capture pid and show progress dialog
     local task_pid="$!"
     echo "$task_pid" >"$STATE_FILE"
@@ -648,6 +648,7 @@ update_ecos_system() {
 
     print_title 'UPDATE ECOS REPO'
     update_ecos_repo
+    echo ">>> OK"
 
     # FETCH PACKAGES
     print_title 'FETCH PACMAN/AUR PACKAGES'
