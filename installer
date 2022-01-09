@@ -27,6 +27,14 @@ ECOS_ARCH_ISO_ROOT_URL="https://www.archlinux.de/download/iso/$(date "+%Y.%m.01"
 ECOS_ARCH_ISO_FILE="archlinux-$(date "+%Y.%m.01")-x86_64.iso"
 ECOS_ARCH_ISO_SHA1="sha1sums.txt"
 
+# TERMINAL COLORS
+TERM_COLOR_RED='\033[0;31m'
+TERM_COLOR_GREEN='\033[1;32m'
+TERM_COLOR_BLUE='\033[1;34m'
+TERM_COLOR_PURPLE='\033[1;35m'
+TERM_COLOR_YELLOW='\033[1;33m'
+TERM_COLOR_NULL='\033[0m' # No Color
+
 # INSTALLER CONFIGURATION
 USERNAME=''
 HOSTNAME=''
@@ -930,7 +938,7 @@ tui_open_recovery() {
     # Open Crypt
     #----------------------------------------
     clear
-    print_title "OPEN CRYPTED: $ROOT_PARTITION"
+    print_info "OPEN CRYPTED: $ROOT_PARTITION"
     echo -e "\nENTER YOUR ENCRYPTION PASSWORD\n"
     cryptsetup open $ROOT_PARTITION cryptroot
 
@@ -938,7 +946,7 @@ tui_open_recovery() {
     # Mount
     #----------------------------------------
     local mnt_recovery='/mnt/recovery'
-    print_title "MOUNT TO $mnt_recovery"
+    print_info "MOUNT TO $mnt_recovery"
     mkdir -p "$mnt_recovery"
     mount /dev/mapper/cryptroot "$mnt_recovery"
     mkdir -p "$mnt_recovery/boot"
@@ -948,7 +956,7 @@ tui_open_recovery() {
     # Chroot
     #----------------------------------------
     clear
-    print_title "ECOS RECOVERY"
+    print_info "ECOS RECOVERY"
 
     # Mount /boot in recovery system
     if ! arch-chroot "$mnt_recovery" mount $BOOT_PARTITION /boot; then
@@ -966,7 +974,7 @@ tui_open_recovery() {
     # Unmount
     #----------------------------------------
     clear
-    print_title "UNMOUNT"
+    print_info "UNMOUNT"
     swapoff -a
     umount -R "$mnt_recovery"
     cryptsetup close cryptroot
@@ -977,6 +985,8 @@ tui_open_recovery() {
 #/////////////////////////////////////////////////////
 
 tui_create_usb() {
+
+    clear
 
     if ! [ -x "$(command -v whiptail)" ]; then
         echo "ERROR: whiptail not installed"
@@ -1019,11 +1029,11 @@ tui_create_usb() {
 
     # Check and download arch iso
     #--------------------------------------------
-    print_title "USB Disk: $usb_disk"
+    print_info "Target USB Device" "$usb_disk"
 
     # Downloading ISO
     if ! [ -f "$local_iso_file" ]; then
-        print_title "Downloading ISO: $iso_url"
+        print_info "Downloading Arch ISO" "$iso_url"
         if ! curl -L "$iso_url" -o "$local_iso_file.part"; then
             echo "ERROR: Downloading ISO $iso_url"
             exit 1
@@ -1037,7 +1047,7 @@ tui_create_usb() {
 
     # Downloading SHA1 Sum
     if ! [ -f "$local_sha1_file" ]; then
-        print_title "Downloading SHA1: $sha1_url"
+        print_info "Downloading SHA1 Checksum" "$sha1_url"
         if ! curl -L "$sha1_url" -o "$local_sha1_file.part"; then
             echo "ERROR: Downloading SHA1 Sum $sha1_url"
             exit 1
@@ -1052,17 +1062,17 @@ tui_create_usb() {
     # Check SHA1 Sum
     cd "$local_iso_dir" || exit 1
     if grep -qrnw "$local_sha1_file" -e "$(sha1sum "$ECOS_ARCH_ISO_FILE")"; then
-        print_title "SHA1 Checksum correct"
+        print_info "SHA1 Checksum" "correct"
     else
-        print_title "ERROR: SHA1 Checksum incorrect"
+        echo "ERROR: SHA1 Checksum" "incorrect"
         exit 1
     fi
 
-    print_title "Arch ISO: $local_iso_file"
+    print_info "Arch ISO File" "$local_iso_file"
 
     # Create Bootable USB Stick
     #--------------------------------------------
-    print_title "Create Bootable USB Stick"
+    print_info "Create Bootable USB Device..."
 
     if ! sudo dd bs=4M if="$local_iso_file" of="$usb_disk" status=progress oflag=sync; then
         echo "ERROR: Creating USB Stick"
@@ -1070,7 +1080,7 @@ tui_create_usb() {
     fi
 
     # Finished
-    wait && print_title "FINISHED! Please remove the USB Stick $usb_disk"
+    wait && print_info "FINISHED" "Please remove the USB Device $usb_disk"
 }
 
 #/////////////////////////////////////////////////////
@@ -1213,19 +1223,15 @@ tui_add() {
     sleep 0.1
 }
 
-print_title() {
-
-    COLOR_RED='\033[0;31m'
-    COLOR_GREEN='\033[1;32m'
-    COLOR_BLUE='\033[1;34m'
-    COLOR_PURPLE='\033[1;35m'
-    COLOR_YELLOW='\033[1;33m'
-    COLOR_NULL='\033[0m' # No Color
-
-    echo -e "\n"
-    echo -e "${COLOR_BLUE}>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>${COLOR_NULL}"
-    echo -e "${COLOR_BLUE}>>>${COLOR_NULL} ${COLOR_PURPLE}${1}${COLOR_NULL}"
-    echo -e "${COLOR_BLUE}>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>${COLOR_NULL}"
+print_info() {
+    local title="$1"
+    local info="$2"
+    local prefix="${TERM_COLOR_BLUE}>>>${TERM_COLOR_NULL}"
+    local output="${prefix} ${TERM_COLOR_PURPLE}${title}${TERM_COLOR_NULL}"
+    if [ "$info" != "" ]; then
+        output="${output}: ${TERM_COLOR_YELLOW}${info}${TERM_COLOR_NULL}"
+    fi
+    echo -e "\n$output"
 }
 
 check_internet() {
