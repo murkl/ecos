@@ -395,7 +395,7 @@ exec_install_core() {
     fi
 
     #----------------------------------------
-    # Copy ecos in chroot env
+    # Copy ecos installer in chroot env
     #----------------------------------------
     exec_command_wrap cp -f "$INSTALLER_SCRIPT_FILE" /mnt/$INSTALLER_ID
     exec_command_wrap cp -f "$INSTALLER_CONFIG_FILE" /mnt/$INSTALLER_ID.conf

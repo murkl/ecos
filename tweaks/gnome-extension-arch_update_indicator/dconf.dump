@@ -7,5 +7,5 @@ package-manager="bash -c 'ecos --manager'"
 position=2
 position-number=0
 show-count=true
-update-cmd="gnome-terminal -e \"bash -c 'ecos --ecos-update'\""
+update-cmd="gnome-terminal -e \"bash -c 'ecos --update-ecos'\""
 use-buildin-icons=false
