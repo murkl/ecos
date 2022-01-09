@@ -562,6 +562,7 @@ exec_install_chroot() {
         exec_command_wrap bootctl --path=/boot install
 
         echo 'default arch.conf' >/boot/loader/loader.conf
+        echo 'console-mode auto' >>/boot/loader/loader.conf
         echo 'timeout 0' >>/boot/loader/loader.conf
         echo 'editor  yes' >>/boot/loader/loader.conf
 
