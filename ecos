@@ -1,5 +1,5 @@
 #!/bin/bash
-ECOS_VERSION=2.2.6
+ECOS_VERSION=2.2.7
 
 #/////////////////////////////////////////////////////
 # VARIABLES
@@ -293,16 +293,16 @@ zenity_show_changelog() {
 }
 
 #/////////////////////////////////////////////////////
-# CHECKS
+# CHECK ECOS DEPENDENCIES
 #/////////////////////////////////////////////////////
 
 check_git() {
     if ! pacman -Qi git >/dev/null; then
-        echo "Create Git config"
+        sudo pacman --noconfirm --needed -Syy git
+    fi
+
+    if [ ! -f "$HOME/.config/git/config" ]; then
         mkdir -p "$HOME/.config/git"
-        if [ -f "$HOME/.config/git/config" ]; then
-            mv "$HOME/.config/git/config" "$HOME/.config/git/config.bak"
-        fi
         {
             echo "[user]"
             echo "    email = ${USER}@$(cat /etc/hostname)"
@@ -312,9 +312,6 @@ check_git() {
             echo "[pull]"
             echo "    rebase = false"
         } >"$HOME/.config/git/config"
-
-        echo "Install Git"
-        sudo pacman --noconfirm --needed -Syy git
     fi
 }
 
