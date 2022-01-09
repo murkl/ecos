@@ -1,5 +1,5 @@
 #!/bin/bash
-SCRIPT_VERSION=2.2.3
+ECOS_VERSION=2.2.5
 
 #/////////////////////////////////////////////////////
 # VARIABLES
@@ -14,13 +14,13 @@ SCRIPT_TUI_FILE="$SCRIPT_DIR/.$SCRIPT_ID.tui"
 SCRIPT_TUI_WIDTH=68
 SCRIPT_TUI_HEIGHT=24
 
-# COLORS
-COLOR_RED='\033[0;31m'
-COLOR_GREEN='\033[1;32m'
-COLOR_BLUE='\033[1;34m'
-COLOR_PURPLE='\033[1;35m'
-COLOR_YELLOW='\033[1;33m'
-COLOR_NULL='\033[0m' # No Color
+# TERMINAL COLORS
+TERM_COLOR_RED='\033[0;31m'
+TERM_COLOR_GREEN='\033[1;32m'
+TERM_COLOR_BLUE='\033[1;34m'
+TERM_COLOR_PURPLE='\033[1;35m'
+TERM_COLOR_YELLOW='\033[1;33m'
+TERM_COLOR_NULL='\033[0m' # No Color
 
 # URLS
 ECOS_REPO_URL="https://github.com/murkl/ecos.git"
@@ -28,34 +28,36 @@ ECOS_DOTS_DEFAULT_URL="https://github.com/murkl/dotfiles-gnome.git"
 ECOS_RAW_URL="https://raw.githubusercontent.com/murkl/ecos/main"
 ECOS_CORE_RELEASE_URL="$ECOS_RAW_URL/ecos"
 
-# ECOS
+# ECOS HOME
 ECOS_HOME="$HOME/.ecos"
 ECOS_REPO="$ECOS_HOME/repo"
 ECOS_CORE="$ECOS_REPO/$SCRIPT_ID"
+ECOS_WORKING_DIR="$ECOS_HOME/.cache"
+ECOS_BIN_DIR="$HOME/.local/bin"
+ECOS_DOTFILES_DIR="$ECOS_WORKING_DIR/dotfiles"
+ECOS_INIT_SCRIPT="$ECOS_HOME/init.sh"
 
+# ECOS ASSETS
+ECOS_ICON_FILE="$ECOS_REPO/assets/ecos.svg"
+ECOS_CHANGELOG_FILE="$ECOS_REPO/assets/changelog.html"
+ECOS_DESKTOP_FILE="$HOME/.local/share/applications/$SCRIPT_ID.desktop"
+ECOS_AUTOSTART_FILE="$HOME/.config/autostart/$SCRIPT_ID.desktop"
+
+# ECOS CONFIG
 ECOS_CONFIG_DIR="$ECOS_HOME/config"
 ECOS_CONFIG_FILE="$ECOS_CONFIG_DIR/ecos.conf"
 
-ECOS_BIN_DIR="$HOME/.local/bin"
-ECOS_INIT_SCRIPT="$ECOS_HOME/init.sh"
-
-ECOS_WORKING_DIR="$ECOS_HOME/.cache"
-ECOS_DOTFILES="$ECOS_WORKING_DIR/dotfiles"
-
+# ECOS STATE
 ECOS_STATE_DIR="$ECOS_WORKING_DIR/state"
 ECOS_STATE_INITIALIZED_FILE="$ECOS_STATE_DIR/ecos_initialized"
 ECOS_STATE_SHOW_CHANGELOG="$ECOS_STATE_DIR/ecos_show_changelog"
 ECOS_STATE_LATEST_INIT="$ECOS_STATE_DIR/ecos_latest_init"
 
-ECOS_CACHE_TWEAKS="$ECOS_WORKING_DIR/tweaks"
+# ECOS TWEAKS
+ECOS_TWEAKS_INSTALLED="$ECOS_WORKING_DIR/tweaks"
 ECOS_USER_TWEAKS_DIR="$ECOS_HOME/tweaks"
 
-ECOS_ICON_FILE="$ECOS_REPO/assets/ecos.svg"
-ECOS_CHANGELOG_FILE="$ECOS_REPO/assets/changelog.html"
-
-ECOS_DESKTOP_FILE="$HOME/.local/share/applications/$SCRIPT_ID.desktop"
-ECOS_AUTOSTART_FILE="$HOME/.config/autostart/$SCRIPT_ID.desktop"
-
+# ECOS UPDATE
 ECOS_REMOTE_VERSION_FILE='/tmp/ecos.remote'
 ECOS_REMOTE_VERSION=''
 
@@ -72,7 +74,7 @@ main() {
     # SHOW VERSION
     # ---------------------------------------
     if [ "$1" = "--version" ]; then
-        echo -e "$SCRIPT_VERSION"
+        echo -e "$ECOS_VERSION"
         exit 0
     fi
 
@@ -121,7 +123,7 @@ main() {
     # ---------------------------------------
     # ECOS TWEAKS
     # ---------------------------------------
-    if [ "$1" = "--ecos-tweaks" ]; then
+    if [ "$1" = "--install-tweaks" ]; then
         tui_tweaks_menu '--no-update'
         exit 0
     fi
@@ -160,9 +162,9 @@ print_zenity_header() {
     local version_remote="$2"
     local header='<span font_family="monospace" foreground="#494949" font="18"><b>'$SCRIPT_TITLE' Manager</b></span>'
     local version_txt='<span font_family="monospace" foreground="#494949" font="10"><b>Version: </b></span>'
-    local version='<span font_family="monospace" foreground="#729a4f" font="11">'$SCRIPT_VERSION'</span>'
-    if [ "$version_remote" != "" ] && [ "$SCRIPT_VERSION" != "$version_remote" ]; then
-        local version='<span font_family="monospace" foreground="#db7844" font="10"><b>'$SCRIPT_VERSION'</b></span><span font_family="monospace" foreground="#494949" font="10"><b> ➤ </b></span><span font_family="monospace" foreground="#A3BE8C" font="10"><b>'$version_remote'</b></span>'
+    local version='<span font_family="monospace" foreground="#729a4f" font="11">'$ECOS_VERSION'</span>'
+    if [ "$version_remote" != "" ] && [ "$ECOS_VERSION" != "$version_remote" ]; then
+        local version='<span font_family="monospace" foreground="#db7844" font="10"><b>'$ECOS_VERSION'</b></span><span font_family="monospace" foreground="#494949" font="10"><b> ➤ </b></span><span font_family="monospace" foreground="#A3BE8C" font="10"><b>'$version_remote'</b></span>'
     fi
     local title='<span font_family="monospace" foreground="#494949" font="10"><b>'$title'</b></span>'
     echo "\n$header\n$version\n\n$title"
@@ -220,7 +222,7 @@ zenity_main_menu() {
     fi
     if [ "$zenity_result" = "Tweaks" ]; then
         update_ecos_repo
-        ${TERMINAL_EXEC} 'bash -c "'$ECOS_CORE' --ecos-tweaks"'
+        ${TERMINAL_EXEC} 'bash -c "'$ECOS_CORE' --install-tweaks"'
         exit 0
     fi
     if [ "$zenity_result" = "Settings" ]; then
@@ -396,7 +398,7 @@ init_ecos() {
         fi
 
         ECOS_REMOTE_VERSION="$($ECOS_REMOTE_VERSION_FILE --version)"
-        echo "ECOS LOCAL VERSION:   $SCRIPT_VERSION"
+        echo "ECOS LOCAL VERSION:   $ECOS_VERSION"
         echo "ECOS REMOTE VERSION:  $ECOS_REMOTE_VERSION"
     fi
 }
@@ -476,16 +478,16 @@ exec_install_ecos() {
 
     # Clone dotfiles
     print_title "CLONE DOTFILES"
-    rm -rf "$ECOS_DOTFILES"
-    mkdir -p "$ECOS_DOTFILES"
+    rm -rf "$ECOS_DOTFILES_DIR"
+    mkdir -p "$ECOS_DOTFILES_DIR"
     cd "$HOME" || exit 1
 
-    /usr/bin/git clone --bare "$dotfiles_url" "$ECOS_DOTFILES"
+    /usr/bin/git clone --bare "$dotfiles_url" "$ECOS_DOTFILES_DIR"
 
     # Reset dotfiles
-    /usr/bin/git --git-dir="$ECOS_DOTFILES" --work-tree="$HOME" fetch --all
-    /usr/bin/git --git-dir="$ECOS_DOTFILES" --work-tree="$HOME" reset --hard HEAD
-    /usr/bin/git --git-dir="$ECOS_DOTFILES" --work-tree="$HOME" config --local status.showUntrackedFiles no
+    /usr/bin/git --git-dir="$ECOS_DOTFILES_DIR" --work-tree="$HOME" fetch --all
+    /usr/bin/git --git-dir="$ECOS_DOTFILES_DIR" --work-tree="$HOME" reset --hard HEAD
+    /usr/bin/git --git-dir="$ECOS_DOTFILES_DIR" --work-tree="$HOME" config --local status.showUntrackedFiles no
     echo -e ">> DONE"
 
     print_title "INIT DOTFILES"
@@ -500,7 +502,7 @@ exec_install_ecos() {
     local dots_bin="$ECOS_BIN_DIR/dots"
     mkdir -p "$ECOS_BIN_DIR"
     echo '#!/bin/sh' >"$dots_bin"
-    echo 'git --git-dir="'$ECOS_DOTFILES'" --work-tree="$HOME" "$@"' >>"$dots_bin"
+    echo 'git --git-dir="'$ECOS_DOTFILES_DIR'" --work-tree="$HOME" "$@"' >>"$dots_bin"
     chmod +x "$dots_bin"
     echo -e ">> DONE"
 
@@ -534,7 +536,7 @@ exec_install_ecos() {
 
     # Create initialized state file
     print_title 'ECOS STATE'
-    wait && echo "$SCRIPT_VERSION" >"$ECOS_STATE_INITIALIZED_FILE"
+    wait && echo "$ECOS_VERSION" >"$ECOS_STATE_INITIALIZED_FILE"
     echo -e ">> DONE"
 
     tui_init 0 "ECOS Installation finished"
@@ -651,7 +653,7 @@ update_ecos_system() {
     # LIST PACKAGES
     print_title 'FETCH PACMAN/AUR PACKAGES'
     if ! paru -Qu; then
-        echo -e ">>> ${COLOR_GREEN}No Package Updates available${COLOR_NULL}"
+        echo -e ">>> ${TERM_COLOR_GREEN}No Package Updates available${TERM_COLOR_NULL}"
     fi
 
     print_title 'ECOS SYSTEM UPGRADE'
@@ -670,9 +672,9 @@ update_ecos_system() {
     cd "$HOME" || exit 1
 
     # RESET LOCAL FILES
-    git --git-dir="$ECOS_DOTFILES" --work-tree="$HOME" fetch --all
-    git --git-dir="$ECOS_DOTFILES" --work-tree="$HOME" reset --hard HEAD
-    git --git-dir="$ECOS_DOTFILES" --work-tree="$HOME" pull
+    git --git-dir="$ECOS_DOTFILES_DIR" --work-tree="$HOME" fetch --all
+    git --git-dir="$ECOS_DOTFILES_DIR" --work-tree="$HOME" reset --hard HEAD
+    git --git-dir="$ECOS_DOTFILES_DIR" --work-tree="$HOME" pull
 
     # UPDATE INIT FILE
     print_title "INIT DOTFILES SCRIPT"
@@ -717,7 +719,7 @@ update_ecos_system() {
 
     # FINISH
     clear
-    print_title "${COLOR_GREEN} !! ECOS UPDATE FINISHED !! ${COLOR_NULL}"
+    print_title "${TERM_COLOR_GREEN} !! ECOS UPDATE FINISHED !! ${TERM_COLOR_NULL}"
     echo ""
     read -p "Press any Key to close..."
     exit 0
@@ -727,7 +729,7 @@ notify_ecos_update() {
 
     init_ecos
 
-    if [ "$ECOS_REMOTE_VERSION" != "$SCRIPT_VERSION" ] && [ "$ECOS_REMOTE_VERSION" != "" ]; then
+    if [ "$ECOS_REMOTE_VERSION" != "$ECOS_VERSION" ] && [ "$ECOS_REMOTE_VERSION" != "" ]; then
         notify "New $SCRIPT_TITLE $ECOS_REMOTE_VERSION Update available"
     fi
 }
@@ -755,7 +757,7 @@ tui_tweaks_menu() {
 
         local tweak_id="$(basename $i)"
         local tweak_sh="$ECOS_REPO/tweaks/$tweak_id/${tweak_id}.sh"
-        local tweak_meta="$ECOS_CACHE_TWEAKS/$tweak_id/${tweak_id}.tweak"
+        local tweak_meta="$ECOS_TWEAKS_INSTALLED/$tweak_id/${tweak_id}.tweak"
 
         # Check sh file
         if ! [ -f "$tweak_sh" ]; then
@@ -847,7 +849,7 @@ exec_tweak() {
     local tweak_action="$1"
     local tweak_id="$2"
     local tweak_res_dir="$ECOS_REPO/tweaks/$tweak_id"
-    local tweak_cache_dir="$ECOS_CACHE_TWEAKS/$tweak_id"
+    local tweak_cache_dir="$ECOS_TWEAKS_INSTALLED/$tweak_id"
     local tweak_sh="$tweak_res_dir/${tweak_id}.sh"
     local tweak_meta="$tweak_cache_dir/${tweak_id}.tweak"
 
@@ -878,7 +880,7 @@ exec_tweak() {
         return 1
     fi
 
-    print_title "$action_title TWEAK: ${COLOR_GREEN}$tweak_id${COLOR_NULL}"
+    print_title "$action_title TWEAK: ${TERM_COLOR_GREEN}$tweak_id${TERM_COLOR_NULL}"
     if ! [ -f "$tweak_sh" ]; then
         echo "Error: $tweak_id not exists ($tweak_sh)"
         return 1
@@ -915,7 +917,7 @@ exec_tweak() {
 
 update_tweaks() {
     local tweak_dir_list=()
-    readarray -d '' tweak_dir_list < <(find "$ECOS_CACHE_TWEAKS" -mindepth 1 -maxdepth 1 -type d -print0)
+    readarray -d '' tweak_dir_list < <(find "$ECOS_TWEAKS_INSTALLED" -mindepth 1 -maxdepth 1 -type d -print0)
 
     # Sort array
     IFS=$'\n' tweak_dir_list_sorted=($(sort <<<"${tweak_dir_list[*]}"))
@@ -971,7 +973,7 @@ tui_init() {
              ██╔══╝  ██║     ██║   ██║╚════██║
              ███████╗╚██████╗╚██████╔╝███████║
              ╚══════╝ ╚═════╝ ╚═════╝ ╚══════╝
-                                       v.'$SCRIPT_VERSION'
+                                       v.'$ECOS_VERSION'
     ' >"$SCRIPT_TUI_FILE"
     tui_add "$1" "$2"
 }
@@ -998,21 +1000,21 @@ tui_add() {
 
 print_header() {
     echo -e "
-        ${COLOR_PURPLE}
+        ${TERM_COLOR_PURPLE}
         ███████╗ ██████╗ ██████╗ ███████╗
         ██╔════╝██╔════╝██╔═══██╗██╔════╝
         █████╗  ██║     ██║   ██║███████╗
         ██╔══╝  ██║     ██║   ██║╚════██║
         ███████╗╚██████╗╚██████╔╝███████║
-        ╚══════╝ ╚═════╝ ╚═════╝ ╚══════╝${COLOR_NULL}
-                                  ${COLOR_GREEN}v.${SCRIPT_VERSION}${COLOR_NULL}"
+        ╚══════╝ ╚═════╝ ╚═════╝ ╚══════╝${TERM_COLOR_NULL}
+                                  ${TERM_COLOR_GREEN}v.${ECOS_VERSION}${TERM_COLOR_NULL}"
 }
 
 print_title() {
     echo -e "\n"
-    echo -e "${COLOR_BLUE}>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>${COLOR_NULL}"
-    echo -e "${COLOR_BLUE}>>>${COLOR_NULL} ${COLOR_PURPLE}${1}${COLOR_NULL}"
-    echo -e "${COLOR_BLUE}>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>${COLOR_NULL}"
+    echo -e "${TERM_COLOR_BLUE}>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>${TERM_COLOR_NULL}"
+    echo -e "${TERM_COLOR_BLUE}>>>${TERM_COLOR_NULL} ${TERM_COLOR_PURPLE}${1}${TERM_COLOR_NULL}"
+    echo -e "${TERM_COLOR_BLUE}>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>${TERM_COLOR_NULL}"
 }
 
 #/////////////////////////////////////////////////////
