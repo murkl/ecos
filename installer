@@ -136,7 +136,6 @@ tui_main_menu() {
     # Install core
     #----------------------------------------
     if [ "$menu_input" = "1" ]; then
-        check_internet
         tui_core_installer
         exit $?
     fi
@@ -906,7 +905,13 @@ check_config_disk() {
             local disk_size=$(lsblk -d -n -o SIZE /dev/$disk_line)
             disk_array+=("/dev/$disk_line")
             disk_array+=(" ($disk_size)")
-        done < <(lsblk -I 8,259 -d -o KNAME -n)
+        done < <(lsblk -I 8,259,254 -d -o KNAME -n)
+
+        if [ ${#disk_array[@]} == 0 ]; then
+            tui_init 0 "No supported Disk found"
+            whiptail --msgbox "$(cat "$TUI_FILE")" 0 "$TUI_WIDTH"
+            exit 1
+        fi
 
         tui_init 24 "Choose Disk"
         if ! DISK=$(whiptail --menu "$(cat "$TUI_FILE")" "$TUI_HEIGHT" "$TUI_WIDTH" "${#disk_array[@]}" "${disk_array[@]}" 3>&1 1>&2 2>&3); then
@@ -1012,6 +1017,12 @@ tui_create_usb() {
         disk_array+=("/dev/$disk_line")
         disk_array+=(" ($disk_size)")
     done < <(lsblk -I 8 -d -o KNAME -n)
+
+    if [ ${#disk_array[@]} == 0 ]; then
+        tui_init 0 "No supported Disk found"
+        whiptail --msgbox "$(cat "$TUI_FILE")" 0 "$TUI_WIDTH"
+        exit 1
+    fi
 
     local usb_disk=''
     tui_init 17 "CREATE BOOTABLE USB STICK"
@@ -1233,15 +1244,6 @@ print_info() {
         output="${output}: ${TERM_COLOR_YELLOW}${info}${TERM_COLOR_NULL}"
     fi
     echo -e "\n$output"
-}
-
-check_internet() {
-    # curl -Is "http://www.google.com" | head -1 | grep 200 >/dev/null
-    if ! ping archlinux.de -c 1 >/dev/null 2>&1; then
-        tui_init 0 "Error: No Internet Connection!"
-        whiptail --msgbox "$(cat "$TUI_FILE")" 0 "$TUI_WIDTH"
-        exit 1
-    fi
 }
 
 #/////////////////////////////////////////////////////
