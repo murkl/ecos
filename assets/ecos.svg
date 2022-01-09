@@ -131,7 +131,7 @@
        stroke-width="1.3"
        transform="translate(.135243 .045175)"
        id="g36"
-       style="fill:#b48ead;stroke-width:1.30002456;stroke-miterlimit:4;stroke-dasharray:none;stroke:#b48ead;stroke-opacity:1;fill-opacity:1">
+       style="fill:#7a6eeb;stroke-width:1.30002456;stroke-miterlimit:4;stroke-dasharray:none;stroke:#7a6eeb;stroke-opacity:1;fill-opacity:1">
       <ellipse
          cx="400.57138"
          cy="531.79791"
@@ -139,7 +139,7 @@
          stroke="url(#f)"
          stroke-width="1.3"
          id="circle30"
-         style="fill:#b48ead;fill-opacity:1;stroke:#b48ead;stroke-width:1.30002456;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+         style="fill:#7a6eeb;fill-opacity:1;stroke:#7a6eeb;stroke-width:1.30002456;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
          rx="14.000264"
          ry="13.999958" />
       <circle
@@ -150,14 +150,14 @@
          stroke="url(#d)"
          stroke-width="1"
          id="circle32"
-         style="fill:#b48ead;stroke-width:1.30002456;stroke-miterlimit:4;stroke-dasharray:none;stroke:#b48ead;stroke-opacity:1;fill-opacity:1" />
+         style="fill:#7a6eeb;stroke-width:1.30002456;stroke-miterlimit:4;stroke-dasharray:none;stroke:#7a6eeb;stroke-opacity:1;fill-opacity:1" />
       <circle
          cx="400.57138"
          cy="531.79791"
          fill="url(#c)"
          r="0"
          id="circle34"
-         style="fill:#b48ead;stroke-width:1.30002456;stroke-miterlimit:4;stroke-dasharray:none;stroke:#b48ead;stroke-opacity:1;fill-opacity:1" />
+         style="fill:#7a6eeb;stroke-width:1.30002456;stroke-miterlimit:4;stroke-dasharray:none;stroke:#7a6eeb;stroke-opacity:1;fill-opacity:1" />
     </g>
     <path
        d="m333.227 39.545-54.916 83.015-56.76-83.015zm-63.641 102h-121.829l60.908 231.669zm-117.763-13.6h113.688l-56.847-83.15zm-12.79-5.385 56.753-83.015h-111.67zm56.725 255.02-62.057-236.035h-133.701zm-195.568-249.635h126.1l-54.931-83.035zm345.699-82.885-54.836 82.885h125.883zm-62.248 96.485-62.063 236.015 195.547-236.015z"
