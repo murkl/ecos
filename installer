@@ -11,9 +11,12 @@ INSTALLER_SCRIPT_FILE="$INSTALLER_WORKING_DIR/$(basename "$0")"
 INSTALLER_CONFIG_FILE="$INSTALLER_WORKING_DIR/$INSTALLER_ID.conf"
 INSTALLER_LOG_FILE="$INSTALLER_WORKING_DIR/$INSTALLER_ID.log"
 
+# DEFAULT PASSWORD
+ECOS_DEFAULT_PASSWORD='ecos'
+
 # TUI VARIABLES
 TUI_FILE="$INSTALLER_WORKING_DIR/$INSTALLER_ID.tui"
-TUI_WIDTH=68
+TUI_WIDTH=64
 TUI_HEIGHT=24
 
 # ECOS URL
@@ -116,7 +119,7 @@ tui_main_menu() {
     #----------------------------------------
     # Show TUI menu
     #----------------------------------------
-    tui_init 24 "ECOS INSTALLER"
+    tui_init 22 "ECOS INSTALLER"
     if ! menu_input=$(whiptail --menu --notags "$(cat "$TUI_FILE")\n\n" "$TUI_HEIGHT" "$TUI_WIDTH" 3 "1" "Install ECOS Core" "2" "    Recovery" "3" "      Logs" 3>&1 1>&2 2>&3); then
         exit 0
     fi
@@ -280,13 +283,13 @@ exec_install_core() {
     #----------------------------------------
     # Wipe disk
     #----------------------------------------
-    gauge_update_tui 4 "Wipe $DISK"
+    gauge_tui_update 4 "Wipe $DISK"
     exec_command_wrap sgdisk -Z "$DISK"
 
     #----------------------------------------
     # Partition disk
     #----------------------------------------
-    gauge_update_tui 8 "Partition $DISK"
+    gauge_tui_update 8 "Partition $DISK"
 
     # Create new partition table
     exec_command_wrap sgdisk -o "$DISK"
@@ -314,7 +317,7 @@ exec_install_core() {
     #----------------------------------------
     # Encrypt disk
     #----------------------------------------
-    gauge_update_tui 10 "Encrypt $DISK"
+    gauge_tui_update 10 "Encrypt $DISK"
 
     # Set encrypt command
     local crypt_cmd=''
@@ -345,7 +348,7 @@ exec_install_core() {
     #----------------------------------------
     # Format disk
     #----------------------------------------
-    gauge_update_tui 12 "Format $DISK"
+    gauge_tui_update 12 "Format $DISK"
 
     # Format /boot
     if [ "$uefi_mode" = "true" ]; then
@@ -368,13 +371,13 @@ exec_install_core() {
     #----------------------------------------
     # Pacstrap base arch packages
     #----------------------------------------
-    gauge_update_tui 24 "Pacstrap Installation (may take a while)..."
+    gauge_tui_update 24 "Pacstrap Installation (may take a while)..."
     exec_command_wrap pacstrap /mnt base base-devel linux linux-firmware
 
     #----------------------------------------
     # Generate /etc/fstab
     #----------------------------------------
-    gauge_update_tui 52 "Generate /etc/fstab"
+    gauge_tui_update 52 "Generate /etc/fstab"
     local log_txt="genfstab -U /mnt >>/mnt/etc/fstab"
     if ! genfstab -U /mnt >>/mnt/etc/fstab; then
         core_log "e" "$log_txt"
@@ -393,7 +396,7 @@ exec_install_core() {
     #----------------------------------------
     # Chroot into new system
     #----------------------------------------
-    gauge_update_tui 54 "Enter CHROOT Environement"
+    gauge_tui_update 54 "Enter CHROOT Environement"
     log_txt="arch-chroot /mnt /$INSTALLER_ID --install-chroot $uefi_mode <ENCRYPTION_PASSWORD>"
     if ! arch-chroot /mnt "/$INSTALLER_ID" --install-chroot "$uefi_mode" "$password_encryption"; then
         core_log "e" "$log_txt"
@@ -422,7 +425,7 @@ exec_install_core() {
     #----------------------------------------
     # Finished
     #----------------------------------------
-    gauge_update_tui 100 "Installation finished!"
+    gauge_tui_update 100 "Installation finished!"
     core_log "!!! INSTALLATION SUCCESSFULLY FINISHED !!!"
 
     exit 0
@@ -447,11 +450,11 @@ exec_install_chroot() {
     #----------------------------------------
     local gauge_txt="Install Essential Packages (may take a while)..."
 
-    gauge_update_tui 56 "$gauge_txt"
+    gauge_tui_update 56 "$gauge_txt"
     exec_command_wrap pacman -Syy
 
     # Boootloader, Microcode Kernel Updates for CPU & Core Tools
-    gauge_update_tui 58 "$gauge_txt"
+    gauge_tui_update 58 "$gauge_txt"
     bootloader_pkgs="efibootmgr"
     if [ "$uefi_mode" = "false" ]; then
         bootloader_pkgs="grub"
@@ -459,11 +462,15 @@ exec_install_chroot() {
     exec_command_wrap pacman --noconfirm --needed -S $UCODE $bootloader_pkgs dosfstools gptfdisk $CUSTOM_PACKAGES
 
     # Network manager
-    gauge_update_tui 60 "$gauge_txt"
+    gauge_tui_update 60 "$gauge_txt"
     exec_command_wrap pacman --noconfirm --needed -S networkmanager
 
+    # Git
+    gauge_tui_update 64 "$gauge_txt"
+    exec_command_wrap pacman --noconfirm --needed -S git
+
     # Default shell
-    gauge_update_tui 70 "$gauge_txt"
+    gauge_tui_update 70 "$gauge_txt"
     exec_command_wrap pacman --noconfirm --needed -S zsh
 
     if [ "$WORKSTATION" = "notebook" ]; then
@@ -475,7 +482,7 @@ exec_install_chroot() {
     # Swap
     #----------------------------------------
     if [ "$SWAP_SIZE" != "0" ] && [ -n "$SWAP_SIZE" ]; then
-        gauge_update_tui 75 "Create Swap File"
+        gauge_tui_update 75 "Create Swap File"
         exec_command_wrap dd if=/dev/zero of=/swapfile bs=1GiB count="$SWAP_SIZE" status=progress
         exec_command_wrap chmod 600 /swapfile
         exec_command_wrap mkswap /swapfile
@@ -510,7 +517,7 @@ exec_install_chroot() {
         sed -i "s/^#$locale_gen_item/$locale_gen_item/g" "/etc/locale.gen"
     done
 
-    gauge_update_tui 78 "Generate Locale"
+    gauge_tui_update 78 "Generate Locale"
     exec_command_wrap locale-gen
 
     #----------------------------------------
@@ -531,13 +538,13 @@ exec_install_chroot() {
     #----------------------------------------
     # Network
     #----------------------------------------
-    gauge_update_tui 80 "Configure Network"
+    gauge_tui_update 80 "Configure Network"
     exec_command_wrap systemctl enable NetworkManager
 
     #----------------------------------------
     # Boot loader
     #----------------------------------------
-    gauge_update_tui 82 "Install Bootloader"
+    gauge_tui_update 82 "Install Bootloader"
 
     if [ "$uefi_mode" = true ]; then
         #----------------------------------------
@@ -600,7 +607,7 @@ exec_install_chroot() {
     #----------------------------------------
     # Rebuild initrc
     #----------------------------------------
-    gauge_update_tui 85 "Rebuild Initial Ramdisk"
+    gauge_tui_update 85 "Rebuild Initial Ramdisk"
     exec_command_wrap mkinitcpio -P
 
     #----------------------------------------
@@ -617,7 +624,7 @@ exec_install_chroot() {
     #----------------------------------------
     # Auto login tty1
     #----------------------------------------
-    gauge_update_tui 90 "Enable Automatic Login"
+    gauge_tui_update 90 "Enable Automatic Login"
     mkdir -p "/etc/systemd/system/getty@tty1.service.d/"
     {
         echo "[Service]"
@@ -677,7 +684,7 @@ exec_install_chroot() {
 
     } >"/etc/X11/xorg.conf.d/70-touchpad.conf"
 
-    gauge_update_tui 92 "Enable Daemons"
+    gauge_tui_update 92 "Enable Daemons"
 
     #----------------------------------------
     # SSD fstrim
@@ -704,15 +711,16 @@ exec_install_chroot() {
     #----------------------------------------
     # Pacman colors & multilib
     #----------------------------------------
-    gauge_update_tui 95 "Configure Pacman"
+    gauge_tui_update 95 "Configure Pacman"
     core_log "Enable pacman multilib & colors"
     sed -i 's/^#Color/Color/g;/#\[multilib\]/,/#Include/ s/^#//g' /etc/pacman.conf
     exec_command_wrap pacman -Syy
 
     #----------------------------------------
-    # ECOS Binary
+    # ECOS Repo
     #----------------------------------------
-    gauge_update_tui 98 "ECOS Binary"
+    # TODO
+    gauge_tui_update 98 "ECOS Repo"
 
     # Copy ecos to local bin
     mkdir -p "/home/$USERNAME/.ecos/bin"
@@ -747,8 +755,8 @@ exec_install_chroot() {
     core_log "Change passwords"
     #passwd root < <(echo -e "$password_encryption\n$password_encryption")
     #passwd "$USERNAME" < <(echo -e "$password_encryption\n$password_encryption")
-    echo -e "$password_encryption\n$password_encryption" | (passwd)
-    echo -e "$password_encryption\n$password_encryption" | (passwd "$USERNAME")
+    echo -e "${ECOS_DEFAULT_PASSWORD}\n${ECOS_DEFAULT_PASSWORD}" | (passwd)
+    echo -e "${ECOS_DEFAULT_PASSWORD}\n${ECOS_DEFAULT_PASSWORD}" | (passwd "$USERNAME")
 
     #----------------------------------------
     # Chroot finished
@@ -786,7 +794,7 @@ check_config() {
     # Check workstation
     #----------------------------------------
     if [ "$WORKSTATION" = "" ]; then
-        tui_init 22 "Choose Workstation"
+        tui_init 20 "Choose Workstation"
         if ! WORKSTATION=$(whiptail --menu --notags "$(cat "$TUI_FILE")\n" "$TUI_HEIGHT" "$TUI_WIDTH" 2 "desktop" "Desktop" "notebook" "Notebook" 3>&1 1>&2 2>&3); then
             exit 0
         fi
@@ -799,7 +807,7 @@ check_config() {
     # Check Dualboot
     #----------------------------------------
     if [ "$DUALBOOT" = "" ]; then
-        tui_init 27 "Dualboot"
+        tui_init 25 "Dualboot"
         if ! DUALBOOT=$(whiptail --menu --notags "$(cat "$TUI_FILE")\n" "$TUI_HEIGHT" "$TUI_WIDTH" 2 "default" "Default" "windows10" "Windows 10" 3>&1 1>&2 2>&3); then
             exit 0
         fi
@@ -812,7 +820,7 @@ check_config() {
     #----------------------------------------
     if [ "$LOCALE_LANG" = "" ] || [ ${#LOCALE_GEN[@]} = 0 ] || [ "$TIMEZONE" = "" ] || [ "$VCONSOLE_KEYMAP" = "" ] || [ "$X11_KEYBOARD_LAYOUT" = "" ] || [ "$X11_KEYBOARD_VARIANT" = "" ]; then
 
-        tui_init 20 "Choose Setup Language"
+        tui_init 19 "Choose Setup Language"
         if ! lang_result=$(whiptail --menu --notags "$(cat "$TUI_FILE")\n" "$TUI_HEIGHT" "$TUI_WIDTH" 2 "en_US" "English" "de_DE" "German" 3>&1 1>&2 2>&3); then
             exit 0
         fi
@@ -837,7 +845,7 @@ check_config() {
     #----------------------------------------
     if [ "$UCODE" = "" ]; then
 
-        tui_init 18 "Choose Processor Microcode"
+        tui_init 17 "Choose Processor Microcode"
         if ! UCODE=$(whiptail --menu --notags "$(cat "$TUI_FILE")\n" "$TUI_HEIGHT" "$TUI_WIDTH" 3 "none" "Disable" "intel-ucode" "Intel" "amd-ucode" "AMD" 3>&1 1>&2 2>&3); then
             exit 0
         fi
@@ -891,7 +899,7 @@ check_config_disk() {
             disk_array+=(" ($disk_size)")
         done < <(lsblk -I 8,259 -d -o KNAME -n)
 
-        tui_init 26 "Choose Disk"
+        tui_init 24 "Choose Disk"
         if ! DISK=$(whiptail --menu "$(cat "$TUI_FILE")" "$TUI_HEIGHT" "$TUI_WIDTH" "${#disk_array[@]}" "${disk_array[@]}" 3>&1 1>&2 2>&3); then
             exit 0
         fi
@@ -995,8 +1003,8 @@ tui_create_usb() {
     done < <(lsblk -I 8 -d -o KNAME -n)
 
     local usb_disk=''
-    tui_init 20 "CREATE BOOTABLE USB STICK"
-    tui_add 25 "Choose Device"
+    tui_init 17 "CREATE BOOTABLE USB STICK"
+    tui_add 20 "Choose Target Device"
     if ! usb_disk=$(whiptail --menu "$(cat "$TUI_FILE")\n" "$TUI_HEIGHT" "$TUI_WIDTH" "${#disk_array[@]}" "${disk_array[@]}" 3>&1 1>&2 2>&3); then
         exit 0
     fi
@@ -1131,7 +1139,7 @@ exec_command_wrap() {
     fi
 }
 
-gauge_update_tui() {
+gauge_tui_update() {
     local percent="$1"
     local text="$2"
     tui_init 0 "$text"
@@ -1174,12 +1182,12 @@ check_config_key_array() {
 tui_init() {
     rm -f "$TUI_FILE"
     echo '
-                ███████╗ ██████╗ ██████╗ ███████╗
-                ██╔════╝██╔════╝██╔═══██╗██╔════╝
-                █████╗  ██║     ██║   ██║███████╗
-                ██╔══╝  ██║     ██║   ██║╚════██║
-                ███████╗╚██████╗╚██████╔╝███████║
-                ╚══════╝ ╚═════╝ ╚═════╝ ╚══════╝
+             ███████╗ ██████╗ ██████╗ ███████╗
+             ██╔════╝██╔════╝██╔═══██╗██╔════╝
+             █████╗  ██║     ██║   ██║███████╗
+             ██╔══╝  ██║     ██║   ██║╚════██║
+             ███████╗╚██████╗╚██████╔╝███████║
+             ╚══════╝ ╚═════╝ ╚═════╝ ╚══════╝
     ' >"$TUI_FILE"
     tui_add "$1" "$2"
 }
