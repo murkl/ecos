@@ -938,7 +938,7 @@ tui_open_recovery() {
     # Open Crypt
     #----------------------------------------
     clear
-    print_info "OPEN CRYPTED: $ROOT_PARTITION"
+    print_info "OPEN CRYPTED DEVICE" "$ROOT_PARTITION"
     echo -e "\nENTER YOUR ENCRYPTION PASSWORD\n"
     cryptsetup open $ROOT_PARTITION cryptroot
 
@@ -946,7 +946,7 @@ tui_open_recovery() {
     # Mount
     #----------------------------------------
     local mnt_recovery='/mnt/recovery'
-    print_info "MOUNT TO $mnt_recovery"
+    print_info "MOUNT TO" "$mnt_recovery"
     mkdir -p "$mnt_recovery"
     mount /dev/mapper/cryptroot "$mnt_recovery"
     mkdir -p "$mnt_recovery/boot"
@@ -956,11 +956,11 @@ tui_open_recovery() {
     # Chroot
     #----------------------------------------
     clear
-    print_info "ECOS RECOVERY"
+    print_info "CHROOT" "$mnt_recovery"
 
     # Mount /boot in recovery system
     if ! arch-chroot "$mnt_recovery" mount $BOOT_PARTITION /boot; then
-        echo "CHROOT Mount /boot"
+        echo "ERROR: CHROOT Mount /boot"
         exit 1
     fi
     echo -e "\n"
@@ -974,7 +974,7 @@ tui_open_recovery() {
     # Unmount
     #----------------------------------------
     clear
-    print_info "UNMOUNT"
+    print_info "UNMOUNT" "$mnt_recovery"
     swapoff -a
     umount -R "$mnt_recovery"
     cryptsetup close cryptroot
