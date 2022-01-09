@@ -165,7 +165,7 @@ main() {
     # ---------------------------------------
     # ECOS INSTALL
     # ---------------------------------------
-    if [ "$1" = "--ecos-install" ]; then
+    if [ "$1" = "--install-ecos" ]; then
         if [ ! -f "$ECOS_STATE_INITIALIZED_FILE" ]; then
             tui_menu_install_ecos
         else
@@ -1206,7 +1206,7 @@ core_install_chroot() {
     echo 'export ECOS_HOME="$HOME/.ecos"' >>$user_profile
     echo 'export ECOS_CORE="$ECOS_HOME/bin/ecos"' >>$user_profile
     echo 'export PATH="$PATH:$ECOS_HOME/bin"' >>$user_profile
-    echo '$ECOS_CORE --ecos-install' >>$user_profile
+    echo '$ECOS_CORE --install-ecos' >>$user_profile
     chmod +x $user_profile
 
     #----------------------------------------
