@@ -1,5 +1,5 @@
 #!/bin/bash
-ECOS_VERSION=2.2.5
+ECOS_VERSION=2.2.6
 
 #/////////////////////////////////////////////////////
 # VARIABLES
@@ -199,6 +199,10 @@ zenity_main_menu() {
         if [ "$pid_state" = "CANCELED" ]; then
             echo "INIT FAILED"
             return 1
+        fi
+
+        if [ "$pid_state" = "SUCCESS" ]; then
+            ECOS_REMOTE_VERSION="$($ECOS_REMOTE_VERSION_FILE --version)"
         fi
     fi
 
