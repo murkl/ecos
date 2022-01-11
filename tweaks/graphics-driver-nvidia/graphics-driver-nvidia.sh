@@ -10,39 +10,17 @@ TWEAK_CACHE_DIR="$3"
 # SHOW GRAPHIC CARD INFO:
 # lspci -k | grep -A 2 -E "(VGA|3D)"
 
-# NVIDIA BUMBLEBEE
-# optirun -b primus <APP>
-
 # TEST NVIDIA
 # glxinfo | grep NVIDIA
 # glxgears
+
+# NVIDIA BUMBLEBEE
+# optirun -b primus <APP>
 
 # TEST NVIDIA BUMBLEBEE
 # optirun -b primus glxgears -info
 # optirun -b primus glxspheres64
 # optirun -b primus glxspheres32
-
-# ----------------------------------------------------------
-
-# NVIDIA Geforce GT 730
-# Driver: 470.94
-
-# https://www.reddit.com/r/linux_gaming/comments/rtsxey/pacman_install_nvidia_driver_470/
-# https://github.com/frogging-family/nvidia-all
-
-# git clone https://github.com/frogging-family/nvidia-all && cd nvidia-all
-# sed -i 's/dkms=""/dkms="true"/g' customization.cfg
-# makepkg -si
-
-# DRM kernel mode setting
-# sudo vim /boot/loader/entries/arch.conf
-# nvidia-drm.modeset=1
-
-# Early Loading
-# MODULES=(nvidia nvidia_modeset nvidia_uvm nvidia_drm)
-# sudo mkinitcpio -P
-
-# ----------------------------------------------------------
 
 install() {
 
@@ -58,6 +36,9 @@ install() {
     fi
 
     if [ "$whiptail_result" = 'nvidia' ]; then
+
+        # https://www.reddit.com/r/linux_gaming/comments/rtsxey/pacman_install_nvidia_driver_470/
+        # https://github.com/frogging-family/nvidia-all
 
         rm -rf "$TWEAK_CACHE_DIR/repo"
         git clone "https://github.com/frogging-family/nvidia-all" "$TWEAK_CACHE_DIR/repo"
@@ -80,15 +61,8 @@ install() {
         exit 0
     fi
 
-    if [ "$whiptail_result" = "nvidia-390xx" ] || [ "$whiptail_result" = "nvidia-390xx-bumblebee" ]; then
-
-        local BUMBLEBEE_ENABLED="false"
-        if [ "$whiptail_result" = "nvidia-390xx" ]; then BUMBLEBEE_ENABLED="false"; fi
-        if [ "$whiptail_result" = "nvidia-390xx-bumblebee" ]; then BUMBLEBEE_ENABLED="true"; fi
-
-        # Remove Nouveau Driver
-        paru --noconfirm --sudoloop -R xf86-video-nouveau prime
-        sudo sed -i "s/MODULES=(nouveau)/MODULES=()/g" "/etc/mkinitcpio.conf"
+    if [ "$whiptail_result" = "nvidia-390xx" ]; then
+        # NVDIA Driver Only (https://wiki.archlinux.org/title/NVIDIA_Optimus#Use_NVIDIA_graphics_only)
 
         # Install Dependencies
         paru --noconfirm --needed --sudoloop -S linux-headers xorg-xrandr mesa mesa-demos
@@ -101,39 +75,16 @@ install() {
         # optional: lib32-opencl-nvidia-390xx lib32-virtualgl
         paru --noconfirm --needed --sudoloop -S lib32-nvidia-390xx-utils lib32-opencl-nvidia-390xx lib32-virtualgl
 
-        # BUMBLEBEE
-        if [ "$BUMBLEBEE_ENABLED" = "true" ]; then
-            # optional: lib32-virtualgl
-            paru --noconfirm --needed --sudoloop -S mesa bumblebee xf86-video-intel lib32-virtualgl primus lib32-primus
-            sudo gpasswd -a $USER bumblebee
+        # Early Loading
+        sudo sed -i "s/MODULES=()/MODULES=(nvidia nvidia_modeset nvidia_uvm nvidia_drm)/g" "/etc/mkinitcpio.conf"
 
-            # Workaround for: [ERROR]Cannot access secondary GPU - error: [XORG] (EE) No devices detected.
-            sudo sed -i 's/#   BusID "PCI:01:00:0"/    BusID "PCI:01:00:0"/g' "/etc/bumblebee/xorg.conf.nvidia"
+        # DRM kernel mode setting (nvidia-drm.modeset=1)
+        sudo sed -i "s/vt.global_cursor_default=0 rw/vt.global_cursor_default=0 nvidia-drm.modeset=1 rw/g" "/boot/loader/entries/arch.conf"
 
-            sudo systemctl enable bumblebeed.service
+        # Rebuild
+        sudo mkinitcpio -P
 
-            # Early Loading
-            sudo sed -i "s/MODULES=()/MODULES=(i915)/g" "/etc/mkinitcpio.conf"
-
-            # Rebuild
-            sudo mkinitcpio -P
-
-            exit 0
-        fi
-
-        # NVDIA Driver Only (https://wiki.archlinux.org/title/NVIDIA_Optimus#Use_NVIDIA_graphics_only)
-        if [ "$BUMBLEBEE_ENABLED" = "false" ]; then
-
-            # Early Loading
-            sudo sed -i "s/MODULES=()/MODULES=(nvidia nvidia_modeset nvidia_uvm nvidia_drm)/g" "/etc/mkinitcpio.conf"
-
-            # DRM kernel mode setting (nvidia-drm.modeset=1)
-            sudo sed -i "s/vt.global_cursor_default=0 rw/vt.global_cursor_default=0 nvidia-drm.modeset=1 rw/g" "/boot/loader/entries/arch.conf"
-
-            # Rebuild
-            sudo mkinitcpio -P
-
-            echo 'Section "OutputClass"
+        echo 'Section "OutputClass"
     Identifier "intel"
     MatchDriver "i915"
     Driver "modesetting"
@@ -148,19 +99,49 @@ Section "OutputClass"
     ModulePath "/usr/lib/nvidia/xorg"
     ModulePath "/usr/lib/xorg/modules"
 EndSection' >/tmp/10-nvidia-drm-outputclass.conf
-            sudo cp -f /tmp/10-nvidia-drm-outputclass.conf /etc/X11/xorg.conf.d/10-nvidia-drm-outputclass.conf
+        sudo cp -f /tmp/10-nvidia-drm-outputclass.conf /etc/X11/xorg.conf.d/10-nvidia-drm-outputclass.conf
 
-            # Set for GNOME GDM
-            echo '[Desktop Entry]
+        # Set for GNOME GDM
+        echo '[Desktop Entry]
 Type=Application
 Name=Optimus
 Exec=sh -c "xrandr --setprovideroutputsource modesetting NVIDIA-0; xrandr --auto"
 NoDisplay=true
 X-GNOME-Autostart-Phase=DisplayServer' >/tmp/optimus.desktop
-            sudo cp -f /tmp/optimus.desktop /usr/share/gdm/greeter/autostart/optimus.desktop
-            sudo cp -f /tmp/optimus.desktop /etc/xdg/autostart/optimus.desktop
-            exit 0
-        fi
+        sudo cp -f /tmp/optimus.desktop /usr/share/gdm/greeter/autostart/optimus.desktop
+        sudo cp -f /tmp/optimus.desktop /etc/xdg/autostart/optimus.desktop
+        exit 0
+    fi
+
+    if [ "$whiptail_result" = "nvidia-390xx-bumblebee" ]; then
+
+        # Install Dependencies
+        paru --noconfirm --needed --sudoloop -S linux-headers xorg-xrandr mesa mesa-demos
+
+        # Install NVIDIA Driver
+        # optional: opencl-nvidia-390xx
+        paru --noconfirm --needed --sudoloop -S nvidia-390xx-dkms nvidia-390xx-settings opencl-nvidia-390xx
+
+        # 32 Bit Support
+        # optional: lib32-opencl-nvidia-390xx lib32-virtualgl
+        paru --noconfirm --needed --sudoloop -S lib32-nvidia-390xx-utils lib32-opencl-nvidia-390xx lib32-virtualgl
+
+        # optional: lib32-virtualgl
+        paru --noconfirm --needed --sudoloop -S mesa bumblebee xf86-video-intel lib32-virtualgl primus lib32-primus
+        sudo gpasswd -a $USER bumblebee
+
+        # Workaround for: [ERROR]Cannot access secondary GPU - error: [XORG] (EE) No devices detected.
+        sudo sed -i 's/#   BusID "PCI:01:00:0"/    BusID "PCI:01:00:0"/g' "/etc/bumblebee/xorg.conf.nvidia"
+
+        sudo systemctl enable bumblebeed.service
+
+        # Early Loading
+        sudo sed -i "s/MODULES=()/MODULES=(i915)/g" "/etc/mkinitcpio.conf"
+
+        # Rebuild
+        sudo mkinitcpio -P
+
+        exit 0
     fi
 }
 
