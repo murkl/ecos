@@ -68,6 +68,15 @@ install() {
             exit 1
         fi
 
+        # Early Loading
+        sudo sed -i "s/MODULES=()/MODULES=(nvidia nvidia_modeset nvidia_uvm nvidia_drm)/g" "/etc/mkinitcpio.conf"
+
+        # DRM kernel mode setting (nvidia-drm.modeset=1)
+        sudo sed -i "s/vt.global_cursor_default=0 rw/vt.global_cursor_default=0 nvidia-drm.modeset=1 rw/g" "/boot/loader/entries/arch.conf"
+
+        # Rebuild
+        sudo mkinitcpio -P
+
         exit 0
     fi
 
