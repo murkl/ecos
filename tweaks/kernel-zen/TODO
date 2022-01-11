@@ -1,9 +1,0 @@
-paci linux-zen linux-zen-headers
-
-
-boot/loade/loader.conf
-
-default arch.conf
-timeout 2
-console-mode max
-editor  yes
