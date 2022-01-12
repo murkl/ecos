@@ -61,17 +61,22 @@ nvidia_all() {
     # https://www.reddit.com/r/linux_gaming/comments/rtsxey/pacman_install_nvidia_driver_470/
     # https://github.com/frogging-family/nvidia-all
     (
-
         # Clone Repo
-        rm -rf "$TWEAK_CACHE_DIR/repo"
-        git clone "https://github.com/frogging-family/nvidia-all" "$TWEAK_CACHE_DIR/repo"
-        cd "$TWEAK_CACHE_DIR/repo" || exit 1
+        local driver_repo_dir="."
+        rm -rf "$driver_repo_dir/repo"
+        git clone "https://github.com/frogging-family/nvidia-all" "$driver_repo_dir/repo"
+        cd "$driver_repo_dir/repo" || exit 1
         sed -i 's/dkms=""/dkms="true"/g' customization.cfg
-        if ! ${TERMINAL_EXEC} 'bash -c "makepkg -si"'; then
-            echo "Error makepkg"
-            exit 1
-        fi
+    
+    ) &
 
+    if ! ecos --api progress "$!" --no-cancel; then exit 1; fi
+
+    ${TERMINAL_EXEC} 'bash -c "makepkg -si"' &
+
+    if ! ecos --api progress "$!" --no-cancel; then exit 1; fi
+
+    (
         # Early Loading
         sh -c 'echo $root_password | sudo -S sed -i "s/MODULES=()/MODULES=(nvidia nvidia_modeset nvidia_uvm nvidia_drm)/g" "/etc/mkinitcpio.conf"'
 
@@ -81,12 +86,11 @@ nvidia_all() {
         # Rebuild
         sh -c 'echo $root_password | sudo -S sed -i "sudo mkinitcpio -P"'
 
-        # Notify
-        ecos --api notify "NVIDIA Driver sucessfully installed"
     ) &
-    if ! ecos --api progress "$!" --no-cancel; then
-        exit 1
-    fi
+    if ! ecos --api progress "$!" --no-cancel; then exit 1; fi
+
+    # Notify
+    ecos --api notify "NVIDIA Driver sucessfully installed"
 }
 
 nvidia_390xx_bumblebee() {
