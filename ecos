@@ -93,9 +93,12 @@ main() {
     # ---------------------------------------
     if [ "$1" = "--api" ]; then
         if [ "$2" = "" ]; then
-            echo -e "\nUse ECOS API with action:\n\n"
-            echo -e "\tzenity <ARGS>"
-            echo -e "\tzenity-menu 'item 1' 'item 2' ..."
+            echo -e "\n${TERM_COLOR_PURPLE}ECOS API${TERM_COLOR_NULL}\n"
+            echo -e "\t${TERM_COLOR_GREEN}zenity${TERM_COLOR_NULL} '--arg1' '--arg2' ..."
+            echo -e "\t${TERM_COLOR_GREEN}notify${TERM_COLOR_NULL} 'message'"
+            echo -e "\t${TERM_COLOR_GREEN}menu${TERM_COLOR_NULL} 'item 1' 'item 2' ..."
+            echo -e "\t${TERM_COLOR_GREEN}root${TERM_COLOR_NULL}"
+            echo -e "\t${TERM_COLOR_GREEN}check-root${TERM_COLOR_NULL}"
             exit 1
         fi
         local api_action="$2"
@@ -207,7 +210,7 @@ ecos_api() {
         exit "$?"
     fi
     if [ "$api_action" = "check-root" ]; then
-        api_check_root_password
+        api_check_root_password "${api_arguments[@]}"
         exit "$?"
     fi
 }

@@ -5,7 +5,7 @@ MENU_ITEMS=()
 MENU_ITEMS+=("None")
 
 main() {
-    if ! ZENITY_RESULT="$(ecos --api zenity-menu "$TITLE" "${MENU_ITEMS[@]}")"; then
+    if ! ZENITY_RESULT="$(ecos --api menu "$TITLE" "${MENU_ITEMS[@]}")"; then
         exit 0
     fi
 

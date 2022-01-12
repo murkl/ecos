@@ -15,6 +15,13 @@ main() {
         exit 0
     fi
 
+    if ! ecos --api check-root; then
+        ecos --api notify "Root Password wrong!"
+        exit 1
+    fi
+
+    sh -c "echo $root_password | sudo -S cp /tmp/$SCRIPT_ID.systemd $SYSTEMD_SERVICE_FILE"
+
     if [ "$ZENITY_RESULT" = "Intel Graphics Driver" ]; then
         ecos --api notify "$ROOT_PASSWORD"
         exit 0
