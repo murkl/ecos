@@ -7,12 +7,20 @@ MENU_ITEMS+=("NVIDIA Graphics Driver")
 MENU_ITEMS+=("AMD Graphics Driver")
 
 main() {
-    if ! local ZENITY_RESULT="$(ecos --api menu "$TITLE" "${MENU_ITEMS[@]}")"; then
+
+    local ZENITY_RESULT=''
+    if ! ZENITY_RESULT="$(ecos --api menu "$TITLE" "${MENU_ITEMS[@]}")"; then
         exit 0
     fi
 
+    local ROOT_PASSWORD=''
     if ! local ROOT_PASSWORD="$(ecos --api root)"; then
-        exit 0
+        exit 1
+    fi
+
+    if [ "$ROOT_PASSWORD" = "" ]; then
+        ecos --api notify "Root Password empty!"
+        exit 1
     fi
 
     if ! ecos --api check-root "$ROOT_PASSWORD"; then

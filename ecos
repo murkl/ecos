@@ -235,17 +235,18 @@ api_zenity_menu() {
 api_check_root_password() {
     local root_password="$1"
     if ! echo "$root_password" | sudo -S true; then
-        echo -e "\nRoot Password was wrong\n"
+        # Root Password was wrong
+        root_password=''
         exit 1
     else
-        echo -e "\nRoot Access...\n"
+        # Root Access...
         root_password=''
         exit 0
     fi
 }
+
 api_zenity_root_password() {
 
-    # ROOT PASSWORD
     local root_password=''
     if ! root_password="$(zenity --width=280 --height=120 --entry --hide-text --text='Enter Root Password')"; then
         exit 0
@@ -253,7 +254,7 @@ api_zenity_root_password() {
 
     if [ "$root_password" = "" ]; then
         notify "Root Password was empty"
-        exit "$?"
+        exit 1
     fi
 
     echo "$root_password"
