@@ -843,14 +843,25 @@ update_ecos_system() {
 
     clear
     print_header
+    local user_input=''
 
+    # Init ECOS
     print_title 'INIT ECOS'
     init_ecos
     echo ">>> OK"
 
+    # Update repo
     print_title 'UPDATE ECOS REPO'
     update_ecos_repo
     echo ">>> OK"
+
+    # Ask for system upgrade
+    print_title 'CONTINUE SYSTEM UPGRADE'
+    read -p "Enter q to quit: " user_input
+    if [ "$user_input" = "q" ]; then
+        echo ">>> Skipped..."
+        exit 0
+    fi
 
     # FETCH PACKAGES
     print_title 'FETCH PACMAN/AUR PACKAGES'
@@ -862,9 +873,10 @@ update_ecos_system() {
         echo -e ">>> ${TERM_COLOR_GREEN}No Package Updates available${TERM_COLOR_NULL}"
     fi
 
-    print_title 'ECOS SYSTEM UPGRADE'
-    read -p "Continue? [y/n]: " user_input
-    if [ "$user_input" != "y" ]; then
+    # Ask for system upgrade
+    print_title 'UPGRADE PACKAGES'
+    read -p "Enter q to quit: " user_input
+    if [ "$user_input" = "q" ]; then
         echo ">>> Skipped..."
         exit 0
     fi
