@@ -67,16 +67,10 @@ nvidia_all() {
         git clone "https://github.com/frogging-family/nvidia-all" "$driver_repo_dir/repo"
         cd "$driver_repo_dir/repo" || exit 1
         sed -i 's/dkms=""/dkms="true"/g' customization.cfg
-    
-    ) &
 
-    if ! ecos --api progress "$!" --no-cancel; then exit 1; fi
-
-    ${TERMINAL_EXEC} 'bash -c "makepkg -si"' &
-
-    if ! ecos --api progress "$!" --no-cancel; then exit 1; fi
-
-    (
+        ecos --api check-root "$ROOT_PASSWORD"
+        # makepkg -si --noconfirm --needed
+        echo -ne '3\n' | makepkg -si --noconfirm --needed
         # Early Loading
         sh -c 'echo $root_password | sudo -S sed -i "s/MODULES=()/MODULES=(nvidia nvidia_modeset nvidia_uvm nvidia_drm)/g" "/etc/mkinitcpio.conf"'
 
@@ -85,9 +79,9 @@ nvidia_all() {
 
         # Rebuild
         sh -c 'echo $root_password | sudo -S sed -i "sudo mkinitcpio -P"'
-
     ) &
-    if ! ecos --api progress "$!" --no-cancel; then exit 1; fi
+
+    if ! ecos --api progress "Install NVIDIA Driver" "$!" --no-cancel; then exit 1; fi
 
     # Notify
     ecos --api notify "NVIDIA Driver sucessfully installed"

@@ -249,6 +249,8 @@ api_zenity_menu() {
 }
 
 api_zenity_progress() {
+    local title="$1"
+    shift || exit 1
     local task_pid="$1"
     local pid_file="/tmp/ecos.pids"
 
@@ -260,8 +262,10 @@ api_zenity_progress() {
 
     # Capture pid and show progress dialog
     echo "$task_pid" >"$pid_file"
-    local txt_title='<span font_family="monospace" foreground="#494949" font="12"><b>Initialize '$SCRIPT_TITLE' CORE...</b></span>'
-    tail -f /dev/null --pid $task_pid | (zenity --progress --width=300 --height=150 --text="\n\t$txt_title\n" --pulsate --auto-close "${api_arguments[@]}" || (kill_pid "$task_pid" && echo "CANCELED" >"$pid_file"))
+    echo "TASK PID: $(cat $pid_file)"
+
+    local txt_title='<span font_family="monospace" foreground="#494949" font="12"><b>'$title'</b></span>'
+    tail -f /dev/null --pid "$task_pid" | (zenity --progress --width=300 --height=150 --text="\n$txt_title\n" --pulsate --auto-close "${api_arguments[@]}" || (kill_pid "$task_pid" && echo "CANCELED" >"$pid_file"))
 
     # Finish
     local pid_state=$(<"$pid_file")
