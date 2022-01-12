@@ -194,19 +194,20 @@ ecos_api() {
         api_notify "${api_arguments[@]}"
         exit "$?"
     fi
-
     if [ "$api_action" = "zenity" ]; then
         api_zenity "${api_arguments[@]}"
         exit "$?"
     fi
-
     if [ "$api_action" = "zenity-menu" ]; then
         api_zenity_menu "${api_arguments[@]}"
         exit "$?"
     fi
-
     if [ "$api_action" = "zenity-root" ]; then
         api_zenity_root_password
+        exit "$?"
+    fi
+    if [ "$api_action" = "zenity-root-check" ]; then
+        api_check_root_password
         exit "$?"
     fi
 }
@@ -225,6 +226,17 @@ api_zenity_menu() {
     zenity --list --hide-header --column="" --text="$(print_zenity_header "$title" $ECOS_VERSION)" --cancel-label='Back' --ok-label='Ok' "$@"
 }
 
+api_check_root_password() {
+    local root_password="$1"
+    if ! echo "$root_password" | sudo -S true; then
+        echo "Root Password was wrong"
+        exit 1
+    else
+        echo "Root Access..."
+        root_password=''
+        exit 0
+    fi
+}
 api_zenity_root_password() {
 
     # ROOT PASSWORD
@@ -239,16 +251,9 @@ api_zenity_root_password() {
         api_zenity_root_password
         exit "$?"
     fi
-    if ! echo "$root_password" | sudo -S true; then
-        notify "Root Password was wrong"
-        api_zenity_root_password
-        exit "$?"
-    else
-        notify "Root Access..."
-        echo "$root_password"
-        root_password=''
-        return 0
-    fi
+
+    echo "$root_password"
+    root_password=''
 }
 
 #/////////////////////////////////////////////////////
@@ -535,8 +540,8 @@ init_ecos() {
         fi
 
         ECOS_REMOTE_VERSION="$($ECOS_REMOTE_VERSION_FILE --version)"
-        echo "ECOS LOCAL VERSION:   $ECOS_VERSION"
-        echo "ECOS REMOTE VERSION:  $ECOS_REMOTE_VERSION"
+        # echo "ECOS LOCAL VERSION:   $ECOS_VERSION"
+        # echo "ECOS REMOTE VERSION:  $ECOS_REMOTE_VERSION"
     fi
 }
 
