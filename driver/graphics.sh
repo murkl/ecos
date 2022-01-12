@@ -2,19 +2,26 @@
 TITLE="Graphics Driver"
 
 MENU_ITEMS=()
-MENU_ITEMS+=("Intel Graphics Driver")
-MENU_ITEMS+=("NVIDIA Graphics Driver")
-MENU_ITEMS+=("AMD Graphics Driver")
+MENU_ITEMS+=("intel-i915")
+MENU_ITEMS+=("nvidia-all")
+MENU_ITEMS+=("nvidia-390xx-bumblebee")
+
+ROOT_PASSWORD=''
 
 main() {
+
+    source $(ecos --api config) || exit 1
+
+    # CHECK PROPERTIES
+    if [ -z "$TERMINAL_EXEC" ]; then ecos --api notify "TERMINAL_EXEC peroperty is missing!" && exit 1; fi
 
     local ZENITY_RESULT=''
     if ! ZENITY_RESULT="$(ecos --api menu "$TITLE" "${MENU_ITEMS[@]}")"; then
         exit 0
     fi
 
-    local ROOT_PASSWORD=''
-    if ! local ROOT_PASSWORD="$(ecos --api root)"; then
+    ROOT_PASSWORD=''
+    if ! ROOT_PASSWORD="$(ecos --api root)"; then
         exit 1
     fi
 
@@ -28,20 +35,62 @@ main() {
         exit 1
     fi
 
-    if [ "$ZENITY_RESULT" = "Intel Graphics Driver" ]; then
-        ecos --api notify "$ROOT_PASSWORD"
+    if [ "$ZENITY_RESULT" = "intel-i915" ]; then
+        intel_i915 "$@"
         exit 0
     fi
 
-    if [ "$ZENITY_RESULT" = "NVIDIA Graphics Driver" ]; then
+    if [ "$ZENITY_RESULT" = "nvidia-all" ]; then
+        nvidia_all "$@"
         exit 0
     fi
 
-    if [ "$ZENITY_RESULT" = "AMD Graphics Driver" ]; then
+    if [ "$ZENITY_RESULT" = "nvidia-390xx-bumblebee" ]; then
+        nvidia_390xx_bumblebee "$@"
         exit 0
     fi
 
     ROOT_PASSWORD=''
+}
+
+intel_i915() {
+    exit 1
+}
+
+nvidia_all() {
+    # https://www.reddit.com/r/linux_gaming/comments/rtsxey/pacman_install_nvidia_driver_470/
+    # https://github.com/frogging-family/nvidia-all
+    (
+
+        # Clone Repo
+        rm -rf "$TWEAK_CACHE_DIR/repo"
+        git clone "https://github.com/frogging-family/nvidia-all" "$TWEAK_CACHE_DIR/repo"
+        cd "$TWEAK_CACHE_DIR/repo" || exit 1
+        sed -i 's/dkms=""/dkms="true"/g' customization.cfg
+        if ! ${TERMINAL_EXEC} 'bash -c "makepkg -si"'; then
+            echo "Error makepkg"
+            exit 1
+        fi
+
+        # Early Loading
+        sh -c 'echo $root_password | sudo -S sed -i "s/MODULES=()/MODULES=(nvidia nvidia_modeset nvidia_uvm nvidia_drm)/g" "/etc/mkinitcpio.conf"'
+
+        # DRM kernel mode setting (nvidia-drm.modeset=1)
+        sh -c 'echo $root_password | sudo -S sed -i "s/vt.global_cursor_default=0 rw/vt.global_cursor_default=0 nvidia-drm.modeset=1 rw/g" "/boot/loader/entries/arch.conf"'
+
+        # Rebuild
+        sh -c 'echo $root_password | sudo -S sed -i "sudo mkinitcpio -P"'
+
+        # Notify
+        ecos --api notify "NVIDIA Driver sucessfully installed"
+    ) &
+    if ! ecos --api progress "$!" --no-cancel; then
+        exit 1
+    fi
+}
+
+nvidia_390xx_bumblebee() {
+    exit 1
 }
 
 main "$@"

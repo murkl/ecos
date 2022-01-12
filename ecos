@@ -185,6 +185,10 @@ main() {
     fi
 }
 
+#/////////////////////////////////////////////////////
+# API
+#/////////////////////////////////////////////////////
+
 ecos_api() {
 
     local api_action="$1"
@@ -196,12 +200,20 @@ ecos_api() {
         # echo "API ARGUMENTS: ${api_arguments[@]}"
         # echo "API ARGUMENT COUNT: ${#api_arguments[@]}"
     fi
+    if [ "$api_action" = "config" ]; then
+        api_ecos_config
+        exit "$?"
+    fi
     if [ "$api_action" = "zenity" ]; then
         api_zenity "${api_arguments[@]}"
         exit "$?"
     fi
     if [ "$api_action" = "notify" ]; then
         api_notify "${api_arguments[@]}"
+        exit "$?"
+    fi
+    if [ "$api_action" = "progress" ]; then
+        api_zenity_progress "${api_arguments[@]}"
         exit "$?"
     fi
     if [ "$api_action" = "menu" ]; then
@@ -218,6 +230,10 @@ ecos_api() {
     fi
 }
 
+api_ecos_config() {
+    echo "$ECOS_CONFIG_FILE"
+}
+
 api_notify() {
     notify "$1"
 }
@@ -230,6 +246,34 @@ api_zenity_menu() {
     local title="$1"
     shift || exit 1
     zenity --list --hide-header --column="" --text="$(print_zenity_header "$title" $ECOS_VERSION)" --cancel-label='Back' --ok-label='Ok' "$@"
+}
+
+api_zenity_progress() {
+    local task_pid="$1"
+    local pid_file="/tmp/ecos.pids"
+
+    local api_arguments=("")
+    if [ "$2" != "" ]; then
+        shift || exit 1
+        api_arguments=("$@")
+    fi
+
+    # Capture pid and show progress dialog
+    echo "$task_pid" >"$pid_file"
+    local txt_title='<span font_family="monospace" foreground="#494949" font="12"><b>Initialize '$SCRIPT_TITLE' CORE...</b></span>'
+    tail -f /dev/null --pid $task_pid | (zenity --progress --width=300 --height=150 --text="\n\t$txt_title\n" --pulsate --auto-close "${api_arguments[@]}" || (kill_pid "$task_pid" && echo "CANCELED" >"$pid_file"))
+
+    # Finish
+    local pid_state=$(<"$pid_file")
+    if [ "$pid_state" = "CANCELED" ]; then
+        echo "CANCELD"
+        exit 1
+    fi
+
+    if [ "$pid_state" = "SUCCESS" ]; then
+        echo "SUCCESS"
+        exit 0
+    fi
 }
 
 api_check_root_password() {
