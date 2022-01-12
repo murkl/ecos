@@ -7,11 +7,11 @@ MENU_ITEMS+=("NVIDIA Graphics Driver")
 MENU_ITEMS+=("AMD Graphics Driver")
 
 main() {
-    if ! ZENITY_RESULT="$(ecos --api zenity-menu "$TITLE" "${MENU_ITEMS[@]}")"; then
+    if ! ZENITY_RESULT="$(ecos --api menu "$TITLE" "${MENU_ITEMS[@]}")"; then
         exit 0
     fi
 
-    if ! ROOT_PASSWORD="$(ecos --api zenity-root)"; then
+    if ! ROOT_PASSWORD="$(ecos --api root)"; then
         exit 0
     fi
 

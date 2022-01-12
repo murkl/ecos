@@ -190,23 +190,23 @@ ecos_api() {
         # echo "API ARGUMENTS: ${api_arguments[@]}"
         # echo "API ARGUMENT COUNT: ${#api_arguments[@]}"
     fi
-    if [ "$api_action" = "notify" ]; then
-        api_notify "${api_arguments[@]}"
-        exit "$?"
-    fi
     if [ "$api_action" = "zenity" ]; then
         api_zenity "${api_arguments[@]}"
         exit "$?"
     fi
-    if [ "$api_action" = "zenity-menu" ]; then
+    if [ "$api_action" = "notify" ]; then
+        api_notify "${api_arguments[@]}"
+        exit "$?"
+    fi
+    if [ "$api_action" = "menu" ]; then
         api_zenity_menu "${api_arguments[@]}"
         exit "$?"
     fi
-    if [ "$api_action" = "zenity-root" ]; then
+    if [ "$api_action" = "root" ]; then
         api_zenity_root_password
         exit "$?"
     fi
-    if [ "$api_action" = "zenity-root-check" ]; then
+    if [ "$api_action" = "check-root" ]; then
         api_check_root_password
         exit "$?"
     fi
