@@ -182,9 +182,13 @@ ecos_api() {
         # echo "API ARGUMENTS: ${api_arguments[@]}"
         # echo "API ARGUMENT COUNT: ${#api_arguments[@]}"
     fi
+    if [ "$api_action" = "notify" ]; then
+        api_notify "${api_arguments[@]}"
+        exit "$?"
+    fi
 
     if [ "$api_action" = "zenity" ]; then
-        zenity "${api_arguments[@]}"
+        api_zenity "${api_arguments[@]}"
         exit "$?"
     fi
 
@@ -192,12 +196,51 @@ ecos_api() {
         api_zenity_menu "${api_arguments[@]}"
         exit "$?"
     fi
+
+    if [ "$api_action" = "zenity-root" ]; then
+        api_zenity_root_password
+        exit "$?"
+    fi
+}
+
+api_notify() {
+    notify "$1"
+}
+
+api_zenity() {
+    zenity "$@"
 }
 
 api_zenity_menu() {
     local title="$1"
     shift || exit 1
-    zenity --list --hide-header --column="" --text="$(print_zenity_header "$title" $ECOS_VERSION)" --cancel-label='Exit' --ok-label='Ok' "$@"
+    zenity --list --hide-header --column="" --text="$(print_zenity_header "$title" $ECOS_VERSION)" --cancel-label='Back' --ok-label='Ok' "$@"
+}
+
+api_zenity_root_password() {
+
+    # ROOT PASSWORD
+    local root_password=''
+    if ! root_password="$(zenity --width=280 --height=120 --entry --hide-text --text='Enter Root Password')"; then
+        main
+        return 1
+    fi
+
+    if [ "$root_password" = "" ]; then
+        notify "Root Password was empty"
+        api_zenity_root_password
+        exit "$?"
+    fi
+    if ! echo "$root_password" | sudo -S true; then
+        notify "Root Password was wrong"
+        api_zenity_root_password
+        exit "$?"
+    else
+        notify "Root Access..."
+        echo "$root_password"
+        root_password=''
+        return 0
+    fi
 }
 
 #/////////////////////////////////////////////////////
@@ -261,13 +304,13 @@ zenity_main_menu() {
         fi
     fi
 
-    local menu_entries=()
-    menu_entries+=("Update")
-    menu_entries+=("Dotfiles")
-    menu_entries+=("Tweaks")
-    menu_entries+=("Driver")
-    menu_entries+=("Settings")
-    if ! zenity_result="$(zenity --list --hide-header --column="" --text="$(print_zenity_header 'Menu' $ECOS_REMOTE_VERSION)" --cancel-label='Exit' --ok-label='Ok' "${menu_entries[@]}")"; then
+    local menu_items=()
+    menu_items+=("Update")
+    menu_items+=("Dotfiles")
+    menu_items+=("Tweaks")
+    menu_items+=("Driver")
+    menu_items+=("Settings")
+    if ! zenity_result="$(zenity --list --hide-header --column="" --text="$(print_zenity_header 'Menu' $ECOS_REMOTE_VERSION)" --cancel-label='Exit' --ok-label='Ok' "${menu_items[@]}")"; then
         exit 0
     fi
 
@@ -296,11 +339,11 @@ zenity_main_menu() {
 }
 
 zenity_dotfiles_menu() {
-    local menu_entries=()
-    menu_entries+=("Edit Init Script")
-    menu_entries+=("Reset Dotfiles")
-    menu_entries+=("Clone Dotfiles Repo")
-    if ! zenity_result="$(zenity --list --hide-header --column="" --text="$(print_zenity_header 'Dotfiles' $ECOS_REMOTE_VERSION)" --cancel-label='Back' --ok-label='Ok' "${menu_entries[@]}")"; then
+    local menu_items=()
+    menu_items+=("Edit Init Script")
+    menu_items+=("Reset Dotfiles")
+    menu_items+=("Clone Dotfiles Repo")
+    if ! zenity_result="$(zenity --list --hide-header --column="" --text="$(print_zenity_header 'Dotfiles' $ECOS_REMOTE_VERSION)" --cancel-label='Back' --ok-label='Ok' "${menu_items[@]}")"; then
         return 0
     fi
 
@@ -342,15 +385,15 @@ zenity_driver_menu() {
     check_git
     check_paru
 
-    local menu_entries=()
-    menu_entries+=("Audio Driver")
-    menu_entries+=("Graphics Driver")
-    if ! zenity_result="$(zenity --list --hide-header --column="" --text="$(print_zenity_header 'Dotfiles' $ECOS_REMOTE_VERSION)" --cancel-label='Back' --ok-label='Ok' "${menu_entries[@]}")"; then
+    local menu_items=()
+    menu_items+=("Audio Driver")
+    menu_items+=("Graphics Driver")
+    if ! zenity_result="$(zenity --list --hide-header --column="" --text="$(print_zenity_header 'Dotfiles' $ECOS_REMOTE_VERSION)" --cancel-label='Back' --ok-label='Ok' "${menu_items[@]}")"; then
         zenity_main_menu
         return 0
     fi
 
-    if [ "$zenity_result" = "Audio" ]; then
+    if [ "$zenity_result" = "Audio Driver" ]; then
         bash -c "$ECOS_DRIVER_AUDIO_SCRIPT" && wait
         zenity_main_menu
         return 0
