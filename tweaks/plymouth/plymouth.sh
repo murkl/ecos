@@ -11,9 +11,6 @@ WATERMARK_FILE_BAK="$WATERMARK_FILE.bak"
 
 install() {
 
-    echo $TWEAK_RES_DIR
-    exit 1
-
     if ! efivar -l >/dev/null; then
         echo "BIOS detected. Plymouth only available on UEFI!"
         exit 1
