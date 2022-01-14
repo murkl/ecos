@@ -1,5 +1,5 @@
 #!/bin/bash
-TWEAK_RES_DIR="$2"
+TWEAK_RES_DIR="$2" && if [ -z "$2" ]; then TWEAK_RES_DIR="$(pwd)"; fi && if [ -z "$2" ]; then TWEAK_RES_DIR="$(pwd)"; fi
 
 RES_PLYMOUTH_WATERMARK="$TWEAK_RES_DIR/plymouth.png"
 
@@ -10,6 +10,9 @@ WATERMARK_FILE='/usr/share/plymouth/themes/spinner/watermark.png'
 WATERMARK_FILE_BAK="$WATERMARK_FILE.bak"
 
 install() {
+
+    echo $TWEAK_RES_DIR
+    exit 1
 
     if ! efivar -l >/dev/null; then
         echo "BIOS detected. Plymouth only available on UEFI!"

@@ -1,5 +1,5 @@
 #!/bin/bash
-TWEAK_RES_DIR="$2"
+TWEAK_RES_DIR="$2" && if [ -z "$2" ]; then TWEAK_RES_DIR="$(pwd)"; fi
 
 install() {
     paru --noconfirm --needed --sudoloop -S synology-drive

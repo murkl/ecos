@@ -1,8 +1,8 @@
 #!/bin/bash
 # dconf dump /org/gnome/shell/extensions/dash-to-dock/ > dconf.dump
 
-TWEAK_RES_DIR="$2"
-TWEAK_CACHE_DIR="$3"
+TWEAK_RES_DIR="$2" && if [ -z "$2" ]; then TWEAK_RES_DIR="$(pwd)"; fi
+TWEAK_CACHE_DIR="$3" && if [ -z "$3" ]; then TWEAK_CACHE_DIR="$(pwd)"; fi"$3"
 
 EXTENSION_NAME="dash-to-dock@micxgx.gmail.com"
 EXTENSION_REPO="https://github.com/micheleg/dash-to-dock.git"
