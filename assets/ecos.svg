@@ -23,13 +23,13 @@
      inkscape:pagecheckerboard="0"
      showgrid="false"
      inkscape:zoom="6.8020832"
-     inkscape:cx="23.595713"
+     inkscape:cx="-10.437979"
      inkscape:cy="39.326188"
-     inkscape:window-width="1920"
-     inkscape:window-height="1020"
-     inkscape:window-x="0"
-     inkscape:window-y="28"
-     inkscape:window-maximized="1"
+     inkscape:window-width="1505"
+     inkscape:window-height="920"
+     inkscape:window-x="206"
+     inkscape:window-y="32"
+     inkscape:window-maximized="0"
      inkscape:current-layer="g40" />
   <linearGradient
      id="a">
@@ -126,45 +126,11 @@
      fill="url(#b)"
      transform="matrix(1.569970343761 0 0 1.569970343761 -605.097515035022 -810.977878778761)"
      id="g40">
-    <g
-       fill="url(#c)"
-       stroke-width="1.3"
-       transform="translate(.135243 .045175)"
-       id="g36"
-       style="fill:#a347ba;stroke-width:1.30002456;stroke-miterlimit:4;stroke-dasharray:none;stroke:#a347ba;stroke-opacity:1;fill-opacity:1">
-      <ellipse
-         cx="400.57138"
-         cy="531.79791"
-         fill="url(#f)"
-         stroke="url(#f)"
-         stroke-width="1.3"
-         id="circle30"
-         style="fill:#a347ba;fill-opacity:1;stroke:#a347ba;stroke-width:1.30002456;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
-         rx="14.000264"
-         ry="13.999958" />
-      <circle
-         cx="400.57144"
-         cy="531.79797"
-         fill="url(#e)"
-         r="0"
-         stroke="url(#d)"
-         stroke-width="1"
-         id="circle32"
-         style="fill:#a347ba;stroke-width:1.30002456;stroke-miterlimit:4;stroke-dasharray:none;stroke:#a347ba;stroke-opacity:1;fill-opacity:1" />
-      <circle
-         cx="400.57138"
-         cy="531.79791"
-         fill="url(#c)"
-         r="0"
-         id="circle34"
-         style="fill:#a347ba;stroke-width:1.30002456;stroke-miterlimit:4;stroke-dasharray:none;stroke:#a347ba;stroke-opacity:1;fill-opacity:1" />
-    </g>
     <path
-       d="m333.227 39.545-54.916 83.015-56.76-83.015zm-63.641 102h-121.829l60.908 231.669zm-117.763-13.6h113.688l-56.847-83.15zm-12.79-5.385 56.753-83.015h-111.67zm56.725 255.02-62.057-236.035h-133.701zm-195.568-249.635h126.1l-54.931-83.035zm345.699-82.885-54.836 82.885h125.883zm-62.248 96.485-62.063 236.015 195.547-236.015z"
+       d="m 409.79783,519.94859 -4.00477,6.05387 -4.13923,-6.05387 z m -4.64105,7.43836 h -8.8844 l 4.44173,16.89455 z m -8.5879,-0.99177 h 8.29073 l -4.14559,-6.06375 z m -0.93272,-0.39272 4.13873,-6.05387 h -8.14356 z m 4.13669,18.59742 -4.52552,-17.21293 h -9.75019 z M 385.511,526.39518 h 9.19587 l -4.00586,-6.05536 z m 25.2102,-6.04442 -3.99893,6.04442 h 9.18006 z m -4.53945,7.03619 -4.52597,17.21149 14.26033,-17.21149 z"
        fill="#fff"
        fill-opacity=".846774"
-       transform="matrix(.045222871636 0 0 .045222871636 391.274830235329 523.685202885563)"
        id="path38"
-       style="fill:#ffffff;fill-opacity:0.84705883;stroke:none;stroke-opacity:1" />
+       style="fill:#a8e912;fill-opacity:0.84705883;stroke:none;stroke-width:0.0729268;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" />
   </g>
 </svg>
