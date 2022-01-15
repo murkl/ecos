@@ -19,6 +19,7 @@
 - TUI Installer
 - Tweak Scripts
 - Driver Scripts
+- Supports Virtualbox & GNOME Boxes (qemu)
 - Sandbox ECOS Home Dir (~/.ecos)
 - Easy expandable (have a look in ECOS home dir)
 - Based on official Arch Linux
