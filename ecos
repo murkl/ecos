@@ -941,9 +941,8 @@ update_ecos_system() {
     update_tweaks
 
     # FINISH
-    echo -e "\n\n"
     echo -e "${TERM_COLOR_GREEN}-------------------------------------------------${TERM_COLOR_NULL}"
-    echo -e "\n\n\n\n"
+    echo -e "\n\n"
     print_title "${TERM_COLOR_GREEN} !! ECOS UPDATE FINISHED !! ${TERM_COLOR_NULL}"
     echo -e "\n"
     read -p "Press any Key to close..."
