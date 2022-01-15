@@ -66,12 +66,12 @@ install() {
     echo -e 'OK'
 
     #----------------------------------------
-    # Download Watermark
+    # Copy Watermark
     #----------------------------------------
-    echo 'DOWNLOAD WATERMARK'
-
-    # Backup spinner conf
+    echo 'COPY WATERMARK PNG FILE'
+    # Backup watermark file
     if [ ! -f "$WATERMARK_FILE_BAK" ]; then sudo cp -f "$WATERMARK_FILE" "$WATERMARK_FILE_BAK"; fi
+    cp -f "$RES_PLYMOUTH_WATERMARK" "$WATERMARK_FILE"
 
     #----------------------------------------
     # Rebuild
@@ -93,6 +93,7 @@ remove() {
     sudo sed -i "s/keymap plymouth plymouth-encrypt filesystems/keymap encrypt filesystems/g" "$MKINIT_CONF"
     sudo mv -f "$SPINNER_CONF_BAK" "$SPINNER_CONF"
     sudo mv -f "$WATERMARK_FILE_BAK" "$WATERMARK_FILE"
+    sudo rm -rf "/usr/share/plymouth/"
     sudo mkinitcpio -P
 }
 
