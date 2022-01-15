@@ -2,7 +2,7 @@
 # dconf dump /org/gnome/shell/extensions/blur-my-shell/ > dconf.dump
 
 TWEAK_RES_DIR="$2" && if [ -z "$2" ]; then TWEAK_RES_DIR="$(pwd)"; fi
-TWEAK_CACHE_DIR="$3" && if [ -z "$3" ]; then TWEAK_CACHE_DIR="$(pwd)"; fi"$3"
+TWEAK_CACHE_DIR="$3" && if [ -z "$3" ]; then TWEAK_CACHE_DIR="$(pwd)"; fi
 
 EXTENSION_REPO="https://github.com/aunetx/blur-my-shell"
 EXTENSION_NAME="blur-my-shell@aunetx"
