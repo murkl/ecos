@@ -64,7 +64,7 @@ install() {
     #----------------------------------------
     echo 'COPY WATERMARK PNG FILE'
     # Backup watermark file
-    if [ ! -f "$WATERMARK_FILE_BAK" ]; then sudo cp -f "$WATERMARK_FILE" "$WATERMARK_FILE_BAK"; fi
+    if [ ! -f "$WATERMARK_FILE_BAK" ] && [ -f "$WATERMARK_FILE" ]; then sudo cp -f "$WATERMARK_FILE" "$WATERMARK_FILE_BAK"; fi
     sudo cp -f "$RES_PLYMOUTH_WATERMARK" "$WATERMARK_FILE"
 
     #----------------------------------------
