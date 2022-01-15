@@ -663,7 +663,7 @@ exec_install_ecos() {
     echo -e ">> DONE"
 
     # Removing existing init
-    print_title "REMOVE EXISTING DOTFILES"
+    print_title "EXECUTE EXISTING INIT REMOVE SCRIPT"
     if [ ! -f "$ECOS_INIT_SCRIPT" ]; then
         echo -e ">> $ECOS_INIT_SCRIPT NOT FOUND"
     else
@@ -677,6 +677,7 @@ exec_install_ecos() {
     mkdir -p "$ECOS_DOTFILES_DIR"
     cd "$HOME" || exit 1
 
+    # Clone dotfiles
     /usr/bin/git clone --bare "$dotfiles_url" "$ECOS_DOTFILES_DIR"
 
     # Reset dotfiles
@@ -721,7 +722,7 @@ exec_install_ecos() {
     create_autostart_file
     echo -e ">> DONE"
 
-    # Call init script
+    # Execute init script
     print_title 'INIT DOTFILES SCRIPT'
     echo -e "EXECUTE $ECOS_INIT_SCRIPT"
     chmod +x "$ECOS_INIT_SCRIPT" || exit 1
@@ -759,7 +760,7 @@ create_desktop_file() {
         echo "[Desktop Entry]"
         echo "Name=ECOS"
         echo "Icon="$ECOS_ICON_FILE""
-        echo 'Exec=bash -c "$HOME/.ecos/repo/ecos"'
+        echo "Exec=bash -c "$ECOS_BIN""
         echo "Type=Application"
     } >"$ECOS_DESKTOP_FILE"
     chmod +x "$ECOS_DESKTOP_FILE"
@@ -772,7 +773,7 @@ create_autostart_file() {
         echo "[Desktop Entry]"
         echo "Name=ECOS"
         echo "Icon="$ECOS_ICON_FILE""
-        echo 'Exec=bash -c "$HOME/.ecos/repo/ecos --autostart"'
+        echo "Exec=bash -c "$ECOS_BIN --autostart""
         echo "Type=Application"
     } >"$ECOS_AUTOSTART_FILE"
     chmod +x "$ECOS_AUTOSTART_FILE"
@@ -855,6 +856,30 @@ update_ecos_system() {
     update_ecos_repo
     echo ">>> OK"
 
+    # DOTFILES UPDATE
+    print_title 'UPDATE DOTFILES REPO'
+    cd "$HOME" || exit 1
+    # Reset and update local tracked files
+    git --git-dir="$ECOS_DOTFILES_DIR" --work-tree="$HOME" fetch --all
+    git --git-dir="$ECOS_DOTFILES_DIR" --work-tree="$HOME" reset --hard HEAD
+    git --git-dir="$ECOS_DOTFILES_DIR" --work-tree="$HOME" pull
+    echo ">>> OK"
+
+    # UPDATE DESKTOP FILE
+    print_title 'UPDATE ECOS DESKTOP FILE'
+    create_desktop_file
+    echo ">>> OK"
+
+    # UPDATE ECOS BIN LINK
+    print_title 'UPDATE ECOS BIN LINK'
+    create_bin_link
+    echo ">>> OK"
+
+    # Create Autostart file
+    print_title 'ENABLE ECOS AUTOSTART'
+    create_autostart_file
+    echo -e ">> DONE"
+
     # Ask for system upgrade
     print_title 'CONTINUE SYSTEM UPGRADE'
     read -p "Enter q to quit: " user_input
@@ -885,15 +910,6 @@ update_ecos_system() {
     print_title 'UPADE PACMAN/AUR PACKAGES'
     paru -Su --noconfirm
 
-    # DOTFILES UPDATE
-    print_title 'UPDATE DOTFILES REPO'
-    cd "$HOME" || exit 1
-
-    # RESET LOCAL FILES
-    git --git-dir="$ECOS_DOTFILES_DIR" --work-tree="$HOME" fetch --all
-    git --git-dir="$ECOS_DOTFILES_DIR" --work-tree="$HOME" reset --hard HEAD
-    git --git-dir="$ECOS_DOTFILES_DIR" --work-tree="$HOME" pull
-
     # UPDATE INIT FILE
     print_title "INIT DOTFILES SCRIPT"
     if [ -f "$ECOS_INIT_SCRIPT" ]; then
@@ -921,21 +937,6 @@ update_ecos_system() {
             echo ">>> UP TO DATE. SKIPPED..."
         fi
     fi
-
-    # UPDATE DESKTOP FILE
-    print_title 'UPDATE ECOS DESKTOP FILE'
-    create_desktop_file
-    echo ">>> OK"
-
-    # UPDATE ECOS BIN LINK
-    print_title 'UPDATE ECOS BIN LINK'
-    create_bin_link
-    echo ">>> OK"
-
-    # Create Autostart file
-    print_title 'ENABLE ECOS AUTOSTART'
-    create_autostart_file
-    echo -e ">> DONE"
 
     # UPDATE TWEAKS
     update_tweaks
