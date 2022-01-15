@@ -1074,7 +1074,7 @@ exec_tweak() {
     local tweak_res_dir="$ECOS_TWEAKS_DIR/$tweak_id"
     local tweak_cache_dir="$ECOS_TWEAKS_META_DIR/$tweak_id"
     local tweak_sh="$tweak_res_dir/${tweak_id}.sh"
-    local tweak_meta="$tweak_cache_dir/${tweak_id}.tweak"
+    local tweak_meta="$tweak_cache_dir/${tweak_id}.meta"
 
     #----------------------------------------
     # Check
