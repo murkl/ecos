@@ -16,12 +16,6 @@ install() {
         exit 1
     fi
 
-    # Check if installed
-    if pacman -Qi plymouth >/dev/null; then
-        echo "Plymouth already installed!"
-        exit 1
-    fi
-
     #----------------------------------------
     # Install Plymouth
     #----------------------------------------
