@@ -101,6 +101,8 @@ For Example: Have a look into the official GNOME Dotfiles repo: https://github.c
 
 <b>Repository:</b> https://github.com/murkl/dotfiles-gnome.git
 
+### Screenshots
+
 <span align="center">
   <img width="45%" src="https://raw.githubusercontent.com/murkl/ecos/master/assets/screenshots/gnome-01.png">
   <img width="45%" src="https://raw.githubusercontent.com/murkl/ecos/master/assets/screenshots/gnome-02.png">
@@ -110,12 +112,16 @@ For Example: Have a look into the official GNOME Dotfiles repo: https://github.c
 
 <b>Repository:</b> https://github.com/murkl/dotfiles-bspwm.git
 
+### Screenshots
+
 <span align="center">
   <img width="45%" src="https://raw.githubusercontent.com/murkl/ecos/master/assets/screenshots/bspwm-01.png">
   <img width="45%" src="https://raw.githubusercontent.com/murkl/ecos/master/assets/screenshots/bspwm-02.png">
 </span>
 
-## ECOS Installation Screenshots
+## ECOS Installation
+
+### Screenshots
 
 <span align="center">
   <img width="22%" src="https://raw.githubusercontent.com/murkl/ecos/master/assets/screenshots/ecos-core-01.png">
@@ -130,7 +136,9 @@ For Example: Have a look into the official GNOME Dotfiles repo: https://github.c
   <img width="22%" src="https://raw.githubusercontent.com/murkl/ecos/master/assets/screenshots/ecos-core-10.png">
 </span>
 
-## ECOS Manager Screenshots
+## ECOS Manager
+
+### Screenshots
 
 <span align="center">
   <img width="22%" src="https://raw.githubusercontent.com/murkl/ecos/master/assets/screenshots/ecos-manager-01.png">
