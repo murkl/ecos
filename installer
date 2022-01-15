@@ -481,10 +481,10 @@ exec_install_chroot() {
     gauge_tui_update 70 "$gauge_txt"
     exec_command_wrap pacman --noconfirm --needed -S zsh
 
-    if [ "$WORKSTATION" = "notebook" ]; then
-        # Battery safer
-        exec_command_wrap pacman --noconfirm --needed -S tlp
-    fi
+    # if [ "$WORKSTATION" = "notebook" ]; then
+    #     # Battery safer
+    #     exec_command_wrap pacman --noconfirm --needed -S tlp
+    # fi
 
     #----------------------------------------
     # Swap
@@ -713,9 +713,9 @@ exec_install_chroot() {
     #----------------------------------------
     # TLP (Notebook)
     #----------------------------------------
-    if [ "$WORKSTATION" = "notebook" ]; then
-        exec_command_wrap systemctl enable "tlp.service"
-    fi
+    # if [ "$WORKSTATION" = "notebook" ]; then
+    #     exec_command_wrap systemctl enable "tlp.service"
+    # fi
 
     #----------------------------------------
     # Pacman colors & multilib
