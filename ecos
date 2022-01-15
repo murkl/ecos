@@ -1,5 +1,5 @@
 #!/bin/bash
-ECOS_VERSION=2.2.7
+ECOS_VERSION=2.2.8
 
 #/////////////////////////////////////////////////////
 # LOCATE SCRIPT DIR
