@@ -942,7 +942,7 @@ update_ecos_system() {
 
     # FINISH
     echo -e "\n\n\n"
-    echo -e "-------------------------------------------------------------------------------"
+    echo -e "${TERM_COLOR_YELLOW}>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>${TERM_COLOR_NULL}"
     echo -e "\n\n\n"
     print_title "${TERM_COLOR_GREEN} !! ECOS UPDATE FINISHED !! ${TERM_COLOR_NULL}"
     echo -e "\n"
