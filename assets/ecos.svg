@@ -1,17 +1,128 @@
-<svg width="64" height="64" version="1.1" xmlns="http://www.w3.org/2000/svg">
- <defs>
-  <style id="current-color-scheme" type="text/css">.ColorScheme-Text { color:#4d4d4d; }</style>
- </defs>
- <g transform="matrix(1.3 0 0 1.3 .8 -20)" stroke-width=".76923">
-  <rect x="4" y="20" width="40" height="40" rx="2.3077" ry="2.3077" fill="#26292b" stroke="#292929" stroke-width="1.5385"/>
-  <rect x="4" y="20" width="40" height="40" rx="2.3077" ry="2.3077" fill="#404448" stroke-width=".76923"/>
-  <g fill-rule="evenodd" shape-rendering="auto">
-   <rect x="9" y="34" width="30" height="2" rx="1" ry=".956" color="#000000" color-rendering="auto" fill="#fff" image-rendering="auto" opacity=".194" solid-color="#000000" style="isolation:auto;mix-blend-mode:normal"/>
-   <path d="m9.9614 33.988c-0.55712 0-1.0056 0.44851-1.0056 1.0056s0.44851 1.0056 1.0056 1.0056h21.056v-2.0113z" color="#000000" color-rendering="auto" fill="#5294e2" image-rendering="auto" solid-color="#000000" style="isolation:auto;mix-blend-mode:normal"/>
-   <circle cx="31.972" cy="34.939" r="2.912" color="#000000" color-rendering="auto" fill="#fafafa" image-rendering="auto" solid-color="#000000" style="isolation:auto;mix-blend-mode:normal"/>
-   <rect x="9" y="44" width="30" height="2" rx="1" ry=".823" color="#000000" color-rendering="auto" fill="#fff" image-rendering="auto" opacity=".194" solid-color="#000000" style="isolation:auto;mix-blend-mode:normal"/>
-   <path d="m9.9614 43.988c-0.55712 0-1.0056 0.44851-1.0056 1.0056s0.44851 1.0056 1.0056 1.0056h11.056v-2.0113z" color="#000000" color-rendering="auto" fill="#5294e2" image-rendering="auto" solid-color="#000000" style="isolation:auto;mix-blend-mode:normal"/>
-   <circle cx="19.972" cy="44.939" r="2.912" color="#000000" color-rendering="auto" fill="#fafafa" image-rendering="auto" solid-color="#000000" style="isolation:auto;mix-blend-mode:normal"/>
-  </g>
- </g>
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   width="64"
+   height="64"
+   version="1.1"
+   id="svg25"
+   sodipodi:docname="ecos.svg"
+   inkscape:version="1.1.1 (3bf5ae0d25, 2021-09-20, custom)"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <sodipodi:namedview
+     id="namedview27"
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1.0"
+     inkscape:pageshadow="2"
+     inkscape:pageopacity="0.0"
+     inkscape:pagecheckerboard="0"
+     showgrid="false"
+     inkscape:zoom="11.046875"
+     inkscape:cx="32"
+     inkscape:cy="32"
+     inkscape:window-width="1920"
+     inkscape:window-height="1024"
+     inkscape:window-x="0"
+     inkscape:window-y="28"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="svg25" />
+  <defs
+     id="defs3">
+    <style
+       id="current-color-scheme"
+       type="text/css">.ColorScheme-Text { color:#4d4d4d; }</style>
+  </defs>
+  <rect
+     x="6"
+     y="6"
+     width="52"
+     height="52"
+     rx="3.00001"
+     ry="3.00001"
+     fill="#26292b"
+     stroke="#292929"
+     stroke-width="2.00005"
+     id="rect5" />
+  <rect
+     x="6"
+     y="6"
+     width="52"
+     height="52"
+     rx="3.00001"
+     ry="3.00001"
+     fill="#404448"
+     stroke-width="0.999999"
+     id="rect7" />
+  <rect
+     x="12.5"
+     y="24.200001"
+     width="39"
+     height="2.5999999"
+     rx="1.3"
+     ry="1.2428"
+     color="#000000"
+     color-rendering="auto"
+     fill="#ffffff"
+     image-rendering="auto"
+     opacity="0.194"
+     solid-color="#000000"
+     style="isolation:auto;mix-blend-mode:normal;fill-rule:evenodd;stroke-width:0.999999;shape-rendering:auto"
+     id="rect9" />
+  <path
+     d="m 13.74982,24.1844 c -0.724256,0 -1.30728,0.583063 -1.30728,1.30728 0,0.724217 0.583063,1.30728 1.30728,1.30728 h 27.3728 v -2.61469 z"
+     color="#000000"
+     color-rendering="auto"
+     fill="#5294e2"
+     image-rendering="auto"
+     solid-color="#000000"
+     style="isolation:auto;mix-blend-mode:normal;fill-rule:evenodd;stroke-width:0.999999;shape-rendering:auto;fill:#da52e2;fill-opacity:1"
+     id="path11" />
+  <circle
+     cx="42.363602"
+     cy="25.420698"
+     r="3.7855999"
+     color="#000000"
+     color-rendering="auto"
+     fill="#fafafa"
+     image-rendering="auto"
+     solid-color="#000000"
+     style="isolation:auto;mix-blend-mode:normal;fill-rule:evenodd;stroke-width:0.999999;shape-rendering:auto"
+     id="circle13" />
+  <rect
+     x="12.5"
+     y="37.200001"
+     width="39"
+     height="2.5999999"
+     rx="1.3"
+     ry="1.0699"
+     color="#000000"
+     color-rendering="auto"
+     fill="#ffffff"
+     image-rendering="auto"
+     opacity="0.194"
+     solid-color="#000000"
+     style="isolation:auto;mix-blend-mode:normal;fill-rule:evenodd;stroke-width:0.999999;shape-rendering:auto"
+     id="rect15" />
+  <path
+     d="m 13.74982,37.1844 c -0.724256,0 -1.30728,0.583063 -1.30728,1.30728 0,0.724217 0.583063,1.30728 1.30728,1.30728 h 14.3728 v -2.61469 z"
+     color="#000000"
+     color-rendering="auto"
+     fill="#5294e2"
+     image-rendering="auto"
+     solid-color="#000000"
+     style="isolation:auto;mix-blend-mode:normal;fill-rule:evenodd;stroke-width:0.999999;shape-rendering:auto;fill:#da52e2;fill-opacity:1"
+     id="path17" />
+  <circle
+     cx="26.763599"
+     cy="38.4207"
+     r="3.7855999"
+     color="#000000"
+     color-rendering="auto"
+     fill="#fafafa"
+     image-rendering="auto"
+     solid-color="#000000"
+     style="isolation:auto;mix-blend-mode:normal;fill-rule:evenodd;stroke-width:0.999999;shape-rendering:auto"
+     id="circle19" />
 </svg>
