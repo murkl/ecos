@@ -55,7 +55,6 @@ ECOS_CONFIG_DIR="$ECOS_HOME/config"
 ECOS_CONFIG_FILE="$ECOS_CONFIG_DIR/ecos.conf"
 
 # ECOS STATE
-ECOS_STATE_DIR="$ECOS_WORKING_DIR/state"
 ECOS_STATE_FILE="$ECOS_WORKING_DIR/ecos.state"
 
 # ECOS TWEAKS
@@ -560,7 +559,6 @@ init_ecos() {
     mkdir -p "$ECOS_CONFIG_DIR"
     mkdir -p "$ECOS_TWEAKS_USER_DIR"
     mkdir -p "$ECOS_WORKING_DIR"
-    mkdir -p "$ECOS_STATE_DIR"
     mkdir -p "$HOME/.local/share/applications"
 
     # DEFAULT CONFIG PROPERTIES
