@@ -826,16 +826,20 @@ update_ecos_repo() {
     /usr/bin/git clean -d -f
     /usr/bin/git pull
 
+    # Check new version
     local installed_init_version=$(<$ECOS_STATE_INITIALIZED_FILE)
     local remote_init_version=$($SCRIPT_FILENAME --version)
-
+    echo "installed: $installed_init_version"
+    echo "remote: $remote_init_version"
     if [ "$installed_init_version" != "" ] && [ "$remote_init_version" != "" ]; then
         if [ "$installed_init_version" != "$remote_init_version" ]; then
-            touch "$ECOS_STATE_SHOW_CHANGELOG"
+            echo "$remote_init_version" >"$ECOS_STATE_SHOW_CHANGELOG"
+            echo "$ECOS_STATE_SHOW_CHANGELOG created"
         fi
     fi
 
     exit 1
+
     # Add user tweaks
     if [ -d "$ECOS_TWEAKS_USER_DIR" ]; then
         readarray -d '' user_tweaks_list < <(find "$ECOS_TWEAKS_USER_DIR" -mindepth 1 -maxdepth 1 -type d -print0)
