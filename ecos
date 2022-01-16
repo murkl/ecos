@@ -592,7 +592,7 @@ init_ecos() {
             return 1
         fi
 
-        ECOS_REMOTE_VERSION="$($ECOS_REMOTE_VERSION_FILE --version)"
+        export ECOS_REMOTE_VERSION="$($ECOS_REMOTE_VERSION_FILE --version)"
         # echo "ECOS LOCAL VERSION:   $ECOS_VERSION"
         # echo "ECOS REMOTE VERSION:  $ECOS_REMOTE_VERSION"
     fi
