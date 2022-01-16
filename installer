@@ -1172,10 +1172,10 @@ gauge_tui_update() {
 check_config_key() {
     local config_file="$1"
     local config_key="$2"
-    local config_value="$3"
+    local default_value="$3"
     touch "$config_file"
     if ! grep -qrnw "$config_file" -e "$config_key=*"; then
-        echo "$config_key=\"$config_value\"" >>"$config_file"
+        echo "$config_key=\"$default_value\"" >>"$config_file"
     fi
 }
 
