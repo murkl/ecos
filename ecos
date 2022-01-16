@@ -847,8 +847,6 @@ update_ecos_repo() {
         fi
     fi
 
-    exit 1
-
     # Add user tweaks
     if [ -d "$ECOS_TWEAKS_USER_DIR" ]; then
         readarray -d '' user_tweaks_list < <(find "$ECOS_TWEAKS_USER_DIR" -mindepth 1 -maxdepth 1 -type d -print0)
