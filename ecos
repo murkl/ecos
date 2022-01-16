@@ -1,5 +1,5 @@
 #!/bin/bash
-ECOS_VERSION=2.3.0
+ECOS_VERSION=2.3.1
 
 #/////////////////////////////////////////////////////
 # LOCATE SCRIPT DIR
@@ -156,7 +156,8 @@ main() {
     # ECOS AUTOSTART
     # ---------------------------------------
     if [ "$1" = "--autostart" ]; then
-        init_ecos && (sleep 10 && notify_ecos_update >/dev/null) &
+        init_ecos
+        (sleep 10 && notify_ecos_update >/dev/null) &
         if [ "$ECOS_SHOW_CHANGELOG" = "true" ]; then
             zenity_show_changelog
         fi
