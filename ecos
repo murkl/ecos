@@ -749,7 +749,7 @@ exec_install_ecos() {
     rm -f "$HOME/.zlogin"
     echo -e ">> DONE"
 
-    # Create initialized state file
+    # Set initialized state
     print_title 'UPDATE ECOS STATE'
     wait && replace_config_value "$ECOS_STATE_FILE" "ECOS_INSTALLED_VERSION" "$ECOS_VERSION"
     echo -e ">> DONE"
