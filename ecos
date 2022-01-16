@@ -143,7 +143,7 @@ main() {
     # UPDATE NOTIFY
     # ---------------------------------------
     if [ "$1" = "--update-notify" ]; then
-        notify_ecos_update
+        init_ecos && notify_ecos_update
         exit 0
     fi
 
@@ -151,7 +151,7 @@ main() {
     # ECOS AUTOSTART
     # ---------------------------------------
     if [ "$1" = "--autostart" ]; then
-        (sleep 10 && notify_ecos_update >/dev/null) &
+        init_ecos && (sleep 10 && notify_ecos_update >/dev/null) &
         if [ "$ECOS_SHOW_CHANGELOG" = "true" ]; then
             zenity_show_changelog
         fi
@@ -162,6 +162,7 @@ main() {
     # ECOS TWEAKS
     # ---------------------------------------
     if [ "$1" = "--install-tweaks" ]; then
+        init_ecos
         tui_tweaks_menu '--no-update'
         exit 0
     fi
@@ -982,9 +983,6 @@ update_ecos_system() {
 }
 
 notify_ecos_update() {
-
-    init_ecos
-
     if [ "$ECOS_REMOTE_VERSION" != "$ECOS_VERSION" ] && [ "$ECOS_REMOTE_VERSION" != "" ]; then
         notify "New $SCRIPT_TITLE $ECOS_REMOTE_VERSION Update available"
     fi
