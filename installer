@@ -1179,6 +1179,22 @@ check_config_key() {
     fi
 }
 
+check_config_key_array() {
+    local config_file="$1" && shift
+    local config_key="$1" && shift
+    local default_value_list=("$@")
+
+    local items_txt='( '
+    for item in "${default_value_list[@]}"; do
+        items_txt="$items_txt'$item' "
+    done
+    items_txt="$items_txt"')'
+
+    # Check items
+    check_config_key "$config_file" "$config_key" "$items_txt"
+
+}
+
 replace_config_value() {
     local config_file="$1"
     local key="$2"
