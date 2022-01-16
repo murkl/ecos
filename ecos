@@ -1,5 +1,5 @@
 #!/bin/bash
-ECOS_VERSION=2.3.2
+ECOS_VERSION=2.3.3
 
 #/////////////////////////////////////////////////////
 # LOCATE SCRIPT DIR
@@ -314,31 +314,6 @@ api_zenity_root_password() {
 
     echo "$root_password"
     root_password=''
-}
-
-#/////////////////////////////////////////////////////
-# ZENITY
-#/////////////////////////////////////////////////////
-
-zenity() {
-    /usr/bin/zenity --name="$SCRIPT_ID" --width=350 --height=280 --title='' --text='' --window-icon="$ECOS_ICON_FILE" "$@" 2>/dev/null
-}
-
-notify() {
-    zenity --notification --text="$SCRIPT_TITLE\n$1"
-}
-
-print_zenity_header() {
-    local title="$1"
-    local version_remote="$2"
-    local header='<span font_family="monospace" foreground="#494949" font="18"><b>'$SCRIPT_TITLE' Manager</b></span>'
-    local version_txt='<span font_family="monospace" foreground="#494949" font="10"><b>Version: </b></span>'
-    local version='<span font_family="monospace" foreground="#729a4f" font="11">'$ECOS_VERSION'</span>'
-    if [ "$version_remote" != "" ] && [ "$ECOS_VERSION" != "$version_remote" ]; then
-        local version='<span font_family="monospace" foreground="#db7844" font="10"><b>'$ECOS_VERSION'</b></span><span font_family="monospace" foreground="#494949" font="10"><b> ➤ </b></span><span font_family="monospace" foreground="#A3BE8C" font="10"><b>'$version_remote'</b></span>'
-    fi
-    local title='<span font_family="monospace" foreground="#494949" font="10"><b>'$title'</b></span>'
-    echo "\n$header\n$version\n\n$title"
 }
 
 #/////////////////////////////////////////////////////
@@ -1192,6 +1167,30 @@ update_tweaks() {
         local tweak_sh="$ECOS_REPO_DIR/$tweak_id/${tweak_id}.sh"
         exec_tweak "update" "$tweak_id"
     done
+}
+
+#/////////////////////////////////////////////////////
+# ZENITY
+#/////////////////////////////////////////////////////
+
+zenity() {
+    /usr/bin/zenity --name="$SCRIPT_ID" --width=350 --height=280 --title='' --text='' --window-icon="$ECOS_ICON_FILE" "$@" 2>/dev/null
+}
+
+notify() {
+    zenity --notification --text="$SCRIPT_TITLE\n$1"
+}
+
+print_zenity_header() {
+    local title="$1"
+    local version_remote="$2"
+    local header='<span font_family="monospace" foreground="#404448" font="18"><b>'$SCRIPT_TITLE' Manager</b></span>'
+    local version='<span font_family="monospace" foreground="#da52e2" font="11">'$ECOS_VERSION'</span>'
+    if [ "$version_remote" != "" ] && [ "$ECOS_VERSION" != "$version_remote" ]; then
+        local version='<span font_family="monospace" foreground="#db7844" font="10"><b>'$ECOS_VERSION'</b></span><span font_family="monospace" foreground="#404448" font="10"><b> ➤ </b></span><span font_family="monospace" foreground="#A3BE8C" font="10"><b>'$version_remote'</b></span>'
+    fi
+    local title='<span font_family="monospace" foreground="#404448" font="10"><b>'$title'</b></span>'
+    echo "\n$header\n$version\n\n$title"
 }
 
 #/////////////////////////////////////////////////////
