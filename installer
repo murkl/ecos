@@ -738,9 +738,9 @@ exec_install_chroot() {
     # ECOS Repo
     #----------------------------------------
     gauge_tui_update 98 "ECOS Repo"
-    mkdir -p "/home/$USERNAME/.ecos"
-
-    local ecos_repo_dir="/home/$USERNAME/.ecos/repo"
+    local ecos_system_dir="/home/$USERNAME/.ecos/.system"
+    local ecos_repo_dir="$ecos_system_diru/repo"
+    mkdir -p "$ecos_system_dir"
     /usr/bin/git clone "$ECOS_REPO_URL" "$ecos_repo_dir"
 
     chmod +x "$ecos_repo_dir/ecos"
@@ -750,7 +750,7 @@ exec_install_chroot() {
     local user_profile="/home/$USERNAME/.zlogin"
     echo '#!/bin/sh' >$user_profile
     echo 'export ECOS_HOME="$HOME/.ecos"' >>$user_profile
-    echo 'export ECOS_CORE="$ECOS_HOME/repo/ecos"' >>$user_profile
+    echo 'export ECOS_CORE="$ECOS_HOME/.system/repo/ecos"' >>$user_profile
     echo '$ECOS_CORE --install' >>$user_profile
     chmod +x $user_profile
 
