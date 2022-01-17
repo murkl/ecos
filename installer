@@ -84,7 +84,7 @@ main() {
     #----------------------------------------
     # CHROOT INSTALLER
     #----------------------------------------
-    if [ "$1" = "--install-chroot" ] && [ "$2" != "" ] && [ "$3" != "" ]; then
+    if [ "$1" = "--chroot" ] && [ "$2" != "" ] && [ "$3" != "" ]; then
         exec_install_chroot "$2" "$3"
         exit $?
     fi
@@ -92,7 +92,7 @@ main() {
     # ---------------------------------------
     # FORCE: INSTALL ECOS CORE
     # ---------------------------------------
-    if [ "$1" = "--install-core" ]; then
+    if [ "$1" = "--core" ]; then
         tui_main_menu
         exit $?
     fi
@@ -100,7 +100,7 @@ main() {
     # ---------------------------------------
     # FORCE: CREATE BOOTABLE USB
     # ---------------------------------------
-    if [ "$1" = "--create-usb" ]; then
+    if [ "$1" = "--usb" ]; then
         tui_create_usb
         exit $?
     fi
@@ -202,12 +202,14 @@ tui_core_installer() {
     #----------------------------------------
     tui_init 0 "Enter Encryption Password"
     if ! password_encryption=$(whiptail --passwordbox "$(cat "$TUI_FILE")" "$TUI_HEIGHT" "$TUI_WIDTH" 3>&1 1>&2 2>&3); then
+        tui_main_menu
         exit 0
     fi
 
     # Confirm password
     tui_init 0 "Confirm Encryption Password"
     if ! password_input_confirm=$(whiptail --passwordbox "$(cat "$TUI_FILE")" "$TUI_HEIGHT" "$TUI_WIDTH" 3>&1 1>&2 2>&3); then
+        tui_main_menu
         exit 0
     fi
 
@@ -215,7 +217,8 @@ tui_core_installer() {
     if [ "$password_encryption" != "$password_input_confirm" ]; then
         tui_init 0 "Password Mismatch! Restart the Installation..."
         whiptail --msgbox "$(cat "$TUI_FILE")" "$TUI_HEIGHT" "$TUI_WIDTH"
-        exit 1
+        tui_main_menu
+        exit 0
     fi
 
     #----------------------------------------
@@ -225,6 +228,7 @@ tui_core_installer() {
     tui_add 0 "!!! ALL YOUR DATA WILL BE LOST !!!"
     tui_add 0 "Continue?"
     if (! whiptail --yesno "$(cat "$TUI_FILE")" "$TUI_HEIGHT" "$TUI_WIDTH"); then
+        tui_main_menu
         exit 0
     fi
 
@@ -405,8 +409,8 @@ exec_install_core() {
     # Chroot into new system
     #----------------------------------------
     gauge_tui_update 54 "Enter CHROOT Environement"
-    log_txt="arch-chroot /mnt /$INSTALLER_ID --install-chroot $uefi_mode <ENCRYPTION_PASSWORD>"
-    if ! arch-chroot /mnt "/$INSTALLER_ID" --install-chroot "$uefi_mode" "$password_encryption"; then
+    log_txt="arch-chroot /mnt /$INSTALLER_ID --chroot $uefi_mode <ENCRYPTION_PASSWORD>"
+    if ! arch-chroot /mnt "/$INSTALLER_ID" --chroot "$uefi_mode" "$password_encryption"; then
         core_log "e" "$log_txt"
         exit 1
     else
@@ -464,10 +468,11 @@ exec_install_chroot() {
     # Boootloader, Microcode Kernel Updates for CPU & Core Tools
     gauge_tui_update 58 "$gauge_txt"
     bootloader_pkgs="efibootmgr"
-    if [ "$uefi_mode" = "false" ]; then
-        bootloader_pkgs="grub"
-    fi
-    exec_command_wrap pacman --noconfirm --needed -S $UCODE $bootloader_pkgs dosfstools gptfdisk $CUSTOM_PACKAGES
+    [ "$uefi_mode" = "false" ] && bootloader_pkgs="grub"
+
+    local ucode_pkg="$UCODE"
+    [ "$ucode_pkg" = "disabled" ] && ucode_pkg=""
+    exec_command_wrap pacman --noconfirm --needed -S $ucode_pkg $bootloader_pkgs dosfstools gptfdisk $CUSTOM_PACKAGES
 
     # Network manager
     gauge_tui_update 60 "$gauge_txt"
@@ -477,8 +482,12 @@ exec_install_chroot() {
     gauge_tui_update 64 "$gauge_txt"
     exec_command_wrap pacman --noconfirm --needed -S git
 
+    # Nano
+    gauge_tui_update 67 "$gauge_txt"
+    exec_command_wrap pacman --noconfirm --needed -S nano
+
     # Default shell
-    gauge_tui_update 70 "$gauge_txt"
+    gauge_tui_update 72 "$gauge_txt"
     exec_command_wrap pacman --noconfirm --needed -S zsh
 
     # if [ "$WORKSTATION" = "notebook" ]; then
@@ -568,7 +577,7 @@ exec_install_chroot() {
 
         echo 'title   Arch Linux' >/boot/loader/entries/arch.conf
         echo 'linux   /vmlinuz-linux' >>/boot/loader/entries/arch.conf
-        [ -n "$UCODE" ] && echo "initrd  /$UCODE.img" >>/boot/loader/entries/arch.conf
+        [ "$UCODE" != "disabled" ] && echo "initrd  /$UCODE.img" >>/boot/loader/entries/arch.conf
         echo 'initrd  /initramfs-linux.img' >>/boot/loader/entries/arch.conf
         echo "options cryptdevice=$ROOT_PARTITION:cryptroot root=/dev/mapper/cryptroot quiet splash loglevel=3 rd.systemd.show_status=false rd.udev.log_priority=3 vt.global_cursor_default=0 rw" >>/boot/loader/entries/arch.conf
     else
@@ -789,11 +798,13 @@ check_config() {
     if [ "$USERNAME" = "" ]; then
         tui_init 0 "Enter Username"
         if ! USERNAME=$(whiptail --inputbox "$(cat "$TUI_FILE")" "$TUI_HEIGHT" "$TUI_WIDTH" 3>&1 1>&2 2>&3); then
+            tui_main_menu
             exit 0
         fi
         if [ "$USERNAME" = "" ]; then
             tui_init 0 "Username was empty! Restart the Installation..."
             whiptail --textbox "$TUI_FILE" "$TUI_HEIGHT" "$TUI_WIDTH"
+            tui_main_menu
             exit 0
         fi
         replace_config_value "$INSTALLER_CONFIG_FILE" "USERNAME" "$USERNAME"
@@ -805,6 +816,7 @@ check_config() {
     if [ "$WORKSTATION" = "" ]; then
         tui_init 20 "Choose Workstation"
         if ! WORKSTATION=$(whiptail --menu --notags "$(cat "$TUI_FILE")\n" "$TUI_HEIGHT" "$TUI_WIDTH" 2 "desktop" "Desktop" "notebook" "Notebook" 3>&1 1>&2 2>&3); then
+            tui_main_menu
             exit 0
         fi
 
@@ -818,6 +830,7 @@ check_config() {
     if [ "$DUALBOOT" = "" ]; then
         tui_init 25 "Dualboot"
         if ! DUALBOOT=$(whiptail --menu --notags "$(cat "$TUI_FILE")\n" "$TUI_HEIGHT" "$TUI_WIDTH" 2 "default" "Default" "windows10" "Windows 10" 3>&1 1>&2 2>&3); then
+            tui_main_menu
             exit 0
         fi
 
@@ -831,6 +844,7 @@ check_config() {
 
         tui_init 19 "Choose Setup Language"
         if ! lang_result=$(whiptail --menu --notags "$(cat "$TUI_FILE")\n" "$TUI_HEIGHT" "$TUI_WIDTH" 2 "en_US" "English" "de_DE" "German" 3>&1 1>&2 2>&3); then
+            tui_main_menu
             exit 0
         fi
         if [ "$lang_result" = "en_US" ]; then
@@ -853,15 +867,11 @@ check_config() {
     # Check Microcode
     #----------------------------------------
     if [ "$UCODE" = "" ]; then
-
         tui_init 17 "Choose Processor Microcode"
-        if ! UCODE=$(whiptail --menu --notags "$(cat "$TUI_FILE")\n" "$TUI_HEIGHT" "$TUI_WIDTH" 3 "none" "Disable" "intel-ucode" "Intel" "amd-ucode" "AMD" 3>&1 1>&2 2>&3); then
+        if ! UCODE=$(whiptail --menu --notags "$(cat "$TUI_FILE")\n" "$TUI_HEIGHT" "$TUI_WIDTH" 3 "disabled" "Disable" "intel-ucode" "Intel" "amd-ucode" "AMD" 3>&1 1>&2 2>&3); then
+            tui_main_menu
             exit 0
         fi
-        if [ "$UCODE" = 'none' ]; then
-            UCODE=''
-        fi
-
         replace_config_value "$INSTALLER_CONFIG_FILE" "UCODE" "$UCODE"
     fi
 
@@ -916,6 +926,7 @@ check_config_disk() {
 
         tui_init 24 "Choose Disk"
         if ! DISK=$(whiptail --menu "$(cat "$TUI_FILE")" "$TUI_HEIGHT" "$TUI_WIDTH" "${#disk_array[@]}" "${disk_array[@]}" 3>&1 1>&2 2>&3); then
+            tui_main_menu
             exit 0
         fi
 
@@ -1029,6 +1040,7 @@ tui_create_usb() {
     tui_init 17 "CREATE BOOTABLE USB STICK"
     tui_add 20 "Choose Target Device"
     if ! usb_disk=$(whiptail --menu "$(cat "$TUI_FILE")\n" "$TUI_HEIGHT" "$TUI_WIDTH" "${#disk_array[@]}" "${disk_array[@]}" 3>&1 1>&2 2>&3); then
+        tui_main_menu
         exit 0
     fi
 
@@ -1192,30 +1204,30 @@ check_config_key_array() {
 
     # Check items
     check_config_key "$config_file" "$config_key" "$items_txt"
-
 }
 
 replace_config_value() {
     local config_file="$1"
-    local key="$2"
-    local value="$3"
-    check_config_key "$config_file" "$key" ""
-    sed -i "s#$key=.*#$key=\"$value\"#g" "$config_file"
+    local config_key="$2"
+    local config_value="$3"
+    check_config_key "$config_file" "$config_key" ""
+    sed -i "s#$config_key=.*#$config_key=\"$config_value\"#g" "$config_file"
 }
 
 replace_config_value_array() {
     local config_file="$1" && shift
-    local key=$1 && shift
-    local value=("$@")
+    local config_key=$1 && shift
+    local config_value_list=("$@")
 
-    local items_txt='( '
-    for item in "${value[@]}"; do
-        items_txt="$items_txt'$item' "
+    local value_item=''
+    local new_value_item_list='( '
+    for value_item in "${config_value_list[@]}"; do
+        new_value_item_list="$new_value_item_list'$value_item' "
     done
-    items_txt="$items_txt"')'
+    new_value_item_list="$new_value_item_list"')'
 
     # Replace items
-    replace_config_value "$key" "$items_txt"
+    replace_config_value "$config_file" "$config_key" "$new_value_item_list"
 }
 
 tui_init() {

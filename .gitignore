@@ -1,1 +1,6 @@
 ecos.tui
+ecos-installer.tui
+ecos-installer.log
+ecos-installer.conf
+ecos-installer.conf.backup
+ecos-installer.log.backup
