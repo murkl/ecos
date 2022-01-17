@@ -98,6 +98,11 @@ TERM_COLOR_NULL='\033[0m' # No Color
 
 main() {
 
+    log -e "No versions found"
+    log -i "No versions found"
+
+    exit
+
     # ---------------------------------------
     # API
     # ---------------------------------------
@@ -1335,19 +1340,19 @@ print_title() {
 #/////////////////////////////////////////////////////
 
 log() {
-    local log_level="${TERM_COLOR_GREEN}INFO ${TERM_COLOR_NULL}"
+    local log_level="${TERM_COLOR_GREEN} INFO${TERM_COLOR_NULL}"
 
     if [ "$1" = "-e" ]; then
         shift && log_level="${TERM_COLOR_RED}ERROR${TERM_COLOR_NULL}"
     fi
     if [ "$1" = "-i" ]; then
-        shift && log_level="${TERM_COLOR_GREEN}INFO ${TERM_COLOR_NULL}"
+        shift && log_level="${TERM_COLOR_GREEN} INFO${TERM_COLOR_NULL}"
     fi
     if [ "$1" = "-d" ]; then
         shift && log_level="${TERM_COLOR_BLUE}DEBUG${TERM_COLOR_NULL}"
     fi
 
-    echo -e "${TERM_COLOR_BLUE}$(date "+%Y-%m-%d-%H:%M:%S")${TERM_COLOR_NULL} | ${log_level} | ${TERM_COLOR_YELLOW}$*"
+    echo -e "${TERM_COLOR_BLUE}$(date "+%Y-%m-%d-%H:%M:%S")${TERM_COLOR_NULL} | ${TERM_COLOR_PURPLE} ECOS ${ECOS_VERSION} ${TERM_COLOR_NULL} | ${log_level} | ${TERM_COLOR_YELLOW}$*"
 }
 
 #/////////////////////////////////////////////////////
