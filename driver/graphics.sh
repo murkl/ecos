@@ -81,8 +81,9 @@ nvidia_all() {
         # Rebuild
         sh -c 'echo $root_password | sudo -S sed -i "sudo mkinitcpio -P"'
     ) &
-
-    if ! ecos --api progress "Install NVIDIA Driver" "$!"; then exit 1; fi
+    local task_pid="$!"
+    local task_status_file="/tmp/ecos-task.$(date "+%Y-%m-%d-%H:%M:%S")"
+    if ! ecos --api progress "Install NVIDIA Driver" "$task_pid" "$task_status_file"; then exit 1; fi
 
     # Notify
     ecos --api notify "NVIDIA Driver sucessfully installed"
