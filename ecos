@@ -317,23 +317,20 @@ api_zenity_root_password() {
 
 zenity_main_menu() {
 
-    local pid_file="/tmp/ecos.pids"
-    if [ "$ECOS_STATE_VERSION_REMOTE" = '' ]; then
-        (
-            if ! update_ecos_remote && update_ecos_repo; then
-                echo "CANCELED" >"$pid_file"
-            else
-                echo "SUCCESS" >"$pid_file"
-            fi
-        ) &
+    if [ "$1" = "--init" ]; then
+        local task_status_file="/tmp/ecos-task.$(date "+%Y-%m-%d-%H:%M:%S")"
+        (update_ecos_remote && update_ecos_repo && echo "SUCCESS" >"$task_status_file" && return 0) || echo "FAILED" >"$task_status_file" &
         local task_pid="$!"
         local task_status=$(api_zenity_progress "Initialize $SCRIPT_TITLE CORE..." "$task_pid" "$task_status_file" --no-cancel)
 
         if [ "$task_status" = "CANCELED" ]; then
             return 1
         fi
-
-        if [ "$pid_state" = "SUCCESS" ]; then
+        if [ "$task_status" = "FAILED" ]; then
+            notify "INIT FAILED"
+            return 1
+        fi
+        if [ "$task_status" = "SUCCESS" ]; then
             init_ecos
         fi
     fi
@@ -795,21 +792,6 @@ update_ecos_remote() {
     wait && replace_config_value "$ECOS_STATE_FILE" "ECOS_STATE_VERSION_REMOTE" "$($ECOS_REMOTE_VERSION_FILE --version)"
 }
 
-update_ecos_remote() {
-    # DOWNLOAD REMOTE ECOS VERSION
-    if ! curl -s -L "$SCRIPT_FILE_URL" >"$ECOS_REMOTE_VERSION_FILE"; then
-        log -e "curl -s -L $SCRIPT_FILE_URL"
-        return 1
-    fi
-    if ! chmod +x "$ECOS_REMOTE_VERSION_FILE"; then
-        log -e "chmod +x $ECOS_REMOTE_VERSION_FILE"
-        return 1
-    fi
-
-    # SET VARS
-    wait && replace_config_value "$ECOS_STATE_FILE" "ECOS_STATE_VERSION_REMOTE" "$ECOS_STATE_VERSION_REMOTE"
-}
-
 update_ecos_repo() {
 
     cd "$HOME" || exit 1
@@ -942,7 +924,7 @@ update_ecos_system() {
         else
             "$ECOS_INIT_SCRIPT" --init
             replace_config_value "$ECOS_STATE_FILE" "ECOS_STATE_VERSION_INIT_SCRIPT" "$new_init_script_version"
-            echo ">>> DONE"
+            echo -e ">>> UPDATED: $ECOS_STATE_VERSION_INIT_SCRIPT > $new_init_script_version"
         fi
     else
         echo -e ">>> UP TO DATE. SKIPPED..."
@@ -953,6 +935,7 @@ update_ecos_system() {
     if [ "$ECOS_STATE_VERSION_INSTALLED" != "$SCRIPT_VERSION" ]; then
         wait && replace_config_value "$ECOS_STATE_FILE" "ECOS_STATE_VERSION_INSTALLED" "$SCRIPT_VERSION"
         wait && replace_config_value "$ECOS_STATE_FILE" "ECOS_STATE_SHOW_CHANGELOG" "true"
+        echo -e ">>> UPDATED: $ECOS_STATE_VERSION_INSTALLED > $SCRIPT_VERSION"
     else
         echo -e ">>> UP TO DATE. SKIPPED..."
     fi
