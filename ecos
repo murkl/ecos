@@ -193,7 +193,7 @@ main() {
     # OPEN MAIN MENU
     #----------------------------------------
     if [ "$1" = "" ]; then
-        zenity_main_menu
+        zenity_main_menu --init
         exit $?
     fi
 }
@@ -317,20 +317,22 @@ api_zenity_root_password() {
 
 zenity_main_menu() {
 
-    local task_status_file="/tmp/ecos-task.$(date "+%Y-%m-%d-%H:%M:%S")"
-    (update_ecos_remote && update_ecos_repo && echo "SUCCESS" >"$task_status_file" && return 0) || echo "FAILED" >"$task_status_file" &
-    local task_pid="$!"
-    local task_status=$(api_zenity_progress "Initialize $SCRIPT_TITLE CORE..." "$task_pid" "$task_status_file" --no-cancel)
+    if [ "$1" = "--init" ]; then
+        local task_status_file="/tmp/ecos-task.$(date "+%Y-%m-%d-%H:%M:%S")"
+        (update_ecos_remote && update_ecos_repo && echo "SUCCESS" >"$task_status_file" && return 0) || echo "FAILED" >"$task_status_file" &
+        local task_pid="$!"
+        local task_status=$(api_zenity_progress "Initialize $SCRIPT_TITLE CORE..." "$task_pid" "$task_status_file" --no-cancel)
 
-    if [ "$task_status" = "CANCELED" ]; then
-        return 1
-    fi
-    if [ "$task_status" = "FAILED" ]; then
-        notify "INIT FAILED"
-        return 1
-    fi
-    if [ "$task_status" = "SUCCESS" ]; then
-        init_ecos
+        if [ "$task_status" = "CANCELED" ]; then
+            return 1
+        fi
+        if [ "$task_status" = "FAILED" ]; then
+            notify "INIT FAILED"
+            return 1
+        fi
+        if [ "$task_status" = "SUCCESS" ]; then
+            init_ecos
+        fi
     fi
 
     local menu_items=()
