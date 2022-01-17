@@ -1192,30 +1192,30 @@ check_config_key_array() {
 
     # Check items
     check_config_key "$config_file" "$config_key" "$items_txt"
-
 }
 
 replace_config_value() {
     local config_file="$1"
-    local key="$2"
-    local value="$3"
-    check_config_key "$config_file" "$key" ""
-    sed -i "s#$key=.*#$key=\"$value\"#g" "$config_file"
+    local config_key="$2"
+    local config_value="$3"
+    check_config_key "$config_file" "$config_key" ""
+    sed -i "s#$config_key=.*#$config_key=\"$config_value\"#g" "$config_file"
 }
 
 replace_config_value_array() {
     local config_file="$1" && shift
-    local key=$1 && shift
-    local value=("$@")
+    local config_key=$1 && shift
+    local config_value_list=("$@")
 
-    local items_txt='( '
-    for item in "${value[@]}"; do
-        items_txt="$items_txt'$item' "
+    local value_item=''
+    local new_value_item_list='( '
+    for value_item in "${config_value_list[@]}"; do
+        new_value_item_list="$new_value_item_list'$value_item' "
     done
-    items_txt="$items_txt"')'
+    new_value_item_list="$new_value_item_list"')'
 
     # Replace items
-    replace_config_value "$key" "$items_txt"
+    replace_config_value "$config_key" "$new_value_item_list"
 }
 
 tui_init() {
