@@ -1,5 +1,5 @@
 #!/bin/bash
-ECOS_VERSION=2.3.3
+SCRIPT_VERSION=2.3.3
 
 #/////////////////////////////////////////////////////
 # LOCATE SCRIPT DIR
@@ -39,6 +39,7 @@ ECOS_REPO_DIR="$ECOS_WORKING_DIR/repo"
 ECOS_BIN_DIR="$ECOS_HOME/bin"
 ECOS_DOTFILES_DIR="$ECOS_WORKING_DIR/dotfiles"
 ECOS_INIT_SCRIPT="$ECOS_HOME/init.sh"
+ECOS_LOG_FILE="$ECOS_WORKING_DIR/ecos.log"
 
 # ECOS ASSETS
 ECOS_ICON_FILE="$SCRIPT_DIR/assets/ecos.svg"
@@ -70,12 +71,12 @@ ECOS_DRIVER_META_DIR="$ECOS_WORKING_DIR/driver-meta"
 
 # ECOS UPDATE
 ECOS_REMOTE_VERSION_FILE="$ECOS_WORKING_DIR/ecos.remote"
-ECOS_REMOTE_VERSION=''
 
 # ECOS DEFAULT PROPERTIES
 TERMINAL_EXEC='gnome-terminal -e'
 
 # STATE DEFAULTS
+ECOS_STATE_DEV_ENABLED="false"
 ECOS_STATE_SHOW_CHANGELOG="true"
 ECOS_STATE_REPO_ID=""
 ECOS_STATE_TWEAKS_ENABLED_LIST=("")
@@ -98,10 +99,18 @@ TERM_COLOR_NULL='\033[0m' # No Color
 
 main() {
 
-    log -e "No versions found"
-    log -i "No versions found"
+    # ---------------------------------------
+    # SHOW VERSION
+    # ---------------------------------------
+    if [ "$1" = "--version" ]; then
+        echo -e "$SCRIPT_VERSION"
+        exit 0
+    fi
 
-    exit
+    # ---------------------------------------
+    # INIT ECOS
+    # ---------------------------------------
+    init_ecos
 
     # ---------------------------------------
     # API
@@ -121,19 +130,6 @@ main() {
         ecos_api "$api_action" "$@"
         exit 0
     fi
-
-    # ---------------------------------------
-    # SHOW VERSION
-    # ---------------------------------------
-    if [ "$1" = "--version" ]; then
-        echo -e "$ECOS_VERSION"
-        exit 0
-    fi
-
-    # ---------------------------------------
-    # INIT ECOS
-    # ---------------------------------------
-    init_ecos
 
     # ---------------------------------------
     # SHOW CHANGELOG
@@ -262,7 +258,7 @@ api_zenity() {
 api_zenity_menu() {
     local title="$1"
     shift || exit 1
-    zenity --list --hide-header --column="" --text="$(print_zenity_header "$title" $ECOS_VERSION)" --cancel-label='Back' --ok-label='Ok' "$@"
+    zenity --list --hide-header --column="" --text="$(print_zenity_header "$title")" --cancel-label='Back' --ok-label='Ok' "$@"
 }
 
 api_zenity_progress() {
@@ -333,7 +329,7 @@ api_zenity_root_password() {
 zenity_main_menu() {
 
     local pid_file="/tmp/ecos.pids"
-    if [ "$ECOS_REMOTE_VERSION" = '' ]; then
+    if [ "$ECOS_STATE_VERSION_REMOTE" = '' ]; then
         (
             if ! update_ecos_remote && update_ecos_repo; then
                 echo "CANCELED" >"$pid_file"
@@ -367,7 +363,7 @@ zenity_main_menu() {
     menu_items+=("Tweaks")
     menu_items+=("Driver")
     menu_items+=("Settings")
-    if ! zenity_result="$(zenity --list --hide-header --column="" --text="$(print_zenity_header 'Menu' $ECOS_REMOTE_VERSION)" --cancel-label='Exit' --ok-label='Ok' "${menu_items[@]}")"; then
+    if ! zenity_result="$(zenity --list --hide-header --column="" --text="$(print_zenity_header 'Menu')" --cancel-label='Exit' --ok-label='Ok' "${menu_items[@]}")"; then
         exit 0
     fi
 
@@ -400,7 +396,7 @@ zenity_dotfiles_menu() {
     menu_items+=("Edit Init Script")
     menu_items+=("Reset Dotfiles")
     menu_items+=("Clone Dotfiles Repo")
-    if ! zenity_result="$(zenity --list --hide-header --column="" --text="$(print_zenity_header 'Dotfiles' $ECOS_REMOTE_VERSION)" --cancel-label='Back' --ok-label='Ok' "${menu_items[@]}")"; then
+    if ! zenity_result="$(zenity --list --hide-header --column="" --text="$(print_zenity_header 'Dotfiles')" --cancel-label='Back' --ok-label='Ok' "${menu_items[@]}")"; then
         return 0
     fi
 
@@ -442,7 +438,7 @@ zenity_driver_menu() {
     local menu_items=()
     menu_items+=("Audio Driver")
     menu_items+=("Graphics Driver")
-    if ! zenity_result="$(zenity --list --hide-header --column="" --text="$(print_zenity_header 'Dotfiles' $ECOS_REMOTE_VERSION)" --cancel-label='Back' --ok-label='Ok' "${menu_items[@]}")"; then
+    if ! zenity_result="$(zenity --list --hide-header --column="" --text="$(print_zenity_header 'Dotfiles')" --cancel-label='Back' --ok-label='Ok' "${menu_items[@]}")"; then
         zenity_main_menu
         return 0
     fi
@@ -564,17 +560,13 @@ init_ecos() {
     check_config_key "$ECOS_STATE_FILE" "ECOS_STATE_VERSION_REPO" "$ECOS_STATE_VERSION_REPO"
     check_config_key "$ECOS_STATE_FILE" "ECOS_STATE_VERSION_INIT_SCRIPT" "$ECOS_STATE_VERSION_INIT_SCRIPT"
     check_config_key "$ECOS_STATE_FILE" "ECOS_STATE_REPO_ID" "$ECOS_STATE_REPO_ID"
+    check_config_key "$ECOS_STATE_FILE" "ECOS_STATE_DEV_ENABLED" "$ECOS_STATE_DEV_ENABLED"
     check_config_key_array "$ECOS_STATE_FILE" "ECOS_STATE_TWEAKS_ENABLED_LIST" "${ECOS_STATE_TWEAKS_ENABLED_LIST[@]}"
 
     # DOWNLOAD REMOTE ECOS VERSION
     if [ ! -f "$ECOS_REMOTE_VERSION_FILE" ]; then
         update_ecos_remote
     fi
-
-    # SET STATE ECOS VERSIONS
-    ECOS_REMOTE_VERSION="$($ECOS_REMOTE_VERSION_FILE --version)"
-    replace_config_value "$ECOS_STATE_FILE" "ECOS_STATE_VERSION_REMOTE" "$ECOS_REMOTE_VERSION"
-    replace_config_value "$ECOS_STATE_FILE" "ECOS_STATE_VERSION_REPO" "$($ECOS_BIN --version)"
 
     # CHECK CONFIG PROPERTIES
     check_config_key "$ECOS_CONFIG_FILE" "TERMINAL_EXEC" "$TERMINAL_EXEC"
@@ -616,27 +608,27 @@ tui_install_ecos() {
         fi
 
         # Exec install
-        exec_install_ecos "$selected_dotfiles_repo" "$ECOS_DOTS_GNOME_URL"
+        exec_install_ecos "$selected_dotfiles_repo" "true" "$ECOS_DOTS_GNOME_URL"
         exit "$?"
     fi
 
     if [ "$selected_dotfiles_repo" = "gnome-https" ]; then
-        exec_install_ecos "$selected_dotfiles_repo" "https://github.com/murkl/dotfiles-gnome.git"
+        exec_install_ecos "$selected_dotfiles_repo" "false" "https://github.com/murkl/dotfiles-gnome.git"
         exit "$?"
     fi
 
     if [ "$selected_dotfiles_repo" = "bspwm-https" ]; then
-        exec_install_ecos "$selected_dotfiles_repo" "https://github.com/murkl/dotfiles-bspwm.git"
+        exec_install_ecos "$selected_dotfiles_repo" "false" "https://github.com/murkl/dotfiles-bspwm.git"
         exit "$?"
     fi
 
     if [ "$selected_dotfiles_repo" = "gnome-ssh" ]; then
-        exec_install_ecos "$selected_dotfiles_repo" "git@github.com:murkl/dotfiles-gnome.git"
+        exec_install_ecos "$selected_dotfiles_repo" "true" "git@github.com:murkl/dotfiles-gnome.git"
         exit "$?"
     fi
 
     if [ "$selected_dotfiles_repo" = "bspwm-ssh" ]; then
-        exec_install_ecos "$selected_dotfiles_repo" "https://github.com/murkl/dotfiles-bspwm.git"
+        exec_install_ecos "$selected_dotfiles_repo" "true" "https://github.com/murkl/dotfiles-bspwm.git"
         exit "$?"
     fi
 
@@ -645,7 +637,8 @@ tui_install_ecos() {
 exec_install_ecos() {
 
     local repo_id="$1"
-    local dotfiles_url="$2"
+    local dev_enabled="$2"
+    local dotfiles_url="$3"
 
     clear
     print_header
@@ -686,7 +679,7 @@ exec_install_ecos() {
 
     print_title "INIT DOTFILES"
     if [ ! -f "$ECOS_INIT_SCRIPT" ]; then
-        echo "ERROR: $ECOS_INIT_SCRIPT not found"
+        log -e "$ECOS_INIT_SCRIPT not found"
         exit 1
     fi
     echo -e ">> DONE"
@@ -725,7 +718,6 @@ exec_install_ecos() {
     echo -e "EXECUTE $ECOS_INIT_SCRIPT"
     chmod +x "$ECOS_INIT_SCRIPT" || exit 1
     "$ECOS_INIT_SCRIPT" --init
-    wait && replace_config_value "$ECOS_STATE_FILE" "ECOS_STATE_VERSION_INIT_SCRIPT" "$($ECOS_INIT_SCRIPT --version)"
     echo -e ">> DONE"
 
     # Remove zlogin file from core
@@ -733,10 +725,13 @@ exec_install_ecos() {
     rm -f "$HOME/.zlogin"
     echo -e ">> DONE"
 
-    # Update state
-    print_title 'UPDATE ECOS STATE'
-    wait && replace_config_value "$ECOS_STATE_FILE" "ECOS_STATE_VERSION_INSTALLED" "$ECOS_VERSION"
+    # Set ECOS states
+    print_title 'SET ECOS STATES'
+    wait && replace_config_value "$ECOS_STATE_FILE" "ECOS_STATE_VERSION_INIT_SCRIPT" "$($ECOS_INIT_SCRIPT --version)"
+    wait && replace_config_value "$ECOS_STATE_FILE" "ECOS_STATE_VERSION_INSTALLED" "$SCRIPT_VERSION"
     wait && replace_config_value "$ECOS_STATE_SHOW_CHANGELOG" "ECOS_STATE_SHOW_CHANGELOG" "true"
+    wait && replace_config_value "$ECOS_STATE_FILE" "ECOS_STATE_REPO_ID" "$repo_id"
+    wait && replace_config_value "$ECOS_STATE_FILE" "ECOS_STATE_DEV_ENABLED" "$dev_enabled"
     echo -e ">> DONE"
 
     tui_init 0 "ECOS Installation finished"
@@ -814,8 +809,7 @@ update_ecos_remote() {
     fi
 
     # SET VARS
-    ECOS_REMOTE_VERSION="$($ECOS_REMOTE_VERSION_FILE --version)"
-    wait && replace_config_value "$ECOS_STATE_FILE" "ECOS_STATE_VERSION_REPO" "$ECOS_REMOTE_VERSION"
+    wait && replace_config_value "$ECOS_STATE_FILE" "ECOS_STATE_VERSION_REMOTE" "$ECOS_STATE_VERSION_REMOTE"
 }
 
 update_ecos_repo() {
@@ -833,6 +827,9 @@ update_ecos_repo() {
     /usr/bin/git reset --hard origin/HEAD
     /usr/bin/git clean -d -f
     /usr/bin/git pull
+
+    # UPDATE STATE
+    wait && replace_config_value "$ECOS_STATE_FILE" "ECOS_STATE_VERSION_REPO" "$($ECOS_BIN --version)"
 
     # Add user tweaks
     if [ -d "$ECOS_TWEAKS_USER_DIR" ]; then
@@ -929,51 +926,41 @@ update_ecos_system() {
     print_title 'UPADE PACMAN/AUR PACKAGES'
     paru -Su --noconfirm
 
-    # UPDATE INIT FILE
-    print_title "INIT DOTFILES SCRIPT"
+    # CHECK NEW INIT SCRIPT VERSION
+    print_title "CHECK NEW INIT SCRIPT UPDATE"
     if [ ! -f "$ECOS_INIT_SCRIPT" ]; then
         log -e "$ECOS_INIT_SCRIPT not found"
         return 1
     fi
-
-    # Read latest init version
-    local init_script_version="$($ECOS_INIT_SCRIPT --version)"
-    if [ "$init_script_version" = "" ]; then
+    local new_init_script_version="$($ECOS_INIT_SCRIPT --version)"
+    if [ "$new_init_script_version" = "" ]; then
         log -e "No result from: $ECOS_INIT_SCRIPT --version"
         return 1
     fi
-
-    # Check new init script version
-    if [ "$ECOS_STATE_VERSION_INIT_SCRIPT" != "$init_script_version" ]; then
-        read -p "Update Dotfiles Script? [y/n]: " user_input
+    if [ "$ECOS_STATE_VERSION_INIT_SCRIPT" != "$new_init_script_version" ]; then
+        read -p "Execute Dotfile Script Update? [y/n]: " user_input
         if [ "$user_input" != "y" ]; then
             echo -e ">>> USER SKIPPED..."
         else
             "$ECOS_INIT_SCRIPT" --init
-            replace_config_value "$ECOS_STATE_FILE" "ECOS_STATE_VERSION_INIT_SCRIPT" "$($ECOS_INIT_SCRIPT --version)"
+            replace_config_value "$ECOS_STATE_FILE" "ECOS_STATE_VERSION_INIT_SCRIPT" "$new_init_script_version"
             echo ">>> DONE"
         fi
     else
-        echo ">>> UP TO DATE. SKIPPED..."
+        echo -e ">>> UP TO DATE. SKIPPED..."
+    fi
+
+    # CHECK NEW ECOS VERSION
+    print_title 'CHECK NEW ECOS UPDATE'
+    if [ "$ECOS_STATE_VERSION_INSTALLED" != "$SCRIPT_VERSION" ]; then
+        wait && replace_config_value "$ECOS_STATE_FILE" "ECOS_STATE_VERSION_INSTALLED" "$SCRIPT_VERSION"
+        wait && replace_config_value "$ECOS_STATE_FILE" "ECOS_STATE_SHOW_CHANGELOG" "true"
+    else
+        echo -e ">>> UP TO DATE. SKIPPED..."
     fi
 
     # UPDATE TWEAKS
     update_tweaks
-
-    # UPDATE STATES
-    print_title 'UPDATE ECOS STATE'
-    # Check new version
-    local remote_version=$($SCRIPT_FILENAME --version)
-    if [ "$ECOS_STATE_VERSION_INSTALLED" != "" ] && [ "$remote_version" != "" ] && [ "$ECOS_STATE_VERSION_INSTALLED" != "$remote_version" ]; then
-        replace_config_value "$ECOS_STATE_FILE" "ECOS_STATE_SHOW_CHANGELOG" "true"
-    else
-        log -e "No versions found"
-    fi
-    # Set
-    wait && replace_config_value "$ECOS_STATE_FILE" "ECOS_STATE_VERSION_REPO" "$($SCRIPT_FILENAME --version)"
-    wait && replace_config_value "$ECOS_STATE_FILE" "ECOS_STATE_VERSION_INSTALLED" "$($SCRIPT_FILENAME --version)"
-    wait && replace_config_value "$ECOS_STATE_FILE" "ECOS_STATE_REPO_ID" "$repo_id"
-    echo -e ">> DONE"
 
     # FINISH
     echo -e "\n"
@@ -987,8 +974,8 @@ update_ecos_system() {
 }
 
 notify_ecos_update() {
-    if [ "$ECOS_REMOTE_VERSION" != "$ECOS_VERSION" ] && [ "$ECOS_REMOTE_VERSION" != "" ]; then
-        notify "New $SCRIPT_TITLE $ECOS_REMOTE_VERSION Update available"
+    if [ "$ECOS_STATE_VERSION_INSTALLED" != "$ECOS_STATE_VERSION_REMOTE" ]; then
+        notify "New $SCRIPT_TITLE $ECOS_STATE_VERSION_REMOTE Update available"
     fi
 }
 
@@ -1112,12 +1099,12 @@ exec_tweak() {
     # Check
     #----------------------------------------
     if [ "$tweak_id" = "" ]; then
-        echo -e "Error: Tweak ID is empty.\nExecute with:\n$SCRIPT_FILE --tweak TWEAK_ACTION TWEAK_ID"
+        log -e "Tweak ID is empty.\nExecute with:\n$SCRIPT_FILE --tweak TWEAK_ACTION TWEAK_ID"
         exit 1
     fi
 
     if [ "$tweak_action" = "" ]; then
-        echo -e "Error: TWEAK_ACTION is empty.\nExecute with:\n$SCRIPT_FILE --tweak TWEAK_ACTION TWEAK_ID"
+        log -e "TWEAK_ACTION is empty.\nExecute with:\n$SCRIPT_FILE --tweak TWEAK_ACTION TWEAK_ID"
         exit 1
     fi
 
@@ -1131,13 +1118,13 @@ exec_tweak() {
     if [ "$tweak_action" = "remove" ]; then action_title='REMOVE'; fi
 
     if [ "$action_title" = "" ]; then
-        echo "Error: TWEAK_ACTION=$tweak_action not supported"
+        log -e "TWEAK_ACTION=$tweak_action not supported"
         return 1
     fi
 
     print_title "$action_title TWEAK: ${TERM_COLOR_GREEN}$tweak_id${TERM_COLOR_NULL}"
     if ! [ -f "$tweak_sh" ]; then
-        echo "Error: $tweak_id not exists ($tweak_sh)"
+        log -e "$tweak_id not exists ($tweak_sh)"
         return 1
     fi
 
@@ -1199,11 +1186,10 @@ notify() {
 
 print_zenity_header() {
     local title="$1"
-    local version_remote="$2"
     local header='<span font_family="monospace" foreground="#404448" font="18"><b>'$SCRIPT_TITLE' Manager</b></span>'
-    local version='<span font_family="monospace" foreground="#da52e2" font="11">'$ECOS_VERSION'</span>'
-    if [ "$version_remote" != "" ] && [ "$ECOS_VERSION" != "$version_remote" ]; then
-        local version='<span font_family="monospace" foreground="#db7844" font="10"><b>'$ECOS_VERSION'</b></span><span font_family="monospace" foreground="#404448" font="10"><b> ➤ </b></span><span font_family="monospace" foreground="#A3BE8C" font="10"><b>'$version_remote'</b></span>'
+    local version='<span font_family="monospace" foreground="#da52e2" font="11">'$ECOS_STATE_VERSION_INSTALLED'</span>'
+    if [ "$ECOS_STATE_VERSION_INSTALLED" != "$ECOS_STATE_VERSION_REMOTE" ]; then
+        local version='<span font_family="monospace" foreground="#db7844" font="10"><b>'$ECOS_STATE_VERSION_INSTALLED'</b></span><span font_family="monospace" foreground="#404448" font="10"><b> ➤ </b></span><span font_family="monospace" foreground="#A3BE8C" font="10"><b>'$ECOS_STATE_VERSION_REMOTE'</b></span>'
     fi
     local title='<span font_family="monospace" foreground="#404448" font="10"><b>'$title'</b></span>'
     echo "\n$header\n$version\n\n$title"
@@ -1220,6 +1206,7 @@ check_config_key() {
     touch "$config_file"
     if ! grep -qrnw "$config_file" -e "$config_key=*"; then
         echo "$config_key=\"$default_value\"" >>"$config_file"
+        log -i --file "Changed $config_file: $config_key='$default_value'"
     fi
 }
 
@@ -1236,30 +1223,31 @@ check_config_key_array() {
 
     # Check items
     check_config_key "$config_file" "$config_key" "$items_txt"
-
 }
 
 replace_config_value() {
     local config_file="$1"
-    local key="$2"
-    local value="$3"
-    check_config_key "$config_file" "$key" ""
-    sed -i "s#$key=.*#$key=\"$value\"#g" "$config_file"
+    local config_key="$2"
+    local config_value="$3"
+    check_config_key "$config_file" "$config_key" ""
+    sed -i "s#$config_key=.*#$config_key=\"$config_value\"#g" "$config_file"
+    log -i --file "Replaced $config_file: $config_key='$config_value'"
 }
 
 replace_config_value_array() {
     local config_file="$1" && shift
-    local key=$1 && shift
-    local value=("$@")
+    local config_key=$1 && shift
+    local config_value_list=("$@")
 
-    local items_txt='( '
-    for item in "${value[@]}"; do
-        items_txt="$items_txt'$item' "
+    local value_item=''
+    local new_value_item_list='( '
+    for value_item in "${config_value_list[@]}"; do
+        new_value_item_list="$new_value_item_list'$value_item' "
     done
-    items_txt="$items_txt"')'
+    new_value_item_list="$new_value_item_list"')'
 
     # Replace items
-    replace_config_value "$key" "$items_txt"
+    replace_config_value "$config_key" "$new_value_item_list"
 }
 
 kill_pid() {
@@ -1279,6 +1267,7 @@ kill_pid() {
     pid_array+=($(print_children_pid "$pid_kill"))
     for pid in ${pid_array[@]}; do
         kill -9 "$pid"
+        log -i --file "PID killed: $pid"
     done
 }
 
@@ -1340,19 +1329,25 @@ print_title() {
 #/////////////////////////////////////////////////////
 
 log() {
-    local log_level="${TERM_COLOR_GREEN} INFO${TERM_COLOR_NULL}"
+    local log_date="$(date "+%Y-%m-%d-%H:%M:%S")"
+    local log_title="${SCRIPT_TITLE}"
+    local log_version="${SCRIPT_VERSION}"
+    local log_level="INFO"
+    local log_color="${TERM_COLOR_GREEN}"
 
-    if [ "$1" = "-e" ]; then
-        shift && log_level="${TERM_COLOR_RED}ERROR${TERM_COLOR_NULL}"
-    fi
-    if [ "$1" = "-i" ]; then
-        shift && log_level="${TERM_COLOR_GREEN} INFO${TERM_COLOR_NULL}"
-    fi
-    if [ "$1" = "-d" ]; then
-        shift && log_level="${TERM_COLOR_BLUE}DEBUG${TERM_COLOR_NULL}"
+    if [ "$1" = "-e" ]; then shift && log_level="ERROR" && log_color="${TERM_COLOR_RED}"; fi
+    if [ "$1" = "-i" ]; then shift && log_level="INFO" && log_color="${TERM_COLOR_GREEN}"; fi
+    if [ "$1" = "-d" ]; then shift && log_level="DEBUG" && log_color="${TERM_COLOR_BLUE}"; fi
+
+    if [ "$1" = "--file" ]; then
+        shift && echo "${log_date}|${log_title}-${log_version}|${log_level}|$*" >>"$ECOS_LOG_FILE"
+        return 0
     fi
 
-    echo -e "${TERM_COLOR_BLUE}$(date "+%Y-%m-%d-%H:%M:%S")${TERM_COLOR_NULL} | ${TERM_COLOR_PURPLE} ECOS ${ECOS_VERSION} ${TERM_COLOR_NULL} | ${log_level} | ${TERM_COLOR_YELLOW}$*"
+    local log_entry="${TERM_COLOR_BLUE}${log_date}${TERM_COLOR_NULL} | ${TERM_COLOR_PURPLE}${log_title} ${log_version}${TERM_COLOR_NULL} | ${log_color}${log_level}${TERM_COLOR_NULL} | ${TERM_COLOR_YELLOW}$*${TERM_COLOR_NULL}"
+
+    # STDOUT
+    echo -e "$log_entry"
 }
 
 #/////////////////////////////////////////////////////
