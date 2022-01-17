@@ -1,7 +1,6 @@
 #!/bin/bash
 SCRIPT_VERSION=2.3.3
 
-
 #/////////////////////////////////////////////////////
 # LOCATE SCRIPT DIR
 #/////////////////////////////////////////////////////
@@ -708,7 +707,7 @@ exec_install_ecos() {
     print_title 'SET ECOS STATES'
     wait && replace_config_value "$ECOS_STATE_FILE" "ECOS_STATE_VERSION_INIT_SCRIPT" "$($ECOS_INIT_SCRIPT --version)"
     wait && replace_config_value "$ECOS_STATE_FILE" "ECOS_STATE_VERSION_INSTALLED" "$SCRIPT_VERSION"
-    wait && replace_config_value "$ECOS_STATE_SHOW_CHANGELOG" "ECOS_STATE_SHOW_CHANGELOG" "true"
+    wait && replace_config_value "$ECOS_STATE_FILE" "ECOS_STATE_SHOW_CHANGELOG" "true"
     wait && replace_config_value "$ECOS_STATE_FILE" "ECOS_STATE_REPO_ID" "$repo_id"
     wait && replace_config_value "$ECOS_STATE_FILE" "ECOS_STATE_DEV_ENABLED" "$dev_enabled"
     echo -e ">> DONE"
