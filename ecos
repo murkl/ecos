@@ -1247,7 +1247,7 @@ replace_config_value_array() {
     new_value_item_list="$new_value_item_list"')'
 
     # Replace items
-    replace_config_value "$config_key" "$new_value_item_list"
+    replace_config_value "$config_file" "$config_key" "$new_value_item_list"
 }
 
 kill_pid() {

@@ -464,10 +464,11 @@ exec_install_chroot() {
     # Boootloader, Microcode Kernel Updates for CPU & Core Tools
     gauge_tui_update 58 "$gauge_txt"
     bootloader_pkgs="efibootmgr"
-    if [ "$uefi_mode" = "false" ]; then
-        bootloader_pkgs="grub"
-    fi
-    exec_command_wrap pacman --noconfirm --needed -S $UCODE $bootloader_pkgs dosfstools gptfdisk $CUSTOM_PACKAGES
+    [ "$uefi_mode" = "false" ] && bootloader_pkgs="grub"
+
+    local ucode_pkg="$UCODE"
+    [ "$ucode_pkg" = "disabled" ] && ucode_pkg=""
+    exec_command_wrap pacman --noconfirm --needed -S $ucode_pkg $bootloader_pkgs dosfstools gptfdisk $CUSTOM_PACKAGES
 
     # Network manager
     gauge_tui_update 60 "$gauge_txt"
@@ -477,8 +478,12 @@ exec_install_chroot() {
     gauge_tui_update 64 "$gauge_txt"
     exec_command_wrap pacman --noconfirm --needed -S git
 
+    # Nano
+    gauge_tui_update 67 "$gauge_txt"
+    exec_command_wrap pacman --noconfirm --needed -S nano
+
     # Default shell
-    gauge_tui_update 70 "$gauge_txt"
+    gauge_tui_update 72 "$gauge_txt"
     exec_command_wrap pacman --noconfirm --needed -S zsh
 
     # if [ "$WORKSTATION" = "notebook" ]; then
@@ -568,7 +573,7 @@ exec_install_chroot() {
 
         echo 'title   Arch Linux' >/boot/loader/entries/arch.conf
         echo 'linux   /vmlinuz-linux' >>/boot/loader/entries/arch.conf
-        [ -n "$UCODE" ] && echo "initrd  /$UCODE.img" >>/boot/loader/entries/arch.conf
+        [ "$UCODE" != "disabled" ] && echo "initrd  /$UCODE.img" >>/boot/loader/entries/arch.conf
         echo 'initrd  /initramfs-linux.img' >>/boot/loader/entries/arch.conf
         echo "options cryptdevice=$ROOT_PARTITION:cryptroot root=/dev/mapper/cryptroot quiet splash loglevel=3 rd.systemd.show_status=false rd.udev.log_priority=3 vt.global_cursor_default=0 rw" >>/boot/loader/entries/arch.conf
     else
@@ -853,15 +858,10 @@ check_config() {
     # Check Microcode
     #----------------------------------------
     if [ "$UCODE" = "" ]; then
-
         tui_init 17 "Choose Processor Microcode"
-        if ! UCODE=$(whiptail --menu --notags "$(cat "$TUI_FILE")\n" "$TUI_HEIGHT" "$TUI_WIDTH" 3 "none" "Disable" "intel-ucode" "Intel" "amd-ucode" "AMD" 3>&1 1>&2 2>&3); then
+        if ! UCODE=$(whiptail --menu --notags "$(cat "$TUI_FILE")\n" "$TUI_HEIGHT" "$TUI_WIDTH" 3 "disabled" "Disable" "intel-ucode" "Intel" "amd-ucode" "AMD" 3>&1 1>&2 2>&3); then
             exit 0
         fi
-        if [ "$UCODE" = 'none' ]; then
-            UCODE=''
-        fi
-
         replace_config_value "$INSTALLER_CONFIG_FILE" "UCODE" "$UCODE"
     fi
 
@@ -1215,7 +1215,7 @@ replace_config_value_array() {
     new_value_item_list="$new_value_item_list"')'
 
     # Replace items
-    replace_config_value "$config_key" "$new_value_item_list"
+    replace_config_value "$config_file" "$config_key" "$new_value_item_list"
 }
 
 tui_init() {
