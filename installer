@@ -84,7 +84,7 @@ main() {
     #----------------------------------------
     # CHROOT INSTALLER
     #----------------------------------------
-    if [ "$1" = "--install-chroot" ] && [ "$2" != "" ] && [ "$3" != "" ]; then
+    if [ "$1" = "--chroot" ] && [ "$2" != "" ] && [ "$3" != "" ]; then
         exec_install_chroot "$2" "$3"
         exit $?
     fi
@@ -92,7 +92,7 @@ main() {
     # ---------------------------------------
     # FORCE: INSTALL ECOS CORE
     # ---------------------------------------
-    if [ "$1" = "--install-core" ]; then
+    if [ "$1" = "--core" ]; then
         tui_main_menu
         exit $?
     fi
@@ -100,7 +100,7 @@ main() {
     # ---------------------------------------
     # FORCE: CREATE BOOTABLE USB
     # ---------------------------------------
-    if [ "$1" = "--create-usb" ]; then
+    if [ "$1" = "--usb" ]; then
         tui_create_usb
         exit $?
     fi
@@ -405,8 +405,8 @@ exec_install_core() {
     # Chroot into new system
     #----------------------------------------
     gauge_tui_update 54 "Enter CHROOT Environement"
-    log_txt="arch-chroot /mnt /$INSTALLER_ID --install-chroot $uefi_mode <ENCRYPTION_PASSWORD>"
-    if ! arch-chroot /mnt "/$INSTALLER_ID" --install-chroot "$uefi_mode" "$password_encryption"; then
+    log_txt="arch-chroot /mnt /$INSTALLER_ID --chroot $uefi_mode <ENCRYPTION_PASSWORD>"
+    if ! arch-chroot /mnt "/$INSTALLER_ID" --chroot "$uefi_mode" "$password_encryption"; then
         core_log "e" "$log_txt"
         exit 1
     else
