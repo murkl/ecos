@@ -787,7 +787,7 @@ update_ecos_remote() {
     fi
 
     # SET VARS
-    wait && replace_config_value "$ECOS_STATE_FILE" "ECOS_STATE_VERSION_REMOTE" "$ECOS_STATE_VERSION_REMOTE"
+    wait && replace_config_value "$ECOS_STATE_FILE" "ECOS_STATE_VERSION_REMOTE" "$($ECOS_REMOTE_VERSION_FILE --version)"
 }
 
 update_ecos_repo() {
