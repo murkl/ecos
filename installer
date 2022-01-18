@@ -285,7 +285,7 @@ exec_install_core() {
     # Check UEFI boot
     #----------------------------------------
     local uefi_mode=true
-    if efivar -l >/dev/null; then
+    if [ -x "$(command -v efivar)" ] && efivar -l >/dev/null; then
         core_log "UEFI detected"
     else
         core_log "BIOS detected"
@@ -739,7 +739,7 @@ exec_install_chroot() {
     #----------------------------------------
     gauge_tui_update 98 "ECOS Repo"
     local ecos_system_dir="/home/$USERNAME/.ecos/.system"
-    local ecos_repo_dir="$ecos_system_diru/repo"
+    local ecos_repo_dir="$ecos_system_dir/repo"
     mkdir -p "$ecos_system_dir"
     /usr/bin/git clone "$ECOS_REPO_URL" "$ecos_repo_dir"
 
