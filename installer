@@ -284,12 +284,12 @@ exec_install_core() {
     #----------------------------------------
     # Check UEFI boot
     #----------------------------------------
-    local uefi_mode=true
+    local uefi_mode='true'
     if [ -x "$(command -v efivar)" ] && efivar -l >/dev/null; then
         core_log "UEFI detected"
     else
         core_log "BIOS detected"
-        uefi_mode=false
+        uefi_mode='false'
     fi
 
     #----------------------------------------
