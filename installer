@@ -81,6 +81,15 @@ set_lang_de_DE() {
 
 main() {
 
+    local uefi_mode='true'
+    # TODO:. other check
+    if [ -x "$(command -v efivar)" ] && [ "$(efivar -l >/dev/null)" != "" ]; then
+        core_log "BIOS detected"
+        uefi_mode='false'
+    else
+        core_log "UEFI detected"
+    fi
+
     #----------------------------------------
     # CHROOT INSTALLER
     #----------------------------------------
@@ -285,11 +294,12 @@ exec_install_core() {
     # Check UEFI boot
     #----------------------------------------
     local uefi_mode='true'
-    if [ -x "$(command -v efivar)" ] && efivar -l >/dev/null; then
-        core_log "UEFI detected"
-    else
+    # TODO:. other check
+    if [ -x "$(command -v efivar)" ] && [ "$(efivar -l >/dev/null)" != "" ]; then
         core_log "BIOS detected"
         uefi_mode='false'
+    else
+        core_log "UEFI detected"
     fi
 
     #----------------------------------------
