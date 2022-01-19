@@ -540,6 +540,7 @@ exec_install_chroot() {
     #----------------------------------------
     # Set locale.gen
     #----------------------------------------
+    local locale_gen_item=''
     for locale_gen_item in "${LOCALE_GEN[@]}"; do
         sed -i "s/^#$locale_gen_item/$locale_gen_item/g" "/etc/locale.gen"
     done
