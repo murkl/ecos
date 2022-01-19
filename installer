@@ -752,11 +752,10 @@ exec_install_chroot() {
     gauge_tui_update 98 "ECOS Repo"
     local ecos_system_dir="/home/$USERNAME/.ecos/.system"
     local ecos_repo_dir="$ecos_system_dir/repo"
-    mkdir -p "$ecos_system_dir"
-    /usr/bin/git clone "$ECOS_REPO_URL" "$ecos_repo_dir"
-
-    chmod +x "$ecos_repo_dir/ecos"
-    chmod +x "$ecos_repo_dir/installer"
+    exec_command_wrap mkdir -p "$ecos_system_dir"
+    exec_command_wrap /usr/bin/git clone "$ECOS_REPO_URL" "$ecos_repo_dir"
+    exec_command_wrap chmod +x "$ecos_repo_dir/ecos"
+    exec_command_wrap chmod +x "$ecos_repo_dir/installer"
 
     # Create .zlogin
     local user_profile="/home/$USERNAME/.zlogin"
@@ -764,29 +763,29 @@ exec_install_chroot() {
     echo 'export ECOS_HOME="$HOME/.ecos"' >>$user_profile
     echo 'export ECOS_CORE="$ECOS_HOME/.system/repo/ecos"' >>$user_profile
     echo '$ECOS_CORE --install' >>$user_profile
-    chmod +x $user_profile
+    exec_command_wrap chmod +x $user_profile
 
     #----------------------------------------
     # Deletes unnecessary files
     #----------------------------------------
-    rm -f "/home/$USERNAME/.bash_logout"
-    rm -f "/home/$USERNAME/.bash_profile"
-    rm -f "/home/$USERNAME/.bashrc"
-    rm -f "/home/$USERNAME/.zshrc"
+    exec_command_wrap rm -f "/home/$USERNAME/.bash_logout"
+    exec_command_wrap rm -f "/home/$USERNAME/.bash_profile"
+    exec_command_wrap rm -f "/home/$USERNAME/.bashrc"
+    exec_command_wrap rm -f "/home/$USERNAME/.zshrc"
 
     #----------------------------------------
     # Set correct user permissions
     #----------------------------------------
-    chown -R "$USERNAME":"$USERNAME" "/home/$USERNAME"
+    exec_command_wrap chown -R "$USERNAME":"$USERNAME" "/home/$USERNAME"
 
     #----------------------------------------
     # Change passwords
     #----------------------------------------
     core_log "Change passwords"
-    #passwd root < <(echo -e "$password_encryption\n$password_encryption")
-    #passwd "$USERNAME" < <(echo -e "$password_encryption\n$password_encryption")
-    echo -e "${ECOS_DEFAULT_PASSWORD}\n${ECOS_DEFAULT_PASSWORD}" | (passwd)
-    echo -e "${ECOS_DEFAULT_PASSWORD}\n${ECOS_DEFAULT_PASSWORD}" | (passwd "$USERNAME")
+    # passwd root < <(echo -e "$password_encryption\n$password_encryption")
+    # passwd "$USERNAME" < <(echo -e "$password_encryption\n$password_encryption")
+    clear && wait && echo -e "${ECOS_DEFAULT_PASSWORD}\n${ECOS_DEFAULT_PASSWORD}" | (passwd)
+    clear && wait && echo -e "${ECOS_DEFAULT_PASSWORD}\n${ECOS_DEFAULT_PASSWORD}" | (passwd "$USERNAME")
 
     #----------------------------------------
     # Chroot finished
@@ -1234,11 +1233,11 @@ replace_config_value_array() {
     local config_value_list=("$@")
 
     local value_item=''
-    local new_value_item_list='( '
+    local new_value_item_list='('
     for value_item in "${config_value_list[@]}"; do
-        new_value_item_list="$new_value_item_list'$value_item' "
+        new_value_item_list="$new_value_item_list'$value_item'"
     done
-    new_value_item_list="$new_value_item_list"')'
+    new_value_item_list="${new_value_item_list}"')'
 
     # Replace items
     replace_config_value "$config_file" "$config_key" "$new_value_item_list"

@@ -1205,9 +1205,9 @@ replace_config_value_array() {
     local config_value_list=("$@")
 
     local value_item=''
-    local new_value_item_list='( '
+    local new_value_item_list='('
     for value_item in "${config_value_list[@]}"; do
-        new_value_item_list="$new_value_item_list'$value_item' "
+        new_value_item_list="$new_value_item_list'$value_item'"
     done
     new_value_item_list="$new_value_item_list"')'
 
