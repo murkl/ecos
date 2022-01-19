@@ -1231,18 +1231,24 @@ replace_config_value() {
     local config_file="$1"
     local config_key="$2"
     local config_value="$3"
+    local array_mode_enabled="$4"
     check_config_key "$config_file" "$config_key" ""
-    sed -i "s#${config_key}=.*#${config_key}=\"${config_value}\"#g" "$config_file"
+    config_value_replaced="\"${config_value}\""
+    if [ "$array_mode_enabled" = "--array" ]; then
+        config_value_replaced="${config_value}"
+    fi
+    sed -i "s#${config_key}=.*#${config_key}=${config_value}#g" "$config_file"
 }
 
 replace_config_value_array() {
+
     local config_file="$1" && shift
     local config_key=$1 && shift
     local config_value_list=("$@")
-
     local value_item=""
     local new_value_item_list=""
     local item_count=1
+
     for value_item in "${config_value_list[@]}"; do
 
         # First item
@@ -1258,13 +1264,13 @@ replace_config_value_array() {
         if [ $item_count = ${#config_value_list[@]} ]; then
             new_value_item_list="$new_value_item_list)"
         fi
-
         # Increment counter
         item_count=$(($item_count + 1))
+
     done
 
     # Replace items
-    replace_config_value "$config_file" "$config_key" "$new_value_item_list"
+    replace_config_value "$config_file" "$config_key" "$new_value_item_list" "--array"
 }
 
 tui_init() {
