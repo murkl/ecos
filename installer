@@ -826,7 +826,7 @@ check_config() {
             tui_main_menu
             exit 0
         fi
-        replace_config_value "$INSTALLER_CONFIG_FILE" "USERNAME" "$USERNAME"
+        replace_property_value "$INSTALLER_CONFIG_FILE" "USERNAME" "$USERNAME"
     fi
 
     #----------------------------------------
@@ -839,8 +839,8 @@ check_config() {
             exit 0
         fi
 
-        replace_config_value "$INSTALLER_CONFIG_FILE" "HOSTNAME" "$USERNAME-$WORKSTATION"
-        replace_config_value "$INSTALLER_CONFIG_FILE" "WORKSTATION" "$WORKSTATION"
+        replace_property_value "$INSTALLER_CONFIG_FILE" "HOSTNAME" "$USERNAME-$WORKSTATION"
+        replace_property_value "$INSTALLER_CONFIG_FILE" "WORKSTATION" "$WORKSTATION"
     fi
 
     #----------------------------------------
@@ -853,7 +853,7 @@ check_config() {
             exit 0
         fi
 
-        replace_config_value "$INSTALLER_CONFIG_FILE" "DUALBOOT" "$DUALBOOT"
+        replace_property_value "$INSTALLER_CONFIG_FILE" "DUALBOOT" "$DUALBOOT"
     fi
 
     #----------------------------------------
@@ -874,12 +874,12 @@ check_config() {
             set_lang_de_DE
         fi
 
-        replace_config_value "$INSTALLER_CONFIG_FILE" "TIMEZONE" "$TIMEZONE"
-        replace_config_value "$INSTALLER_CONFIG_FILE" "LOCALE_LANG" "$LOCALE_LANG"
+        replace_property_value "$INSTALLER_CONFIG_FILE" "TIMEZONE" "$TIMEZONE"
+        replace_property_value "$INSTALLER_CONFIG_FILE" "LOCALE_LANG" "$LOCALE_LANG"
         replace_config_value_array "$INSTALLER_CONFIG_FILE" "LOCALE_GEN" "${LOCALE_GEN[@]}"
-        replace_config_value "$INSTALLER_CONFIG_FILE" "VCONSOLE_KEYMAP" "$VCONSOLE_KEYMAP"
-        replace_config_value "$INSTALLER_CONFIG_FILE" "X11_KEYBOARD_LAYOUT" "$X11_KEYBOARD_LAYOUT"
-        replace_config_value "$INSTALLER_CONFIG_FILE" "X11_KEYBOARD_VARIANT" "$X11_KEYBOARD_VARIANT"
+        replace_property_value "$INSTALLER_CONFIG_FILE" "VCONSOLE_KEYMAP" "$VCONSOLE_KEYMAP"
+        replace_property_value "$INSTALLER_CONFIG_FILE" "X11_KEYBOARD_LAYOUT" "$X11_KEYBOARD_LAYOUT"
+        replace_property_value "$INSTALLER_CONFIG_FILE" "X11_KEYBOARD_VARIANT" "$X11_KEYBOARD_VARIANT"
     fi
 
     #----------------------------------------
@@ -891,16 +891,16 @@ check_config() {
             tui_main_menu
             exit 0
         fi
-        replace_config_value "$INSTALLER_CONFIG_FILE" "UCODE" "$UCODE"
+        replace_property_value "$INSTALLER_CONFIG_FILE" "UCODE" "$UCODE"
     fi
 
     #----------------------------------------
     # Check disk
     #----------------------------------------
     check_config_disk
-    replace_config_value "$INSTALLER_CONFIG_FILE" "DISK" "$DISK"
-    replace_config_value "$INSTALLER_CONFIG_FILE" "BOOT_PARTITION" "$BOOT_PARTITION"
-    replace_config_value "$INSTALLER_CONFIG_FILE" "ROOT_PARTITION" "$ROOT_PARTITION"
+    replace_property_value "$INSTALLER_CONFIG_FILE" "DISK" "$DISK"
+    replace_property_value "$INSTALLER_CONFIG_FILE" "BOOT_PARTITION" "$BOOT_PARTITION"
+    replace_property_value "$INSTALLER_CONFIG_FILE" "ROOT_PARTITION" "$ROOT_PARTITION"
 
     #----------------------------------------
     # Add default values
@@ -1227,12 +1227,12 @@ check_config_key_array() {
     check_config_key "$config_file" "$config_key" "$items_txt"
 }
 
-replace_config_value() {
+replace_property_value() {
     local config_file="$1"
     local config_key="$2"
     local config_value="$3"
     check_config_key "$config_file" "$config_key" ""
-    sed -i "s#${config_key}=.*#${config_key}=\"${config_value}\"#g" "$config_file"
+    sed -i "s;${config_key}=.*;${config_key}=\"${config_value}\";g" "$config_file"
 }
 
 replace_config_value_array() {
@@ -1242,32 +1242,22 @@ replace_config_value_array() {
     local config_value_list=("$@")
     local value_item=""
     local new_value_item_list=""
-    local item_count=1
 
     for value_item in "${config_value_list[@]}"; do
 
-        # First item
-        if [ $item_count = 1 ]; then
-            new_value_item_list="('$value_item'" && item_count=$(($item_count + 1))
+        # First item without leading space
+        if [ "$new_value_item_list" = "" ]; then
+            new_value_item_list="'$value_item'"
             continue
         fi
 
         # Other items
         new_value_item_list="$new_value_item_list '$value_item'"
-
-        # Last item
-        if [ $item_count = ${#config_value_list[@]} ]; then
-            new_value_item_list="$new_value_item_list)"
-        fi
-        # Increment counter
-        item_count=$(($item_count + 1))
-
     done
 
-    # Replace items
+    # Replace items (without "")
     check_config_key "$config_file" "$config_key" ""
-    sed -i "s#${config_key}=.*#${config_key}=${new_value_item_list}#g" "$config_file"
-
+    sed -i "s;${config_key}=.*;${config_key}=(${new_value_item_list});g" "$config_file"
 }
 
 tui_init() {
