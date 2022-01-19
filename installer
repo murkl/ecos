@@ -751,7 +751,7 @@ exec_install_chroot() {
     #----------------------------------------
     # ECOS Repo
     #----------------------------------------
-    gauge_tui_update 92 "ECOS Repo"
+    gauge_tui_update 92 "Initilize ECOS"
     core_log "Initilize ECOS in ~/.ecos"
     local ecos_system_dir="/home/$USERNAME/.ecos/.system"
     local ecos_repo_dir="$ecos_system_dir/repo"
@@ -787,7 +787,9 @@ exec_install_chroot() {
     #----------------------------------------
     # Change passwords
     #----------------------------------------
+    gauge_tui_update 98 "Change Passwords (flickering message is ok)"
     core_log "Change passwords"
+    sleep 1
     # passwd root < <(echo -e "$password_encryption\n$password_encryption")
     # passwd "$USERNAME" < <(echo -e "$password_encryption\n$password_encryption")
     clear && wait && echo -e "${ECOS_DEFAULT_PASSWORD}\n${ECOS_DEFAULT_PASSWORD}" | (passwd)
