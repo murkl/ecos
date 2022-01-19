@@ -1234,14 +1234,26 @@ replace_config_value_array() {
 
     local value_item=""
     local new_value_item_list=""
+    local item_count=1
     for value_item in "${config_value_list[@]}"; do
-        if [ "$new_value_item_list" = "" ]; then
-            new_value_item_list="('$value_item'"
-        else
-            new_value_item_list=" '$value_item'$new_value_item_list"
+
+        # First item
+        if [ $item_count = 1 ]; then
+            new_value_item_list="('$value_item'" && item_count=$(($item_count + 1))
+            continue
         fi
+
+        # Other items
+        new_value_item_list="$new_value_item_list '$value_item'"
+
+        # Last item
+        if [ $item_count = ${#config_value_list[@]} ]; then
+            new_value_item_list="$new_value_item_list)"
+        fi
+
+        # Increment counter
+        item_count=$(($item_count + 1))
     done
-    new_value_item_list="$new_value_item_list)"
 
     # Replace items
     replace_config_value "$config_file" "$config_key" "$new_value_item_list"
