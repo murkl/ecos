@@ -641,7 +641,7 @@ exec_install_chroot() {
     #----------------------------------------
     # Create new user
     #----------------------------------------
-    exec_command_wrap useradd -m -G users,wheel,video,audio,storage,disk -s /bin/zsh "$USERNAME"
+    exec_command_wrap useradd -m -G users,wheel,video,audio,games,power,storage,disk -s /bin/zsh "$USERNAME"
 
     #----------------------------------------
     # Allow users in group wheel to use sudo
