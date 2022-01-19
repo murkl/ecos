@@ -244,13 +244,12 @@ tui_core_installer() {
     #----------------------------------------
     # Check UEFI boot
     #----------------------------------------
-    local uefi_mode='true'
+    local uefi_mode=''
     # TODO:. other check
     if [ -x "$(command -v efivar)" ] && [ "$(efivar -l >/dev/null)" != "" ]; then
-        core_log "BIOS detected"
         uefi_mode='false'
     else
-        core_log "UEFI detected"
+        uefi_mode='true'
     fi
 
     #----------------------------------------
@@ -302,6 +301,9 @@ exec_install_core() {
     . "$INSTALLER_CONFIG_FILE"
 
     core_log "!!! INSTALLATION START !!!"
+    core_log "UEFI Mode: $uefi_mode"
+    if [ "$password_encryption" = "" ]; then core_log e "ERROR: Encryption Password is missing" && exit 1; fi
+    core_log "Encryption Password is set!"
 
     #----------------------------------------
     # Wipe disk
@@ -714,7 +716,7 @@ exec_install_chroot() {
 
     } >"/etc/X11/xorg.conf.d/70-touchpad.conf"
 
-    gauge_tui_update 92 "Enable Daemons"
+    gauge_tui_update 90 "Enable Daemons"
 
     #----------------------------------------
     # SSD fstrim
@@ -741,7 +743,7 @@ exec_install_chroot() {
     #----------------------------------------
     # Pacman colors & multilib
     #----------------------------------------
-    gauge_tui_update 95 "Configure Pacman"
+    gauge_tui_update 90 "Configure Pacman"
     core_log "Enable pacman multilib & colors"
     sed -i 's/^#Color/Color/g;/#\[multilib\]/,/#Include/ s/^#//g' /etc/pacman.conf
     exec_command_wrap pacman -Syy
@@ -749,7 +751,8 @@ exec_install_chroot() {
     #----------------------------------------
     # ECOS Repo
     #----------------------------------------
-    gauge_tui_update 98 "ECOS Repo"
+    gauge_tui_update 92 "ECOS Repo"
+    core_log "Initilize ECOS in ~/.ecos"
     local ecos_system_dir="/home/$USERNAME/.ecos/.system"
     local ecos_repo_dir="$ecos_system_dir/repo"
     exec_command_wrap mkdir -p "$ecos_system_dir"
@@ -758,6 +761,7 @@ exec_install_chroot() {
     exec_command_wrap chmod +x "$ecos_repo_dir/installer"
 
     # Create .zlogin
+    core_log "Creating ~/.zlogin"
     local user_profile="/home/$USERNAME/.zlogin"
     echo '#!/bin/sh' >$user_profile
     echo 'export ECOS_HOME="$HOME/.ecos"' >>$user_profile
@@ -768,6 +772,7 @@ exec_install_chroot() {
     #----------------------------------------
     # Deletes unnecessary files
     #----------------------------------------
+    core_log "Deletes unnecessary files"
     exec_command_wrap rm -f "/home/$USERNAME/.bash_logout"
     exec_command_wrap rm -f "/home/$USERNAME/.bash_profile"
     exec_command_wrap rm -f "/home/$USERNAME/.bashrc"
@@ -776,6 +781,7 @@ exec_install_chroot() {
     #----------------------------------------
     # Set correct user permissions
     #----------------------------------------
+    core_log "Set correct user permissions"
     exec_command_wrap chown -R "$USERNAME":"$USERNAME" "/home/$USERNAME"
 
     #----------------------------------------
