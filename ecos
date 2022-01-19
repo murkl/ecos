@@ -897,10 +897,7 @@ update_ecos_system() {
     # Ask for system upgrade
     print_title 'UPGRADE PACKAGES'
     read -p "Enter q to quit: " user_input
-    if [ "$user_input" = "q" ]; then
-        echo ">>> Skipped..."
-        exit 0
-    fi
+    if [ "$user_input" = "q" ]; then echo ">>> Skipped..."; exit 0; fi
 
     # PACKAGE UPGRADE
     print_title 'UPADE PACMAN/AUR PACKAGES'
@@ -908,24 +905,13 @@ update_ecos_system() {
 
     # CHECK NEW INIT SCRIPT VERSION
     print_title "CHECK NEW INIT SCRIPT UPDATE"
-    if [ ! -f "$ECOS_INIT_SCRIPT" ]; then
-        log -e "$ECOS_INIT_SCRIPT not found"
-        return 1
-    fi
+    if [ ! -f "$ECOS_INIT_SCRIPT" ]; then log -e "$ECOS_INIT_SCRIPT not found" && return 1; fi
     local new_init_script_version="$($ECOS_INIT_SCRIPT --version)"
-    if [ "$new_init_script_version" = "" ]; then
-        log -e "No result from: $ECOS_INIT_SCRIPT --version"
-        return 1
-    fi
+    if [ "$new_init_script_version" = "" ]; then log -e "No result from: $ECOS_INIT_SCRIPT --version" && return 1; fi
     if [ "$ECOS_STATE_VERSION_INIT_SCRIPT" != "$new_init_script_version" ]; then
-        read -p "Execute Dotfile Script Update? [y/n]: " user_input
-        if [ "$user_input" != "y" ]; then
-            echo -e ">>> USER SKIPPED..."
-        else
-            "$ECOS_INIT_SCRIPT" --init
-            replace_config_value "$ECOS_STATE_FILE" "ECOS_STATE_VERSION_INIT_SCRIPT" "$new_init_script_version"
-            echo -e ">>> UPDATED: $ECOS_STATE_VERSION_INIT_SCRIPT > $new_init_script_version"
-        fi
+        "$ECOS_INIT_SCRIPT" --init
+        replace_config_value "$ECOS_STATE_FILE" "ECOS_STATE_VERSION_INIT_SCRIPT" "$new_init_script_version"
+        echo -e ">>> UPDATED: $ECOS_STATE_VERSION_INIT_SCRIPT > $new_init_script_version"
     else
         echo -e ">>> UP TO DATE. SKIPPED..."
     fi
