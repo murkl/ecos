@@ -897,7 +897,10 @@ update_ecos_system() {
     # Ask for system upgrade
     print_title 'UPGRADE PACKAGES'
     read -p "Enter q to quit: " user_input
-    if [ "$user_input" = "q" ]; then echo ">>> Skipped..."; exit 0; fi
+    if [ "$user_input" = "q" ]; then
+        echo ">>> Skipped..."
+        exit 0
+    fi
 
     # PACKAGE UPGRADE
     print_title 'UPADE PACMAN/AUR PACKAGES'
@@ -1205,11 +1208,12 @@ replace_config_value_array() {
     local config_value_list=("$@")
 
     local value_item=''
-    local new_value_item_list='('
+    local new_value_item_list=''
     for value_item in "${config_value_list[@]}"; do
-        new_value_item_list="$new_value_item_list'$value_item'"
+        if [ "$new_value_item_list" = '' ]; then new_value_item_list="('${value_item}'" && continue; fi
+        new_value_item_list=" '$value_item' $new_value_item_list"
     done
-    new_value_item_list="$new_value_item_list"')'
+    new_value_item_list="${new_value_item_list})"
 
     # Replace items
     replace_config_value "$config_file" "$config_key" "$new_value_item_list"
