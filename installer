@@ -242,10 +242,22 @@ tui_core_installer() {
     fi
 
     #----------------------------------------
+    # Check UEFI boot
+    #----------------------------------------
+    local uefi_mode='true'
+    # TODO:. other check
+    if [ -x "$(command -v efivar)" ] && [ "$(efivar -l >/dev/null)" != "" ]; then
+        core_log "BIOS detected"
+        uefi_mode='false'
+    else
+        core_log "UEFI detected"
+    fi
+
+    #----------------------------------------
     # Execute install (will execute chroot)
     #----------------------------------------
     tui_init 0 "Core Installation..."
-    exec_install_core "$password_encryption" | whiptail --gauge "$(cat "$TUI_FILE")" "$TUI_HEIGHT" "$TUI_WIDTH" 0 3>&1 1>&2 2>&3
+    exec_install_core "$uefi_mode" "$password_encryption" | whiptail --gauge "$(cat "$TUI_FILE")" "$TUI_HEIGHT" "$TUI_WIDTH" 0 3>&1 1>&2 2>&3
 
     # Show Result
     if [ $? = 1 ]; then
@@ -281,7 +293,8 @@ tui_core_installer() {
 
 exec_install_core() {
 
-    local password_encryption="$1"
+    local uefi_mode="$1"
+    local password_encryption="$2"
 
     #----------------------------------------
     # Source config
@@ -289,18 +302,6 @@ exec_install_core() {
     . "$INSTALLER_CONFIG_FILE"
 
     core_log "!!! INSTALLATION START !!!"
-
-    #----------------------------------------
-    # Check UEFI boot
-    #----------------------------------------
-    local uefi_mode='true'
-    # TODO:. other check
-    if [ -x "$(command -v efivar)" ] && [ "$(efivar -l >/dev/null)" != "" ]; then
-        core_log "BIOS detected"
-        uefi_mode='false'
-    else
-        core_log "UEFI detected"
-    fi
 
     #----------------------------------------
     # Wipe disk
