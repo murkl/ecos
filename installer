@@ -904,7 +904,9 @@ check_config() {
     #----------------------------------------
     tui_init 0 "$(cat "$INSTALLER_CONFIG_FILE")"
     tui_add 28 "\nEdit Setup Configuration?"
-    if (whiptail --yesno "$(cat "$TUI_FILE")" 0 "$TUI_WIDTH"); then
+    local line="#############################################################"
+    local setup_cfg="$line\nSETUP CONFIGURATION\n$line\n\n$(cat "$INSTALLER_CONFIG_FILE")\n\n$line\n\nEdit Configuration?"
+    if (whiptail "$setup_cfg" --yesno 0 0); then
         nano "$INSTALLER_CONFIG_FILE"
         wait
         # Check again after edit
@@ -1243,12 +1245,11 @@ replace_config_value_array() {
 tui_init() {
     rm -f "$TUI_FILE"
     echo '
-            ███████╗ ██████╗ ██████╗ ███████╗
-            ██╔════╝██╔════╝██╔═══██╗██╔════╝
-            █████╗  ██║     ██║   ██║███████╗
-            ██╔══╝  ██║     ██║   ██║╚════██║
-            ███████╗╚██████╗╚██████╔╝███████║
-            ╚══════╝ ╚═════╝ ╚═════╝ ╚══════╝
+             ███████  ██████  ██████  ███████ 
+             ██      ██      ██    ██ ██      
+             █████   ██      ██    ██ ███████ 
+             ██      ██      ██    ██      ██ 
+             ███████  ██████  ██████  ███████ 
     ' >"$TUI_FILE"
     tui_add "$1" "$2"
 }
