@@ -543,11 +543,10 @@ exec_install_chroot() {
     #----------------------------------------
     # Set locale.gen
     #----------------------------------------
-    local locale_gen_item=''
-    for locale_gen_item in "${LOCALE_GEN[@]}"; do
+    for ((i = 0; i < ${#LOCALE_GEN[@]}; i++)); do
+        local locale_gen_item="${LOCALE_GEN[$i]}"
         sed -i "s/^#$locale_gen_item/$locale_gen_item/g" "/etc/locale.gen"
     done
-
     gauge_tui_update 78 "Generate Locale"
     exec_command_wrap locale-gen
 
