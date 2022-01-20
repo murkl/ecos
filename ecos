@@ -539,7 +539,7 @@ init_ecos() {
     check_config_key "$ECOS_STATE_FILE" "ECOS_STATE_VERSION_INIT_SCRIPT" "$ECOS_STATE_VERSION_INIT_SCRIPT"
     check_config_key "$ECOS_STATE_FILE" "ECOS_STATE_REPO_ID" "$ECOS_STATE_REPO_ID"
     check_config_key "$ECOS_STATE_FILE" "ECOS_STATE_DEV_ENABLED" "$ECOS_STATE_DEV_ENABLED"
-    check_config_key_array "$ECOS_STATE_FILE" "ECOS_STATE_TWEAKS_ENABLED_LIST" "${ECOS_STATE_TWEAKS_ENABLED_LIST[@]}"
+    # TODO: check_config_key_array "$ECOS_STATE_FILE" "ECOS_STATE_TWEAKS_ENABLED_LIST" "${ECOS_STATE_TWEAKS_ENABLED_LIST[@]}"
 
     # DOWNLOAD REMOTE ECOS VERSION
     if [ ! -f "$ECOS_REMOTE_VERSION_FILE" ]; then
@@ -1179,18 +1179,8 @@ check_config_key() {
 }
 
 check_config_key_array() {
-    local config_file="$1" && shift
-    local config_key="$1" && shift
-    local default_value_list=("$@")
-
-    local items_txt='( '
-    for item in "${default_value_list[@]}"; do
-        items_txt="$items_txt'$item' "
-    done
-    items_txt="$items_txt"')'
-
-    # Check items
-    check_config_key "$config_file" "$config_key" "$items_txt"
+    # TODO
+    return 1
 }
 
 replace_property_value() {
@@ -1206,19 +1196,19 @@ replace_property_array_value() {
     local config_file="$1" && shift
     local config_key=$1 && shift
     local config_value_list=("$@")
-    local value_item=""
     local new_value_item_list=""
 
-    for value_item in "${config_value_list[@]}"; do
+    for ((i = 0; i < ${#config_value_list[@]}; i++)); do
+        local array_item="${config_value_list[$i]}"
 
         # First item without leading space
-        if [ "$new_value_item_list" = "" ]; then
-            new_value_item_list="\"$value_item\""
+        if [ $i = 0 ]; then
+            new_value_item_list="\"$array_item\""
             continue
         fi
 
         # Other items
-        new_value_item_list="$new_value_item_list \"$value_item\""
+        new_value_item_list="$new_value_item_list \"$array_item\""
     done
 
     # Replace items (without "")
