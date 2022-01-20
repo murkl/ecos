@@ -1201,7 +1201,8 @@ replace_property_value() {
     sed -i "s;${config_key}=.*;${config_key}=\"${config_value}\";g" "$config_file"
 }
 
-replace_config_value_array() {
+replace_property_array_value() {
+
     local config_file="$1" && shift
     local config_key=$1 && shift
     local config_value_list=("$@")
@@ -1212,12 +1213,12 @@ replace_config_value_array() {
 
         # First item without leading space
         if [ "$new_value_item_list" = "" ]; then
-            new_value_item_list="'$value_item'"
+            new_value_item_list="\"$value_item\""
             continue
         fi
 
         # Other items
-        new_value_item_list="$new_value_item_list '$value_item'"
+        new_value_item_list="$new_value_item_list \"$value_item\""
     done
 
     # Replace items (without "")
