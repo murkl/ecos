@@ -1240,19 +1240,19 @@ replace_property_array_value() {
     local config_file="$1" && shift
     local config_key=$1 && shift
     local config_value_list=("$@")
-    local value_item=""
     local new_value_item_list=""
 
-    for value_item in "${config_value_list[@]}"; do
+    for ((i = 0; i < ${#config_value_list[@]}; i++)); do
+        local array_item="${config_value_list[$i]}"
 
         # First item without leading space
-        if [ "$new_value_item_list" = "" ]; then
-            new_value_item_list="\'$value_item\'"
+        if [ $i = 0 ]; then
+            new_value_item_list="\"$array_item\""
             continue
         fi
 
         # Other items
-        new_value_item_list="$new_value_item_list \'$value_item\'"
+        new_value_item_list="$new_value_item_list \"$array_item\""
     done
 
     # Replace items (without "")
