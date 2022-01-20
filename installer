@@ -1197,8 +1197,7 @@ exec_command_wrap() {
 gauge_tui_update() {
     local percent="$1"
     local text="$2"
-    tui_init 0 ""
-    tui_add 0 "$text"
+    tui_init 0 "$text"
     echo -e "XXX\n$percent\n$(cat "$TUI_FILE")\nXXX"
 }
 
