@@ -1,7 +1,6 @@
 #!/bin/bash
 SCRIPT_VERSION=2.3.3
 
-
 #/////////////////////////////////////////////////////
 # LOCATE SCRIPT DIR
 #/////////////////////////////////////////////////////
@@ -1146,7 +1145,7 @@ update_tweaks() {
 #/////////////////////////////////////////////////////
 
 zenity() {
-    /usr/bin/zenity --name="$SCRIPT_ID" --width=350 --height=280 --title='' --text='' --window-icon="$ECOS_ICON_FILE" "$@" 2>/dev/null
+    /usr/bin/zenity --name="$SCRIPT_ID" --width=380 --height=300 --title='' --text='' --window-icon="$ECOS_ICON_FILE" "$@" 2>/dev/null
 }
 
 notify() {
