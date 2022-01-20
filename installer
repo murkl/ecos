@@ -764,6 +764,7 @@ exec_install_chroot() {
     local user_profile="/home/$USERNAME/.zlogin"
     echo '#!/bin/sh' >$user_profile
     echo 'export ECOS_HOME="$HOME/.ecos"' >>$user_profile
+    echo 'export PATH="$PATH:$ECOS_HOME/.system/repo/"' >>$user_profile
     echo 'export ECOS_CORE="$ECOS_HOME/.system/repo/ecos"' >>$user_profile
     echo '$ECOS_CORE --install' >>$user_profile
     exec_command_wrap chmod +x $user_profile
