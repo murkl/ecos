@@ -147,6 +147,7 @@ X-GNOME-Autostart-Phase=DisplayServer' >/tmp/optimus.desktop
 
 remove() {
     paru --noconfirm --sudoloop -Rsn lib32-nvidia-utils-tkg lib32-opencl-nvidia-tkg nvidia-dkms-tkg nvidia-egl-wayland-tkg nvidia-settings-tkg nvidia-utils-tkg opencl-nvidia-tkg
+    paru --noconfirm --sudoloop -Rsn lib32-nvidia-dev-utils-tkg lib32-opencl-nvidia-dev-tkg nvidia-dev-dkms-tkg nvidia-dev-egl-wayland-tkg nvidia-dev-settings-tkg nvidia-dev-utils-tkg opencl-nvidia-dev-tkg
 
     # optional: opencl-nvidia-390xx lib32-opencl-nvidia-390xx lib32-virtualgl
     paru --noconfirm --sudoloop -Rsn nvidia-390xx-dkms nvidia-390xx-settings nvidia-390xx-utils lib32-nvidia-390xx-utils opencl-nvidia-390xx lib32-opencl-nvidia-390xx lib32-virtualgl
