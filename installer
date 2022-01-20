@@ -1247,12 +1247,12 @@ replace_property_array_value() {
 
         # First item without leading space
         if [ "$new_value_item_list" = "" ]; then
-            new_value_item_list="\"$value_item\""
+            new_value_item_list="\'$value_item\'"
             continue
         fi
 
         # Other items
-        new_value_item_list="$new_value_item_list \"$value_item\""
+        new_value_item_list="$new_value_item_list \'$value_item\'"
     done
 
     # Replace items (without "")
