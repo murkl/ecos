@@ -568,7 +568,8 @@ tui_install_ecos() {
     tui_init 24 "DOTFILES REPO"
     local selected_dotfiles_repo
     if ! selected_dotfiles_repo=$(whiptail --menu --notags "$(cat "$SCRIPT_TUI_FILE")\n\n$tweaks_info" "$SCRIPT_TUI_HEIGHT" "$SCRIPT_TUI_WIDTH" 5 "gnome-https" "GNOME (stable)" "bspwm-https" "BSPWM (stable)" "gnome-ssh" "GNOME (dev)" "bspwm-ssh" "BSPWM (dev)" "git" "GIT (custom)" 3>&1 1>&2 2>&3); then
-        echo -e "\nSimply type 'ecos' to open again\n\nInstall your System manually..."
+        clear
+        echo -e "\nSimply type 'ecos' to open again\n\nInstall your System manually...\n"
         exit 1
     fi
     if [ "$selected_dotfiles_repo" = "git" ]; then
