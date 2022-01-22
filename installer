@@ -51,6 +51,7 @@ LOCALE_LANG=''
 LOCALE_GEN=('')
 TIMEZONE=''
 VCONSOLE_KEYMAP=''
+BOOT_ARGS=''
 X11_KEYBOARD_LAYOUT=''
 X11_KEYBOARD_VARIANT=''
 DUALBOOT='default' # windows10
@@ -70,6 +71,7 @@ set_lang_en_US() {
     VCONSOLE_KEYMAP='en-latin1-nodeadkeys'
     X11_KEYBOARD_LAYOUT='en'
     X11_KEYBOARD_VARIANT='nodeadkeys'
+    BOOT_ARGS="lang=en locale=en_US.UTF-8"
 }
 
 set_lang_de_DE() {
@@ -79,6 +81,7 @@ set_lang_de_DE() {
     VCONSOLE_KEYMAP='de-latin1-nodeadkeys'
     X11_KEYBOARD_LAYOUT='de'
     X11_KEYBOARD_VARIANT='nodeadkeys'
+    BOOT_ARGS="lang=de locale=de_DE.UTF-8"
 }
 
 #/////////////////////////////////////////////////////
@@ -353,12 +356,13 @@ exec_install_core() {
     #----------------------------------------
     gauge_tui_update 10 "Encrypt $DISK"
 
-    # Set encrypt command
-    local crypt_cmd="cryptsetup -c aes-xts-plain -s 512 luksFormat $ROOT_PARTITION"
+    # Create encryption
     # GRUB < 2.06: luks2 is not implemented!
     # local crypt_cmd="cryptsetup -c aes-xts-plain -s 512 luksFormat --type luks1 $ROOT_PARTITION"
+    # Set encrypt command
+    local crypt_cmd="cryptsetup -c aes-xts-plain -s 512 luksFormat $ROOT_PARTITION"
 
-    # Create encryption
+    # !! DO NOT USE exec_command_wrap
     if ! echo -n "$password_encryption" | $crypt_cmd -d - >/dev/null; then
         core_log "e" "$crypt_cmd"
         exit 1
@@ -368,6 +372,7 @@ exec_install_core() {
 
     # Open encrypt
     crypt_cmd="cryptsetup open $ROOT_PARTITION lvm"
+    # !! DO NOT USE exec_command_wrap
     if ! echo -n "$password_encryption" | $crypt_cmd -d - >/dev/null; then
         core_log "e" "$crypt_cmd"
         exit 1
@@ -621,7 +626,8 @@ exec_install_chroot() {
         echo 'initrd  /initramfs-linux-fallback.img' >>/boot/loader/entries/arch-fallback.conf
 
         # Boot parameter
-        echo "options cryptdevice=$ROOT_PARTITION:main root=/dev/mapper/main-root quiet splash init=/usr/lib/systemd/systemd loglevel=3 rd.systemd.show_status=false rd.udev.log_priority=3 vt.global_cursor_default=0 rw" >>/boot/loader/entries/arch.conf
+        /dev/mapper/main-root
+        echo "options cryptdevice=/dev/mapper/main-root:main root=/dev/mapper/main-root quiet splash init=/usr/lib/systemd/systemd loglevel=3 rd.systemd.show_status=false rd.udev.log_priority=3 vt.global_cursor_default=0 rw" >>/boot/loader/entries/arch.conf
     fi
 
     #----------------------------------------
@@ -629,6 +635,11 @@ exec_install_chroot() {
     #----------------------------------------
 
     if [ "$BOOTLOADER" = "grub" ] || [ "$uefi_mode" = "false" ]; then
+
+        # Load EFI Variables
+        if [ "$uefi_mode" = "true" ]; then
+            mount -t efivarfs efivarfs /sys/firmware/efi/efivars
+        fi
 
         # Create a keyfile to prevent enter the encryption password twice
         local crypt_key="/crypto_keyfile.bin"
@@ -653,11 +664,13 @@ exec_install_chroot() {
         # Modify /etc/default/grub before execute grub-install!
         echo 'GRUB_ENABLE_CRYPTODISK=y' >/etc/default/grub
         echo 'GRUB_PRELOAD_MODULES="lvm"' >>/etc/default/grub
-        echo 'GRUB_CMDLINE_LINUX="cryptdevice='$ROOT_PARTITION':main  cryptkey=rootfs:'$crypt_key'"' >>/etc/default/grub
+        echo 'GRUB_CMDLINE_LINUX="cryptdevice='$ROOT_PARTITION':main root=/dev/mapper/main-root '$BOOT_ARGS'"' >>/etc/default/grub
         echo 'GRUB_CMDLINE_LINUX_DEFAULT="quiet splash loglevel=3 rd.systemd.show_status=false rd.udev.log_priority=3 vt.global_cursor_default=0"' >>/etc/default/grub
 
         # Install GRUB
         if [ "$uefi_mode" = "true" ]; then
+
+            mount -t efivarfs efivarfs /sys/firmware/efi/efivars
             exec_command_wrap grub-install --target=x86_64-efi --efi-directory=/boot --bootloader-id="Arch Linux"
         else
             exec_command_wrap grub-install --no-floppy "$DISK"
