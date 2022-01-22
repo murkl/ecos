@@ -256,18 +256,7 @@ tui_install_ecos_core() {
     local progress_status=$(<"$PROGRESS_FILE")
     rm -rf "$PROGRESS_FILE"
 
-    if [ "$progress_status" = "FAILED" ]; then
-        # Error message
-        tui_init 0 "ERROR: INSTALLATION FAILED!"
-        whiptail --msgbox "$(cat "$TUI_FILE")" "$TUI_HEIGHT" "$TUI_WIDTH"
-
-        # Logs
-        tui_show_logs
-
-        exit 1
-    fi
-
-    if [ "$progress_status" = "SUCCESS" ]; then
+    if [ "$progress_status" = "PROGRESS_SUCCESS" ]; then
 
         # Success message
         tui_init 0 "INSTALLATION SUCCESSFULLY FINISHED"
@@ -283,6 +272,15 @@ tui_install_ecos_core() {
         fi
         exit 0
     fi
+
+    # Error message
+    tui_init 0 "ERROR: INSTALLATION FAILED!"
+    whiptail --msgbox "$(cat "$TUI_FILE")" "$TUI_HEIGHT" "$TUI_WIDTH"
+
+    # Logs
+    tui_show_logs
+
+    exit 1
 }
 
 #/////////////////////////////////////////////////////
@@ -465,6 +463,9 @@ exec_install_core() {
     #----------------------------------------
     gauge_tui_update 100 "Installation finished!"
     core_log "!!! INSTALLATION SUCCESSFULLY FINISHED !!!"
+
+    # SET STATUS
+    echo "PROGRESS_SUCCESS" >"$progress_result_file"
 
     exit 0
 }
