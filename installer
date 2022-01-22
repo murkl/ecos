@@ -484,9 +484,9 @@ exec_install_chroot() {
     # Boootloader, Microcode Kernel Updates for CPU & Core Tools
     # os-prober will detect existings operating systems like Windows or other Linux Distributions
     gauge_tui_update 58 "$gauge_txt"
-    bootloader_pkgs="os-prober"
-    [ "$uefi_mode" = "true" ] && bootloader_pkgs="efibootmgr"
-    [ "$BOOTLOADER" = "grub" ] || [ "$uefi_mode" = "false" ] && bootloader_pkgs="grub"
+    local bootloader_pkgs="os-prober"
+    [ "$uefi_mode" = "true" ] && bootloader_pkgs="$bootloader_pkgs efibootmgr"
+    [ "$BOOTLOADER" = "grub" ] || [ "$uefi_mode" = "false" ] && bootloader_pkgs="$bootloader_pkgs grub"
 
     local ucode_pkg="$UCODE"
     [ "$ucode_pkg" = "disabled" ] && ucode_pkg=""
