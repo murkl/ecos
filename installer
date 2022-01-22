@@ -455,7 +455,6 @@ exec_install_core() {
     if [ "$AUTO_UNMOUNT" = "true" ]; then
         exec_command_wrap swapoff -a
         exec_command_wrap umount -R /mnt
-        exec_command_wrap cryptsetup close lvm
     fi
 
     #----------------------------------------
@@ -1048,7 +1047,6 @@ tui_open_recovery() {
     print_info "UNMOUNT" "$mnt_recovery"
     swapoff -a
     umount -R "$mnt_recovery"
-    cryptsetup close lvm
 }
 
 #/////////////////////////////////////////////////////
