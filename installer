@@ -448,6 +448,7 @@ exec_install_core() {
     rm -f "/mnt/$INSTALLER_ID.conf"
     rm -f "/mnt/$INSTALLER_ID.log"
     rm -f "/mnt/$INSTALLER_ID.tui"
+    rm -f "/mnt/$INSTALLER_ID.progress"
 
     #----------------------------------------
     # Unmount
@@ -1324,6 +1325,7 @@ print_info() {
 
 on_trap() {
     rm -f "$TUI_FILE"
+    rm -f "$PROGRESS_FILE"
 }
 
 # Set trap
