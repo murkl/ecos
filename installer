@@ -40,6 +40,8 @@ USERNAME=''
 HOSTNAME=''
 WORKSTATION=''
 SWAP_SIZE='0'
+WIPE_DISK='false'
+DUALBOOT='default' # windows10
 DISK=''
 BOOT_PARTITION=''
 ROOT_PARTITION=''
@@ -50,8 +52,8 @@ TIMEZONE=''
 VCONSOLE_KEYMAP=''
 X11_KEYBOARD_LAYOUT=''
 X11_KEYBOARD_VARIANT=''
+BOOTLOADER='grub' # systemd
 CUSTOM_PACKAGES=''
-DUALBOOT=''
 
 #/////////////////////////////////////////////////////
 # INSTALLER LANGUAGES
@@ -195,7 +197,7 @@ tui_core_installer() {
             # Unmount
             swapoff -a
             umount -R /mnt
-            cryptsetup close cryptroot
+            cryptsetup close lvm
 
             core_log "Reset finished!"
         fi
@@ -245,7 +247,7 @@ tui_core_installer() {
     # Check UEFI boot
     #----------------------------------------
     local uefi_mode=''
-    # TODO:. other check
+    # TODO: Maybe other check?
     if [ -x "$(command -v efivar)" ] && [ "$(efivar -l >/dev/null)" != "" ]; then
         uefi_mode='false'
     else
@@ -306,10 +308,16 @@ exec_install_core() {
     core_log "Encryption Password is set!"
 
     #----------------------------------------
-    # Wipe disk
+    # Prepare disk
     #----------------------------------------
-    gauge_tui_update 4 "Wipe $DISK"
+    gauge_tui_update 4 "Prepare $DISK"
+    # Destroy GPT and MBR data structures
     exec_command_wrap sgdisk -Z "$DISK"
+    # Override complete disk with 0
+    if [ "$WIPE_DISK" = "true" ]; then
+        gauge_tui_update 6 "Wipe $DISK and override with zero (this will take a while...)"
+        exec_command_wrap dd status=progress if=/dev/zero of="$DISK"
+    fi
 
     #----------------------------------------
     # Partition disk
@@ -333,7 +341,7 @@ exec_install_core() {
     else
 
         # BIOS only: 1MiB partition is needed for GRUB (if GPT is used instead of MBR)
-        exec_command_wrap sgdisk -n 0:0:+1MiB -t 0:ef02 "$DISK"
+        exec_command_wrap sgdisk -n 0:0:+1MiB -t 0:ef02 -c 0:boot "$DISK"
 
         # / partition: Rest of space
         exec_command_wrap sgdisk -n 0:0:0 -t 0:8300 -c 0:root "$DISK"
@@ -345,13 +353,9 @@ exec_install_core() {
     gauge_tui_update 10 "Encrypt $DISK"
 
     # Set encrypt command
-    local crypt_cmd=''
-    if [ "$uefi_mode" = "true" ]; then
-        crypt_cmd="cryptsetup -c aes-xts-plain -s 512 luksFormat $ROOT_PARTITION"
-    else
-        # LUKS2 isnt implemented yet (GRUB)
-        crypt_cmd="cryptsetup -c aes-xts-plain -s 512 luksFormat --type luks1 $ROOT_PARTITION"
-    fi
+    local crypt_cmd="cryptsetup -c aes-xts-plain -s 512 luksFormat $ROOT_PARTITION"
+    # GRUB < 2.06: luks2 is not implemented!
+    # local crypt_cmd="cryptsetup -c aes-xts-plain -s 512 luksFormat --type luks1 $ROOT_PARTITION"
 
     # Create encryption
     if ! echo -n "$password_encryption" | $crypt_cmd -d - >/dev/null; then
@@ -362,7 +366,7 @@ exec_install_core() {
     fi
 
     # Open encrypt
-    crypt_cmd="cryptsetup open $ROOT_PARTITION cryptroot"
+    crypt_cmd="cryptsetup open $ROOT_PARTITION lvm"
     if ! echo -n "$password_encryption" | $crypt_cmd -d - >/dev/null; then
         core_log "e" "$crypt_cmd"
         exit 1
@@ -371,22 +375,28 @@ exec_install_core() {
     fi
 
     #----------------------------------------
+    # LVM
+    #----------------------------------------
+    gauge_tui_update 10 "Create LVM ($DISK)"
+    exec_command_wrap pvcreate /dev/mapper/lvm
+    exec_command_wrap vgcreate main /dev/mapper/lvm
+    exec_command_wrap lvcreate -l 100%FREE -n root main
+
+    #----------------------------------------
     # Format disk
     #----------------------------------------
     gauge_tui_update 12 "Format $DISK"
 
-    # Format /boot
-    if [ "$uefi_mode" = "true" ]; then
-        exec_command_wrap mkfs.fat -F32 "$BOOT_PARTITION"
-    fi
+    # Format /boot (UEFI)
+    if [ "$uefi_mode" = "true" ]; then exec_command_wrap mkfs.fat -F 32 -n boot "$BOOT_PARTITION"; fi
 
     # Format crypted /
-    exec_command_wrap mkfs.ext4 /dev/mapper/cryptroot
+    exec_command_wrap mkfs.ext4 -L root /dev/mapper/main-root
 
     #----------------------------------------
     # Mount disk to /mnt
     #----------------------------------------
-    exec_command_wrap mount /dev/mapper/cryptroot /mnt
+    exec_command_wrap mount /dev/mapper/main-root /mnt
 
     if [ "$uefi_mode" = "true" ]; then
         exec_command_wrap mkdir /mnt/boot
@@ -396,15 +406,16 @@ exec_install_core() {
     #----------------------------------------
     # Pacstrap base arch packages
     #----------------------------------------
-    gauge_tui_update 24 "Pacstrap Installation (may take a while)..."
+    gauge_tui_update 24 "Pacstrap Installation (this will take a while)..."
     exec_command_wrap pacstrap /mnt base base-devel linux linux-firmware
 
     #----------------------------------------
     # Generate /etc/fstab
     #----------------------------------------
     gauge_tui_update 52 "Generate /etc/fstab"
-    local log_txt="genfstab -U /mnt >>/mnt/etc/fstab"
-    if ! genfstab -U /mnt >>/mnt/etc/fstab; then
+    local log_txt="genfstab -Lp /mnt >>/mnt/etc/fstab"
+    # genfstab -U
+    if ! genfstab -Lp /mnt >>/mnt/etc/fstab; then
         core_log "e" "$log_txt"
         exit 1
     else
@@ -445,7 +456,7 @@ exec_install_core() {
     #----------------------------------------
     exec_command_wrap swapoff -a
     exec_command_wrap umount -R /mnt
-    exec_command_wrap cryptsetup close cryptroot
+    exec_command_wrap cryptsetup close lvm
 
     #----------------------------------------
     # Finished
@@ -473,19 +484,21 @@ exec_install_chroot() {
     #----------------------------------------
     # Essential packages
     #----------------------------------------
-    local gauge_txt="Install Essential Packages (may take a while)..."
+    local gauge_txt="Install Essential Packages (this will take a while)..."
 
     gauge_tui_update 56 "$gauge_txt"
     exec_command_wrap pacman -Syy
 
     # Boootloader, Microcode Kernel Updates for CPU & Core Tools
+    # os-prober will detect existings operating systems like Windows or other Linux Distributions
     gauge_tui_update 58 "$gauge_txt"
-    bootloader_pkgs="efibootmgr"
-    [ "$uefi_mode" = "false" ] && bootloader_pkgs="grub"
+    bootloader_pkgs="os-prober"
+    [ "$uefi_mode" = "true" ] && bootloader_pkgs="efibootmgr"
+    [ "$BOOTLOADER" = "grub" ] || [ "$uefi_mode" = "false" ] && bootloader_pkgs="grub"
 
     local ucode_pkg="$UCODE"
     [ "$ucode_pkg" = "disabled" ] && ucode_pkg=""
-    exec_command_wrap pacman --noconfirm --needed -S $ucode_pkg $bootloader_pkgs dosfstools gptfdisk $CUSTOM_PACKAGES
+    exec_command_wrap pacman --noconfirm --needed -S $ucode_pkg $bootloader_pkgs dosfstools gptfdisk lvm2 $CUSTOM_PACKAGES
 
     # Network manager
     gauge_tui_update 60 "$gauge_txt"
@@ -503,6 +516,7 @@ exec_install_chroot() {
     gauge_tui_update 72 "$gauge_txt"
     exec_command_wrap pacman --noconfirm --needed -S zsh
 
+    # TLP DISABLED
     # if [ "$WORKSTATION" = "notebook" ]; then
     #     # Battery safer
     #     exec_command_wrap pacman --noconfirm --needed -S tlp
@@ -572,31 +586,42 @@ exec_install_chroot() {
     exec_command_wrap systemctl enable NetworkManager
 
     #----------------------------------------
-    # Boot loader
+    # Bootloader: systemd-boot (UEFI)
     #----------------------------------------
     gauge_tui_update 82 "Install Bootloader"
 
-    if [ "$uefi_mode" = true ]; then
-        #----------------------------------------
-        # Bootloader: systemd-boot
-        #----------------------------------------
+    if [ "$BOOTLOADER" = "systemd" ] && [ "$uefi_mode" = "true" ]; then
 
+        # Install boot loeader
         exec_command_wrap bootctl --path=/boot install
 
+        # Create bootloader config
         echo 'default arch.conf' >/boot/loader/loader.conf
         echo 'console-mode auto' >>/boot/loader/loader.conf
         echo 'timeout 0' >>/boot/loader/loader.conf
         echo 'editor  yes' >>/boot/loader/loader.conf
 
+        # Create arch default entry
         echo 'title   Arch Linux' >/boot/loader/entries/arch.conf
         echo 'linux   /vmlinuz-linux' >>/boot/loader/entries/arch.conf
         [ "$UCODE" != "disabled" ] && echo "initrd  /$UCODE.img" >>/boot/loader/entries/arch.conf
         echo 'initrd  /initramfs-linux.img' >>/boot/loader/entries/arch.conf
-        echo "options cryptdevice=$ROOT_PARTITION:cryptroot root=/dev/mapper/cryptroot quiet splash loglevel=3 rd.systemd.show_status=false rd.udev.log_priority=3 vt.global_cursor_default=0 rw" >>/boot/loader/entries/arch.conf
-    else
-        #----------------------------------------
-        # Bootloader: GRUB (for legacy BIOS)
-        #----------------------------------------
+
+        # Create arch fallback entry
+        echo 'title   Arch Linux Fallback' >/boot/loader/entries/arch-fallback.conf
+        echo 'linux   /vmlinuz-linux' >>/boot/loader/entries/arch-fallback.conf
+        [ "$UCODE" != "disabled" ] && echo "initrd  /$UCODE.img" >>/boot/loader/entries/arch-fallback.conf
+        echo 'initrd  /initramfs-linux-fallback.img' >>/boot/loader/entries/arch-fallback.conf
+
+        # Boot parameter
+        echo "options cryptdevice=$ROOT_PARTITION:main root=/dev/mapper/main-root quiet splash init=/usr/lib/systemd/systemd loglevel=3 rd.systemd.show_status=false rd.udev.log_priority=3 vt.global_cursor_default=0 rw" >>/boot/loader/entries/arch.conf
+    fi
+
+    #----------------------------------------
+    # Bootloader: GRUB ( UEFI legacy BIOS support)
+    #----------------------------------------
+
+    if [ "$BOOTLOADER" = "grub" ] || [ "$uefi_mode" = "false" ]; then
 
         # Create a keyfile to prevent enter the encryption password twice
         local crypt_key="/crypto_keyfile.bin"
@@ -618,11 +643,20 @@ exec_install_chroot() {
         sed -i 's^FILES=()^FILES=('$crypt_key')^g' /etc/mkinitcpio.conf
         exec_command_wrap mkinitcpio -P
 
-        # Mdify before execute grub-install!
+        # Modify /etc/default/grub before execute grub-install!
         echo 'GRUB_ENABLE_CRYPTODISK=y' >/etc/default/grub
-        echo 'GRUB_CMDLINE_LINUX="cryptdevice='$ROOT_PARTITION':cryptroot cryptkey=rootfs:'$crypt_key'"' >>/etc/default/grub
+        echo 'GRUB_PRELOAD_MODULES="lvm"' >>/etc/default/grub
+        echo 'GRUB_CMDLINE_LINUX="cryptdevice='$ROOT_PARTITION':main  cryptkey=rootfs:'$crypt_key'"' >>/etc/default/grub
+        echo 'GRUB_CMDLINE_LINUX_DEFAULT="quiet splash loglevel=3 rd.systemd.show_status=false rd.udev.log_priority=3 vt.global_cursor_default=0"' >>/etc/default/grub
 
-        exec_command_wrap grub-install --no-floppy "$DISK"
+        # Install GRUB
+        if [ "$uefi_mode" = "true" ]; then
+            exec_command_wrap grub-install --target=x86_64-efi --efi-directory=/boot --bootloader-id="Arch Linux"
+        else
+            exec_command_wrap grub-install --no-floppy "$DISK"
+        fi
+
+        # Make Grub config
         exec_command_wrap grub-mkconfig -o /boot/grub/grub.cfg
     fi
 
@@ -630,10 +664,11 @@ exec_install_chroot() {
     # Modify HOOKS
     #----------------------------------------
     core_log "Modify /etc/mkinitcpio.conf"
-    cp /etc/mkinitcpio.conf /etc/mkinitcpio.conf.bak
+    sed -i "s/MODULES=()/MODULES=(ext4)/g" /etc/mkinitcpio.conf
     sed -i "s/filesystems keyboard fsck/filesystems fsck/g" /etc/mkinitcpio.conf
     sed -i "s/udev autodetect/udev keyboard autodetect/g" /etc/mkinitcpio.conf
     sed -i "s/block filesystems/block keymap encrypt filesystems/g" /etc/mkinitcpio.conf
+    sed -i "s/encrypt filesystems/encrypt lvm2 filesystems fsck shutdown/g" /etc/mkinitcpio.conf
 
     #----------------------------------------
     # Rebuild initrc
@@ -838,22 +873,8 @@ check_config() {
             tui_main_menu
             exit 0
         fi
-
         replace_property_value "$INSTALLER_CONFIG_FILE" "HOSTNAME" "$USERNAME-$WORKSTATION"
         replace_property_value "$INSTALLER_CONFIG_FILE" "WORKSTATION" "$WORKSTATION"
-    fi
-
-    #----------------------------------------
-    # Check Dualboot
-    #----------------------------------------
-    if [ "$DUALBOOT" = "" ]; then
-        tui_init 25 "Dualboot"
-        if ! DUALBOOT=$(whiptail --menu --notags "$(cat "$TUI_FILE")\n" "$TUI_HEIGHT" "$TUI_WIDTH" 2 "default" "Default" "windows10" "Windows 10" 3>&1 1>&2 2>&3); then
-            tui_main_menu
-            exit 0
-        fi
-
-        replace_property_value "$INSTALLER_CONFIG_FILE" "DUALBOOT" "$DUALBOOT"
     fi
 
     #----------------------------------------
@@ -905,6 +926,9 @@ check_config() {
     #----------------------------------------
     # Add default values
     #----------------------------------------
+    check_config_key "$INSTALLER_CONFIG_FILE" "BOOTLOADER" "$BOOTLOADER"
+    check_config_key "$INSTALLER_CONFIG_FILE" "DUALBOOT" "$DUALBOOT"
+    check_config_key "$INSTALLER_CONFIG_FILE" "WIPE_DISK" "$WIPE_DISK"
     check_config_key "$INSTALLER_CONFIG_FILE" "SWAP_SIZE" "$SWAP_SIZE"
     check_config_key "$INSTALLER_CONFIG_FILE" "CUSTOM_PACKAGES" "$CUSTOM_PACKAGES"
 
@@ -979,7 +1003,7 @@ tui_open_recovery() {
     clear
     print_info "OPEN CRYPTED DEVICE" "$ROOT_PARTITION"
     echo -e "\nENTER YOUR ENCRYPTION PASSWORD\n"
-    cryptsetup open $ROOT_PARTITION cryptroot
+    cryptsetup open $ROOT_PARTITION lvm
 
     #----------------------------------------
     # Mount
@@ -987,7 +1011,7 @@ tui_open_recovery() {
     local mnt_recovery='/mnt/recovery'
     print_info "MOUNT TO" "$mnt_recovery"
     mkdir -p "$mnt_recovery"
-    mount /dev/mapper/cryptroot "$mnt_recovery"
+    mount /dev/mapper/main-root "$mnt_recovery"
     mkdir -p "$mnt_recovery/boot"
     mount -p "$BOOT_PARTITION" "$mnt_recovery/boot"
 
@@ -1016,7 +1040,7 @@ tui_open_recovery() {
     print_info "UNMOUNT" "$mnt_recovery"
     swapoff -a
     umount -R "$mnt_recovery"
-    cryptsetup close cryptroot
+    cryptsetup close lvm
 }
 
 #/////////////////////////////////////////////////////

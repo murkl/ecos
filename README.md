@@ -61,7 +61,7 @@ The `installer` script is the first installation step and will install all essen
 You have to reboot after this step. The following packages and configurations will be installed during the core installation step.
 
 ```
-base base-devel linux linux-firmware efibootmgr dosfstools gptfdisk networkmanager zsh git nano
+base base-devel linux linux-firmware efibootmgr dosfstools gptfdisk lvm2 grub os-prober networkmanager zsh git nano
 ```
 
 Also the choosen ECOS git repository cloned into the following direcory in the new Arch system
