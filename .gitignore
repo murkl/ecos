@@ -1,5 +1,6 @@
 ecos.tui
 ecos-installer.tui
+ecos-installer.progress
 ecos-installer.log
 ecos-installer.conf
 ecos-installer.conf.backup

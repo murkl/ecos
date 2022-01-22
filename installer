@@ -14,6 +14,9 @@ INSTALLER_LOG_FILE="$INSTALLER_WORKING_DIR/$INSTALLER_ID.log"
 # DEFAULT PASSWORD
 ECOS_DEFAULT_PASSWORD='ecos'
 
+# PROGRES
+PROGRESS_FILE="$INSTALLER_WORKING_DIR/$INSTALLER_ID.progress"
+
 # TUI VARIABLES
 TUI_FILE="$INSTALLER_WORKING_DIR/$INSTALLER_ID.tui"
 TUI_WIDTH=64
@@ -247,10 +250,13 @@ tui_install_ecos_core() {
     # Execute install (will execute chroot)
     #----------------------------------------
     tui_init 0 "Core Installation..."
-    exec_install_core "$uefi_mode" "$password_encryption" | whiptail --gauge "$(cat "$TUI_FILE")" "$TUI_HEIGHT" "$TUI_WIDTH" 0 3>&1 1>&2 2>&3
+    exec_install_core "$uefi_mode" "$password_encryption" "$PROGRESS_FILE" | whiptail --gauge "$(cat "$TUI_FILE")" "$TUI_HEIGHT" "$TUI_WIDTH" 0 3>&1 1>&2 2>&3
 
-    # Show Result
-    if [ $? = 1 ]; then
+    # Finish
+    local progress_status=$(<"$PROGRESS_FILE")
+    rm -rf "$PROGRESS_FILE"
+
+    if [ "$progress_status" = "FAILED" ]; then
         # Error message
         tui_init 0 "ERROR: INSTALLATION FAILED!"
         whiptail --msgbox "$(cat "$TUI_FILE")" "$TUI_HEIGHT" "$TUI_WIDTH"
@@ -259,7 +265,10 @@ tui_install_ecos_core() {
         tui_show_logs
 
         exit 1
-    else
+    fi
+
+    if [ "$progress_status" = "SUCCESS" ]; then
+
         # Success message
         tui_init 0 "INSTALLATION SUCCESSFULLY FINISHED"
         whiptail --msgbox "$(cat "$TUI_FILE")" "$TUI_HEIGHT" "$TUI_WIDTH"
@@ -272,7 +281,6 @@ tui_install_ecos_core() {
         if (whiptail --yesno "$(cat "$TUI_FILE")" "$TUI_HEIGHT" "$TUI_WIDTH"); then
             reboot
         fi
-
         exit 0
     fi
 }
@@ -285,6 +293,7 @@ exec_install_core() {
 
     local uefi_mode="$1"
     local password_encryption="$2"
+    local progress_result_file="$3"
 
     #----------------------------------------
     # Source config
