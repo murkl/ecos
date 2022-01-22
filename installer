@@ -1085,7 +1085,6 @@ tui_create_usb() {
     tui_init 17 "CREATE BOOTABLE USB STICK"
     tui_add 20 "Choose Target Device"
     if ! usb_disk=$(whiptail --menu "$(cat "$TUI_FILE")\n" "$TUI_HEIGHT" "$TUI_WIDTH" "${#disk_array[@]}" "${disk_array[@]}" 3>&1 1>&2 2>&3); then
-        tui_main_menu
         exit 0
     fi
 
