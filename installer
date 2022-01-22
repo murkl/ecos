@@ -40,8 +40,6 @@ USERNAME=''
 HOSTNAME=''
 WORKSTATION=''
 SWAP_SIZE='0'
-WIPE_DISK='false'
-DUALBOOT='default' # windows10
 DISK=''
 BOOT_PARTITION=''
 ROOT_PARTITION=''
@@ -52,7 +50,10 @@ TIMEZONE=''
 VCONSOLE_KEYMAP=''
 X11_KEYBOARD_LAYOUT=''
 X11_KEYBOARD_VARIANT=''
-BOOTLOADER='grub' # systemd
+DUALBOOT='default' # windows10
+BOOTLOADER='grub'  # systemd
+WIPE_DISK='false'
+AUTO_UNMOUNT='true'
 CUSTOM_PACKAGES=''
 
 #/////////////////////////////////////////////////////
@@ -83,15 +84,6 @@ set_lang_de_DE() {
 
 main() {
 
-    local uefi_mode='true'
-    # TODO:. other check
-    if [ -x "$(command -v efivar)" ] && [ "$(efivar -l >/dev/null)" != "" ]; then
-        core_log "BIOS detected"
-        uefi_mode='false'
-    else
-        core_log "UEFI detected"
-    fi
-
     #----------------------------------------
     # CHROOT INSTALLER
     #----------------------------------------
@@ -104,7 +96,7 @@ main() {
     # FORCE: INSTALL ECOS CORE
     # ---------------------------------------
     if [ "$1" = "--core" ]; then
-        tui_main_menu
+        tui_core_installer_menu
         exit $?
     fi
 
@@ -122,7 +114,7 @@ main() {
     if [ "$1" = "" ]; then
         # Check if started from arch live iso
         if [ -f "/proc/sys/kernel/hostname" ] && [ "$(cat /proc/sys/kernel/hostname)" = "archiso" ]; then
-            tui_main_menu
+            tui_core_installer_menu
         else
             tui_create_usb
         fi
@@ -130,10 +122,21 @@ main() {
 }
 
 #/////////////////////////////////////////////////////
-# TUI MAIN MENU
+# TUI CORE INSTALLER
 #/////////////////////////////////////////////////////
 
-tui_main_menu() {
+tui_core_installer_menu() {
+
+    #----------------------------------------
+    # Check UEFI boot
+    #----------------------------------------
+    local uefi_mode=''
+    if [ -x "$(command -v efivar)" ] && [ "$(efivar -l >/dev/null)" != "" ]; then
+        uefi_mode='false'
+    else
+        uefi_mode='true'
+    fi
+    core_log "UEFI MODE: $uefi_mode"
 
     #----------------------------------------
     # Show TUI menu
@@ -147,7 +150,7 @@ tui_main_menu() {
     # Install core
     #----------------------------------------
     if [ "$menu_input" = "1" ]; then
-        tui_core_installer
+        tui_install_ecos_core "$uefi_mode"
         exit $?
     fi
 
@@ -155,8 +158,8 @@ tui_main_menu() {
     # Recovery
     #----------------------------------------
     if [ "$menu_input" = "2" ]; then
-        tui_open_recovery
-        tui_main_menu
+        tui_open_recovery "$uefi_mode"
+        tui_core_installer_menu
         exit 0
     fi
 
@@ -165,7 +168,7 @@ tui_main_menu() {
     #----------------------------------------
     if [ "$menu_input" = "3" ]; then
         tui_show_logs
-        tui_main_menu
+        tui_core_installer_menu
         exit 0
     fi
 }
@@ -174,7 +177,9 @@ tui_main_menu() {
 # TUI CORE INSTALLER
 #/////////////////////////////////////////////////////
 
-tui_core_installer() {
+tui_install_ecos_core() {
+
+    local uefi_mode="$1"
 
     #----------------------------------------
     # Ask for reset core config
@@ -194,12 +199,7 @@ tui_core_installer() {
                 mv -f "$INSTALLER_LOG_FILE" "$INSTALLER_LOG_FILE"".backup"
             fi
 
-            # Unmount
-            swapoff -a
-            umount -R /mnt
-            cryptsetup close lvm
-
-            core_log "Reset finished!"
+            core_log "Reset successfully!"
         fi
     fi
 
@@ -213,14 +213,14 @@ tui_core_installer() {
     #----------------------------------------
     tui_init 0 "Enter Encryption Password"
     if ! password_encryption=$(whiptail --passwordbox "$(cat "$TUI_FILE")" "$TUI_HEIGHT" "$TUI_WIDTH" 3>&1 1>&2 2>&3); then
-        tui_main_menu
+        tui_core_installer_menu
         exit 0
     fi
 
     # Confirm password
     tui_init 0 "Confirm Encryption Password"
     if ! password_input_confirm=$(whiptail --passwordbox "$(cat "$TUI_FILE")" "$TUI_HEIGHT" "$TUI_WIDTH" 3>&1 1>&2 2>&3); then
-        tui_main_menu
+        tui_core_installer_menu
         exit 0
     fi
 
@@ -228,7 +228,7 @@ tui_core_installer() {
     if [ "$password_encryption" != "$password_input_confirm" ]; then
         tui_init 0 "Password Mismatch! Restart the Installation..."
         whiptail --msgbox "$(cat "$TUI_FILE")" "$TUI_HEIGHT" "$TUI_WIDTH"
-        tui_main_menu
+        tui_core_installer_menu
         exit 0
     fi
 
@@ -239,19 +239,8 @@ tui_core_installer() {
     tui_add 0 "!!! ALL YOUR DATA WILL BE LOST !!!"
     tui_add 0 "Continue?"
     if (! whiptail --yesno "$(cat "$TUI_FILE")" "$TUI_HEIGHT" "$TUI_WIDTH"); then
-        tui_main_menu
+        tui_core_installer_menu
         exit 0
-    fi
-
-    #----------------------------------------
-    # Check UEFI boot
-    #----------------------------------------
-    local uefi_mode=''
-    # TODO: Maybe other check?
-    if [ -x "$(command -v efivar)" ] && [ "$(efivar -l >/dev/null)" != "" ]; then
-        uefi_mode='false'
-    else
-        uefi_mode='true'
     fi
 
     #----------------------------------------
@@ -308,9 +297,9 @@ exec_install_core() {
     core_log "Encryption Password is set!"
 
     #----------------------------------------
-    # Prepare disk
+    # Wipe disk
     #----------------------------------------
-    gauge_tui_update 4 "Prepare $DISK"
+    gauge_tui_update 4 "Wipe $DISK"
     # Destroy GPT and MBR data structures
     exec_command_wrap sgdisk -Z "$DISK"
     # Override complete disk with 0
@@ -454,9 +443,12 @@ exec_install_core() {
     #----------------------------------------
     # Unmount
     #----------------------------------------
-    exec_command_wrap swapoff -a
-    exec_command_wrap umount -R /mnt
-    exec_command_wrap cryptsetup close lvm
+
+    if [ "$AUTO_UNMOUNT" = "true" ]; then
+        exec_command_wrap swapoff -a
+        exec_command_wrap umount -R /mnt
+        exec_command_wrap cryptsetup close lvm
+    fi
 
     #----------------------------------------
     # Finished
@@ -852,13 +844,13 @@ check_config() {
     if [ "$USERNAME" = "" ]; then
         tui_init 0 "Enter Username"
         if ! USERNAME=$(whiptail --inputbox "$(cat "$TUI_FILE")" "$TUI_HEIGHT" "$TUI_WIDTH" 3>&1 1>&2 2>&3); then
-            tui_main_menu
+            tui_core_installer_menu
             exit 0
         fi
         if [ "$USERNAME" = "" ]; then
             tui_init 0 "Username was empty! Restart the Installation..."
             whiptail --textbox "$TUI_FILE" "$TUI_HEIGHT" "$TUI_WIDTH"
-            tui_main_menu
+            tui_core_installer_menu
             exit 0
         fi
         replace_property_value "$INSTALLER_CONFIG_FILE" "USERNAME" "$USERNAME"
@@ -870,7 +862,7 @@ check_config() {
     if [ "$WORKSTATION" = "" ]; then
         tui_init 20 "Choose Workstation"
         if ! WORKSTATION=$(whiptail --menu --notags "$(cat "$TUI_FILE")\n" "$TUI_HEIGHT" "$TUI_WIDTH" 2 "desktop" "Desktop" "notebook" "Notebook" 3>&1 1>&2 2>&3); then
-            tui_main_menu
+            tui_core_installer_menu
             exit 0
         fi
         replace_property_value "$INSTALLER_CONFIG_FILE" "HOSTNAME" "$USERNAME-$WORKSTATION"
@@ -884,7 +876,7 @@ check_config() {
 
         tui_init 19 "Choose Setup Language"
         if ! lang_result=$(whiptail --menu --notags "$(cat "$TUI_FILE")\n" "$TUI_HEIGHT" "$TUI_WIDTH" 2 "en_US" "English" "de_DE" "German" 3>&1 1>&2 2>&3); then
-            tui_main_menu
+            tui_core_installer_menu
             exit 0
         fi
         if [ "$lang_result" = "en_US" ]; then
@@ -909,7 +901,7 @@ check_config() {
     if [ "$UCODE" = "" ]; then
         tui_init 17 "Choose Processor Microcode"
         if ! UCODE=$(whiptail --menu --notags "$(cat "$TUI_FILE")\n" "$TUI_HEIGHT" "$TUI_WIDTH" 3 "disabled" "Disable" "intel-ucode" "Intel" "amd-ucode" "AMD" 3>&1 1>&2 2>&3); then
-            tui_main_menu
+            tui_core_installer_menu
             exit 0
         fi
         replace_property_value "$INSTALLER_CONFIG_FILE" "UCODE" "$UCODE"
@@ -930,6 +922,7 @@ check_config() {
     check_config_key "$INSTALLER_CONFIG_FILE" "DUALBOOT" "$DUALBOOT"
     check_config_key "$INSTALLER_CONFIG_FILE" "WIPE_DISK" "$WIPE_DISK"
     check_config_key "$INSTALLER_CONFIG_FILE" "SWAP_SIZE" "$SWAP_SIZE"
+    check_config_key "$INSTALLER_CONFIG_FILE" "AUTO_UNMOUNT" "$AUTO_UNMOUNT"
     check_config_key "$INSTALLER_CONFIG_FILE" "CUSTOM_PACKAGES" "$CUSTOM_PACKAGES"
 
     #----------------------------------------
@@ -971,7 +964,7 @@ check_config_disk() {
 
         tui_init 24 "Choose Disk"
         if ! DISK=$(whiptail --menu "$(cat "$TUI_FILE")" "$TUI_HEIGHT" "$TUI_WIDTH" "${#disk_array[@]}" "${disk_array[@]}" 3>&1 1>&2 2>&3); then
-            tui_main_menu
+            tui_core_installer_menu
             exit 0
         fi
 
@@ -991,6 +984,8 @@ check_config_disk() {
 #/////////////////////////////////////////////////////
 
 tui_open_recovery() {
+
+    local uefi_mode="$1"
 
     #----------------------------------------
     # Select Disk
@@ -1021,10 +1016,12 @@ tui_open_recovery() {
     clear
     print_info "CHROOT" "$mnt_recovery"
 
-    # Mount /boot in recovery system
-    if ! arch-chroot "$mnt_recovery" mount $BOOT_PARTITION /boot; then
-        echo "ERROR: CHROOT Mount /boot"
-        exit 1
+    # Mount /boot in recovery system (UEFI only)
+    if [ "$uefi_mode" = "true" ]; then
+        if ! arch-chroot "$mnt_recovery" mount $BOOT_PARTITION /boot; then
+            echo "ERROR: CHROOT Mount /boot"
+            exit 1
+        fi
     fi
     echo -e "\n"
     echo -e "!! YOUR ARE NOW ON YOUR RECOVERY SYSTEM !!"
