@@ -685,14 +685,13 @@ exec_install_chroot() {
         echo 'GRUB_CMDLINE_LINUX_DEFAULT="quiet"' >>/etc/default/grub
         echo 'GRUB_DISABLE_OS_PROBER="false"' >>/etc/default/grub
         echo 'GRUB_DISABLE_RECOVERY="false"' >>/etc/default/grub
-        echo 'GRUB_DISABLE_LINUX_UUID="false"' >>/etc/default/grub
-        [ "$uefi_mode" = "false" ] && echo 'GRUB_PRELOAD_MODULES="lvm"' >>/etc/default/grub
+        #[ "$uefi_mode" = "false" ] && echo 'GRUB_PRELOAD_MODULES="lvm"' >>/etc/default/grub
         echo 'GRUB_DISABLE_LINUX_UUID="false"' >>/etc/default/grub
         echo 'GRUB_TIMEOUT="2"' >>/etc/default/grub
         # exec_command_wrap grub-mkconfig -o /boot/grub/grub.cfg
 
         local ucode_line=""
-        [ "$UCODE" != "disabled" ] && ucode_line="initrd	/intel-ucode.img /initramfs-linux.img\n"
+        [ "$UCODE" != "disabled" ] && ucode_line="initrd /intel-ucode.img /initramfs-linux.img\n"
 
         local grub_root=""
         [ "$uefi_mode" = "true" ] && grub_root="hd1,gpt1"
@@ -704,11 +703,13 @@ exec_install_chroot() {
             echo -e "insmod fat"
             echo -e "set timeout=2"
             echo -e "set default=0"
+            echo -e ""
             echo -e 'menuentry "ECOS" {'
-            echo -e '	set root="'$grub_root'"'
-            echo -e '	gfxpayload='$BOOTLOADER_RESOLUTION''
-            echo -e '	linux	/vmlinuz-linux root=/dev/mapper/main-root rw cryptdevice='$ROOT_PARTITION':main root=/dev/mapper/main-root '$BOOT_ARGS' quiet'
-            echo -e '	'$ucode_line'}'
+            echo -e 'set root="'$grub_root'"'
+            echo -e 'gfxpayload='$BOOTLOADER_RESOLUTION''
+            echo -e 'linux /vmlinuz-linux root=/dev/mapper/main-root rw cryptdevice='$ROOT_PARTITION':main root=/dev/mapper/main-root '$BOOT_ARGS' quiet'
+            echo -e "$ucode_line"
+            echo -e '}'
         } >/boot/grub/grub.cfg
     fi
 
@@ -1054,7 +1055,7 @@ tui_open_recovery() {
     mkdir -p "$mnt_recovery"
     mount /dev/mapper/main-root "$mnt_recovery"
     mkdir -p "$mnt_recovery/boot"
-    mount -p "$BOOT_PARTITION" "$mnt_recovery/boot"
+    mount "$BOOT_PARTITION" "$mnt_recovery/boot"
 
     #----------------------------------------
     # Chroot
