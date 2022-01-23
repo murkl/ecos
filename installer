@@ -1,5 +1,5 @@
 #!/bin/bash
-VERSION=1.0.8
+VERSION=1.0.9
 
 #/////////////////////////////////////////////////////
 # SOURCES
@@ -1268,7 +1268,7 @@ gauge_tui_update() {
     local percent="$1"
     local text="$2"
     tui_init 0 "$text"
-    echo -e "XXX\n$percent\n$(cat "$TUI_FILE")\nDISK:\t$DISK\nUEFI:\t$UEFI_ENABLED\n\nXXX"
+    echo -e "XXX\n$percent\n$(cat "$TUI_FILE")\nXXX"
 }
 
 check_config_key() {
@@ -1316,12 +1316,18 @@ replace_property_array_value() {
 
 tui_init() {
     rm -f "$TUI_FILE"
+    local sys_info="VERSION:\t$VERSION"
+    [ ! -z "$UEFI_ENABLED" ] && sys_info="$sys_info\nUEFI:\t\t'$UEFI_ENABLED'"
+    [ ! -z "$DISK" ] && sys_info="$sys_info\nDISK:\t\t'$DISK'"
     echo -e '
              ███████  ██████  ██████  ███████ 
              ██      ██      ██    ██ ██      
              █████   ██      ██    ██ ███████ 
              ██      ██      ██    ██      ██ 
-             ███████  ██████  ██████  ███████\n 
+             ███████  ██████  ██████  ███████
+             ---------------------------------
+             '$sys_info'
+             ---------------------------------
     ' >"$TUI_FILE"
     tui_add "$1" "$2"
 }
