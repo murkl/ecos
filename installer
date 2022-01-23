@@ -159,7 +159,7 @@ tui_core_installer_menu() {
     # Check UEFI boot
     #----------------------------------------
     local uefi_mode=''
-    [ -d /sys/firmware/efi ] && echo uefi_mode='true' || echo uefi_mode='false'
+    [ -d /sys/firmware/efi ] && uefi_mode='true' || uefi_mode='false'
     # if [ -x "$(command -v efivar)" ] && [ "$(efivar -l >/dev/null)" != "" ]; then
     #if [ -x "$(command -v efivar)" ] && [ "$(efivar -l >/dev/null)" != "" ]; then; fi
 
