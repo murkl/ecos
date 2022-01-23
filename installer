@@ -1,5 +1,5 @@
 #!/bin/bash
-VERSION=1.1.0
+VERSION=1.1.1
 
 #/////////////////////////////////////////////////////
 # SOURCES
@@ -680,14 +680,15 @@ exec_install_chroot() {
         # sed -i 's^FILES=()^FILES=('$crypt_key')^g' /etc/mkinitcpio.conf
         # exec_command_wrap mkinitcpio -P
 
+        # echo 'GRUB_ENABLE_CRYPTODISK=y' >/etc/default/grub
+
         # ----------------------------------------------------------------------------
 
         # Modify /etc/default/grub before execute grub-install!
-        echo 'GRUB_ENABLE_CRYPTODISK=y' >/etc/default/grub
-        echo 'GRUB_PRELOAD_MODULES="lvm"' >>/etc/default/grub
+        echo 'GRUB_PRELOAD_MODULES="lvm"' >/etc/default/grub
         echo 'GRUB_CMDLINE_LINUX="cryptdevice='$ROOT_PARTITION':main root=/dev/mapper/main-root '$BOOT_ARGS'"' >>/etc/default/grub
-        echo 'GRUB_CMDLINE_LINUX_DEFAULT="quiet splash loglevel=3 rd.systemd.show_status=false rd.udev.log_priority=3 vt.global_cursor_default=0"' >>/etc/default/grub
-        echo 'GRUB_TIMEOUT="0"' >>/etc/default/grub
+        #echo 'GRUB_CMDLINE_LINUX_DEFAULT="quiet splash loglevel=3 rd.systemd.show_status=false rd.udev.log_priority=3 vt.global_cursor_default=0"' >>/etc/default/grub
+        echo 'GRUB_TIMEOUT="2"' >>/etc/default/grub
 
         # Install GRUB
         if [ "$uefi_mode" = "true" ]; then
