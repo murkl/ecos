@@ -277,7 +277,7 @@ tui_install_ecos_core() {
     tui_init 0 "Core Installation..."
     exec_install_core "$uefi_mode" "$password_encryption" "$PROGRESS_FILE" | whiptail --gauge "$(cat "$TUI_FILE")" "$TUI_HEIGHT" "$TUI_WIDTH" 0 3>&1 1>&2 2>&3
     wait
-    
+
     # Finish
     local progress_status=$(<"$PROGRESS_FILE")
     rm -rf "$PROGRESS_FILE"
@@ -478,14 +478,11 @@ exec_install_core() {
 
 cleanup() {
 
-    wait && cat "/mnt/$INSTALLER_ID.log" >>"$INSTALLER_LOG_FILE"
-    wait && cp -f "/mnt/$INSTALLER_ID.error" "$INSTALLER_WORKING_DIR/$INSTALLER_ID.error"
-
     #----------------------------------------
     # Merge ecos logs
     #----------------------------------------
-    cat "/mnt/$INSTALLER_ID.log" >>"$INSTALLER_LOG_FILE"
-    cp "/mnt/$INSTALLER_ID.error" "$INSTALLER_WORKING_DIR/$INSTALLER_ID.error"
+    wait && cat "/mnt/$INSTALLER_ID.log" >>"$INSTALLER_LOG_FILE"
+    wait && cat "/mnt/$INSTALLER_ID.error" >>"$INSTALLER_LOG_FILE"
     rm -f "/mnt/$INSTALLER_ID"
     rm -f "/mnt/$INSTALLER_ID.conf"
     rm -f "/mnt/$INSTALLER_ID.log"
@@ -495,7 +492,6 @@ cleanup() {
     #----------------------------------------
     # Unmount
     #----------------------------------------
-
     if [ "$AUTO_UNMOUNT" = "true" ]; then
         exec_command_wrap swapoff -a
         exec_command_wrap umount -R /mnt
@@ -1264,9 +1260,6 @@ exec_command_wrap() {
         return 0
     else
         core_log "e" "$command_txt"
-        cat "$tmp_error" >>"$INSTALLER_LOG_FILE"
-        cat "/mnt/$INSTALLER_ID.log" >>"$INSTALLER_LOG_FILE"
-        rm -f "$tmp_error"
         exit 1
     fi
 }
