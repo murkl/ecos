@@ -18,12 +18,7 @@ INSTALLER_WORKING_DIR="$(cd "$(dirname "$0")" >/dev/null 2>&1 && pwd)"
 INSTALLER_SCRIPT_FILE="$INSTALLER_WORKING_DIR/$(basename "$0")"
 INSTALLER_CONFIG_FILE="$INSTALLER_WORKING_DIR/$INSTALLER_ID.conf"
 INSTALLER_LOG_FILE="$INSTALLER_WORKING_DIR/$INSTALLER_ID.log"
-INSTALLER_VERSION_FILE="$INSTALLER_WORKING_DIR/VERSION"
 UEFI_ENABLED=''
-
-# VERSION
-VERSION=''
-[ -f "$INSTALLER_VERSION_FILE" ] && VERSION="$(<$INSTALLER_VERSION_FILE)"
 
 # DEFAULT PASSWORD
 ECOS_DEFAULT_PASSWORD='ecos'
@@ -172,7 +167,7 @@ tui_core_installer_menu() {
     #----------------------------------------
     # Show TUI menu
     #----------------------------------------
-    tui_init 22 "ECOS INSTALLER"
+    tui_init 0 ""
     if ! menu_input=$(whiptail --menu --notags "$(cat "$TUI_FILE")\n\n" "$TUI_HEIGHT" "$TUI_WIDTH" 3 "1" "Install ECOS Core" "2" "    Recovery" "3" "      Logs" 3>&1 1>&2 2>&3); then
         exit 0
     fi
@@ -1317,22 +1312,16 @@ replace_property_array_value() {
 
 tui_init() {
     rm -f "$TUI_FILE"
-    local uefi_info=""
-    local disk_info=""
-    local version_info=""
-    [ ! -z "$UEFI_ENABLED" ] && uefi_info="UEFI: $UEFI_ENABLED"
-    [ -f "$INSTALLER_VERSION_FILE" ] && version_info="| VERSION: "$(<VERSION)""
-    [ ! -z "$DISK" ] && disk_info="| DISK: $DISK"
+    local uefi_info="BIOS Mode"
+    [ "$UEFI_ENABLED" = "true" ] && uefi_info="UEFI Mode"
     echo -e '
              ███████  ██████  ██████  ███████ 
              ██      ██      ██    ██ ██      
              █████   ██      ██    ██ ███████ 
              ██      ██      ██    ██      ██ 
              ███████  ██████  ██████  ███████\n
-  +-----------------------------------------------------+
-    '$uefi_info' '$version_info' '$disk_info'
-  +-----------------------------------------------------+\n
-    ' >"$TUI_FILE"
+                       - '$uefi_info' -
+             ' >"$TUI_FILE"
     tui_add "$1" "$2"
 }
 
