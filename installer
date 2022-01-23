@@ -2,6 +2,14 @@
 VERSION=1.0.7
 
 #/////////////////////////////////////////////////////
+# SOURCES
+#/////////////////////////////////////////////////////
+
+# https://wiki.archlinux.de/title/Installation_mit_UEFI_und_Verschl%C3%BCsselung
+# https://www.timoschindler.de/arch-linux-uefi-boot-mit-grub-und-verschluesseltem-lvm/
+# https://wiki.archlinux.de/title/GRUB
+
+#/////////////////////////////////////////////////////
 # VARIABLES
 #/////////////////////////////////////////////////////
 
@@ -451,16 +459,26 @@ exec_install_core() {
     gauge_tui_update 54 "Enter CHROOT Environement"
     log_txt="arch-chroot /mnt /$INSTALLER_ID --chroot $uefi_mode <ENCRYPTION_PASSWORD>"
     if ! arch-chroot /mnt "/$INSTALLER_ID" --chroot "$uefi_mode" "$password_encryption"; then
+        # FAILED
         core_log "e" "$log_txt"
-        cat "/mnt/$INSTALLER_ID.log" >>"$INSTALLER_LOG_FILE"
-        cp "/mnt/$INSTALLER_ID.error" "$INSTALLER_WORKING_DIR/$INSTALLER_ID.error"
+        cleanup
         exit 1
     else
+        # SUCCESS
         core_log "c" "$log_txt"
+        cleanup
+        gauge_tui_update 100 "Installation finished!"
+        core_log "!!! INSTALLATION SUCCESSFULLY FINISHED !!!"
+        # SET STATUS SUCCESS
+        echo "PROGRESS_SUCCESS" >"$progress_result_file"
+        exit 0
     fi
+}
 
-    cat "/mnt/$INSTALLER_ID.log" >>"$INSTALLER_LOG_FILE"
-    cp "/mnt/$INSTALLER_ID.error" "$INSTALLER_WORKING_DIR/$INSTALLER_ID.error"
+cleanup() {
+
+    wait && cat "/mnt/$INSTALLER_ID.log" >>"$INSTALLER_LOG_FILE"
+    wait && cp -f "/mnt/$INSTALLER_ID.error" "$INSTALLER_WORKING_DIR/$INSTALLER_ID.error"
 
     #----------------------------------------
     # Merge ecos logs
@@ -482,16 +500,6 @@ exec_install_core() {
         exec_command_wrap umount -R /mnt
     fi
 
-    #----------------------------------------
-    # Finished
-    #----------------------------------------
-    gauge_tui_update 100 "Installation finished!"
-    core_log "!!! INSTALLATION SUCCESSFULLY FINISHED !!!"
-
-    # SET STATUS
-    echo "PROGRESS_SUCCESS" >"$progress_result_file"
-
-    exit 0
 }
 
 #/////////////////////////////////////////////////////
