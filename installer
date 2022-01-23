@@ -200,8 +200,7 @@ tui_core_installer_menu() {
 tui_install_ecos_core() {
 
     local uefi_mode="$1"
-        core_log "UEFI MODE: $uefi_mode"
-
+    core_log "UEFI MODE: $uefi_mode"
 
     #----------------------------------------
     # Ask for reset core config
@@ -311,8 +310,7 @@ exec_install_core() {
     local uefi_mode="$1"
     local password_encryption="$2"
     local progress_result_file="$3"
-        core_log "UEFI MODE: $uefi_mode"
-
+    core_log "UEFI MODE: $uefi_mode"
 
     #----------------------------------------
     # Source config
@@ -502,8 +500,7 @@ exec_install_chroot() {
 
     local uefi_mode="$1"
     local password_encryption="$2"
-        core_log "UEFI MODE: $uefi_mode"
-
+    core_log "UEFI MODE: $uefi_mode"
 
     #----------------------------------------
     # Source config
@@ -1035,8 +1032,7 @@ check_config_disk() {
 tui_open_recovery() {
 
     local uefi_mode="$1"
-        core_log "UEFI MODE: $uefi_mode"
-
+    core_log "UEFI MODE: $uefi_mode"
 
     #----------------------------------------
     # Select Disk
