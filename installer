@@ -688,7 +688,7 @@ exec_install_chroot() {
         # echo 'GRUB_TIMEOUT="2"' >>/etc/default/grub
         # exec_command_wrap grub-mkconfig -o /boot/grub/grub.cfg
 
-        local grub_root="hd1,gpt1"
+        local grub_root="hd0,2" # hd0,gpt2
         [ "$uefi_mode" = "true" ] && grub_root="hd1,gpt1"
         {
             echo "insmod all_video"
