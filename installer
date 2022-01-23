@@ -1,5 +1,5 @@
 #!/bin/bash
-VERSION=1.0.1
+VERSION=1.0.2
 
 #/////////////////////////////////////////////////////
 # VARIABLES
@@ -675,6 +675,7 @@ exec_install_chroot() {
         echo 'GRUB_PRELOAD_MODULES="lvm"' >>/etc/default/grub
         echo 'GRUB_CMDLINE_LINUX="cryptdevice='$ROOT_PARTITION':main root=/dev/mapper/main-root '$BOOT_ARGS'"' >>/etc/default/grub
         echo 'GRUB_CMDLINE_LINUX_DEFAULT="quiet splash loglevel=3 rd.systemd.show_status=false rd.udev.log_priority=3 vt.global_cursor_default=0"' >>/etc/default/grub
+        echo 'GRUB_TIMEOUT="0"' >>/etc/default/grub
 
         # Install GRUB
         if [ "$uefi_mode" = "true" ]; then
