@@ -1,5 +1,4 @@
 #!/bin/bash
-VERSION=1.1.1
 
 #/////////////////////////////////////////////////////
 # SOURCES
@@ -19,6 +18,8 @@ INSTALLER_WORKING_DIR="$(cd "$(dirname "$0")" >/dev/null 2>&1 && pwd)"
 INSTALLER_SCRIPT_FILE="$INSTALLER_WORKING_DIR/$(basename "$0")"
 INSTALLER_CONFIG_FILE="$INSTALLER_WORKING_DIR/$INSTALLER_ID.conf"
 INSTALLER_LOG_FILE="$INSTALLER_WORKING_DIR/$INSTALLER_ID.log"
+INSTALLER_VERSION_FILE="$INSTALLER_WORKING_DIR/VERSION"
+VERSION="$(<$INSTALLER_VERSION_FILE)"
 UEFI_ENABLED=''
 
 # DEFAULT PASSWORD
@@ -447,6 +448,7 @@ exec_install_core() {
     #----------------------------------------
     # Copy ecos installer in chroot env
     #----------------------------------------
+    exec_command_wrap cp -f "$INSTALLER_VERSION_FILE" /mnt/VERSION
     exec_command_wrap cp -f "$INSTALLER_SCRIPT_FILE" /mnt/$INSTALLER_ID
     exec_command_wrap cp -f "$INSTALLER_CONFIG_FILE" /mnt/$INSTALLER_ID.conf
     exec_command_wrap chmod +x /mnt/$INSTALLER_ID
