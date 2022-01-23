@@ -361,7 +361,7 @@ exec_install_core() {
     else
 
         # /boot partition: 512MiB
-        exec_command_wrap sgdisk -n 0:0:+512MiB -t 0:ef02 -c 0:boot "$DISK"
+        exec_command_wrap sgdisk -n 0:0:+512MiB -t 0:8300 -c 0:boot "$DISK"
 
         # / partition: Rest of space
         exec_command_wrap sgdisk -n 0:0:-1MiB -t 0:8300 -c 0:root "$DISK"
