@@ -361,10 +361,10 @@ exec_install_core() {
     else
 
         # BIOS only: 1MiB partition is needed for GRUB (if GPT is used instead of MBR)
-        exec_command_wrap sgdisk -n 0:0:+1MiB -t 0:ef02 -c 0:grub "$DISK"
+        #exec_command_wrap sgdisk -n 0:0:+1MiB -t 0:ef02 -c 0:grub "$DISK"
 
         # /boot partition: 512MiB
-        exec_command_wrap sgdisk -n 0:0:+512MiB -t 0:8300 -c 0:boot "$DISK"
+        exec_command_wrap sgdisk -n 0:0:+512MiB -t 0:ef02 -c 0:boot "$DISK"
 
         # / partition: Rest of space
         exec_command_wrap sgdisk -n 0:0:0 -t 0:8300 -c 0:root "$DISK"
@@ -414,7 +414,7 @@ exec_install_core() {
 
     # Format /boot
     if [ "$uefi_mode" = "true" ]; then exec_command_wrap mkfs.fat -F 32 -n boot "$BOOT_PARTITION"; fi
-    if [ "$uefi_mode" = "false" ]; then exec_command_wrap mkfs.ext4 -L boot "$BOOT_PARTITION"; fi
+    if [ "$uefi_mode" = "false" ]; then exec_command_wrap mkfs.fat -F 32 -n boot "$BOOT_PARTITION"; fi
 
     # Format / (crypted)
     exec_command_wrap mkfs.ext4 -L root /dev/mapper/main-root
@@ -677,7 +677,7 @@ exec_install_chroot() {
         if [ "$uefi_mode" = "true" ]; then
             exec_command_wrap grub-install --target=x86_64-efi --efi-directory=/boot --bootloader-id="ECOS" --recheck
         else
-            exec_command_wrap grub-install --no-floppy "$BOOT_PARTITION" --recheck
+            exec_command_wrap grub-install --no-floppy "$DISK" --recheck
         fi
 
         # GRUB Config (not needed)
@@ -696,7 +696,7 @@ exec_install_chroot() {
 
         local grub_root=""
         [ "$uefi_mode" = "true" ] && grub_root="hd1,gpt1"
-        [ "$uefi_mode" = "false" ] && grub_root="hd0,3"
+        [ "$uefi_mode" = "false" ] && grub_root="hd0,2"
         {
             echo -e "insmod all_video"
             echo -e "insmod gzio"
