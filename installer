@@ -947,6 +947,7 @@ check_config() {
     # Add default values
     #----------------------------------------
     check_config_key "$INSTALLER_CONFIG_FILE" "BOOTLOADER" "$BOOTLOADER"
+    check_config_key "$INSTALLER_CONFIG_FILE" "BOOT_ARGS" "$BOOT_ARGS"
     check_config_key "$INSTALLER_CONFIG_FILE" "DUALBOOT" "$DUALBOOT"
     check_config_key "$INSTALLER_CONFIG_FILE" "WIPE_DISK" "$WIPE_DISK"
     check_config_key "$INSTALLER_CONFIG_FILE" "SWAP_SIZE" "$SWAP_SIZE"
