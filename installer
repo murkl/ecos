@@ -669,9 +669,9 @@ exec_install_chroot() {
     if [ "$BOOTLOADER" = "grub" ] || [ "$uefi_mode" = "false" ]; then
 
         # Load EFI Variables
-        if [ "$uefi_mode" = "true" ]; then
-            mount -t efivarfs efivarfs /sys/firmware/efi/efivars
-        fi
+        # if [ "$uefi_mode" = "true" ]; then
+        #     mount -t efivarfs efivarfs /sys/firmware/efi/efivars
+        # fi
 
         # Install GRUB
         if [ "$uefi_mode" = "true" ]; then
