@@ -30,7 +30,7 @@ install() {
     #----------------------------------------
     echo 'CONFIGURE MKINITCPIO'
     # Intel graphic support (other: https://wiki.archlinux.org/index.php/Kernel_mode_setting#Early_KMS_start)
-    if ! sudo sed -i "s/keymap encrypt filesystems/keymap plymouth plymouth-encrypt filesystems/g" "$MKINIT_CONF"; then echo "ERROR" && exit 1; fi
+    if ! sudo sed -i "s/keymap encrypt lvm2  filesystems/keymap plymouth plymouth-encrypt lvm2 filesystems/g" "$MKINIT_CONF"; then echo "ERROR" && exit 1; fi
     echo -e 'OK'
 
     #----------------------------------------
@@ -72,7 +72,7 @@ install() {
 
 remove() {
     paru --noconfirm --sudoloop -R plymouth
-    sudo sed -i "s/keymap plymouth plymouth-encrypt filesystems/keymap encrypt filesystems/g" "$MKINIT_CONF"
+    sudo sed -i "s/keymap plymouth plymouth-encrypt lvm2 filesystems/keymap encrypt lvm2 filesystems/g" "$MKINIT_CONF"
     sudo mv -f "$SPINNER_CONF_BAK" "$SPINNER_CONF"
     sudo mv -f "$WATERMARK_FILE_BAK" "$WATERMARK_FILE"
     sudo rm -rf "/usr/share/plymouth/"

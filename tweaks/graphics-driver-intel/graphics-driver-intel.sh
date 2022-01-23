@@ -12,7 +12,7 @@ install() {
     if [ "$whiptail_result" = 'intel-i915' ]; then
         paru --noconfirm --needed --sudoloop -S mesa vulkan-intel vulkan-tools
         paru --noconfirm --needed --sudoloop -S lib32-mesa lib32-vulkan-intel
-        sudo sed -i "s/MODULES=()/MODULES=(intel_agp i915)/g" "/etc/mkinitcpio.conf"
+        sudo sed -i "s/MODULES=(ext4)/MODULES=(intel_agp i915)/g" "/etc/mkinitcpio.conf"
         sudo mkinitcpio -P
         exit 0
     fi
@@ -21,7 +21,7 @@ install() {
         paru --noconfirm --needed --sudoloop -S xf86-video-intel
         paru --noconfirm --needed --sudoloop -S mesa vulkan-intel vulkan-tools
         paru --noconfirm --needed --sudoloop -S lib32-mesa lib32-vulkan-intel
-        sudo sed -i "s/MODULES=()/MODULES=(intel_agp i915)/g" "/etc/mkinitcpio.conf"
+        sudo sed -i "s/MODULES=(ext4)/MODULES=(intel_agp i915)/g" "/etc/mkinitcpio.conf"
         sudo mkinitcpio -P
 
         # Font and screen corruption in GTK applications (missing glyphs after suspend/resume)
@@ -42,7 +42,7 @@ EndSection'
 remove() {
     paru --noconfirm --sudoloop -R xf86-video-intel
     paru --noconfirm --sudoloop -R vulkan-intel vulkan-tools lib32-vulkan-intel
-    sudo sed -i "s/MODULES=(intel_agp i915)/MODULES=()/g" "/etc/mkinitcpio.conf"
+    sudo sed -i "s/MODULES=(intel_agp i915)/MODULES=(ext4)/g" "/etc/mkinitcpio.conf"
     sudo sed -i '/COGL_ATLAS_DEFAULT_BLIT_MODE=framebuffer/d' "/etc/environment"
     sudo rm -f "/etc/X11/xorg.conf.d/20-intel.conf"
     sudo mkinitcpio -P

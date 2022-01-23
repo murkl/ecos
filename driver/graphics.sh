@@ -73,7 +73,7 @@ nvidia_all() {
         echo -ne '3\n' | makepkg -si --noconfirm
 
         # Early Loading
-        sh -c 'echo $root_password | sudo -S sed -i "s/MODULES=()/MODULES=(nvidia nvidia_modeset nvidia_uvm nvidia_drm)/g" "/etc/mkinitcpio.conf"'
+        sh -c 'echo $root_password | sudo -S sed -i "s/MODULES=(ext4)/MODULES=(nvidia nvidia_modeset nvidia_uvm nvidia_drm)/g" "/etc/mkinitcpio.conf"'
 
         # DRM kernel mode setting (nvidia-drm.modeset=1)
         sh -c 'echo $root_password | sudo -S sed -i "s/vt.global_cursor_default=0 rw/vt.global_cursor_default=0 nvidia-drm.modeset=1 rw/g" "/boot/loader/entries/arch.conf"'

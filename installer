@@ -693,7 +693,7 @@ exec_install_chroot() {
     # Modify HOOKS
     #----------------------------------------
     core_log "Modify /etc/mkinitcpio.conf"
-    sed -i "s/MODULES=()/MODULES=(ext4)/g" /etc/mkinitcpio.conf
+    sed -i "s/MODULES=(ext4)/MODULES=(ext4)/g" /etc/mkinitcpio.conf
     sed -i "s/filesystems keyboard fsck/filesystems fsck/g" /etc/mkinitcpio.conf
     sed -i "s/udev autodetect/udev keyboard autodetect/g" /etc/mkinitcpio.conf
     sed -i "s/block filesystems/block keymap encrypt filesystems/g" /etc/mkinitcpio.conf
