@@ -30,7 +30,7 @@ install() {
 
     if [ "$whiptail_result" = 'nouveau' ]; then
         paru --noconfirm --needed --sudoloop -S mesa lib32-mesa xf86-video-nouveau
-        sudo sed -i "s/MODULES=(ext4)/MODULES=(nouveau)/g" "/etc/mkinitcpio.conf"
+        sudo sed -i "s/MODULES=(ext4)/MODULES=(ext4 nouveau)/g" "/etc/mkinitcpio.conf"
         sudo mkinitcpio -P
         exit 0
     fi
@@ -50,11 +50,11 @@ install() {
         fi
 
         # Early Loading
-        sudo sed -i "s/MODULES=(ext4)/MODULES=(nvidia nvidia_modeset nvidia_uvm nvidia_drm)/g" "/etc/mkinitcpio.conf"
+        sudo sed -i "s/MODULES=(ext4)/MODULES=(ext4 nvidia nvidia_modeset nvidia_uvm nvidia_drm)/g" "/etc/mkinitcpio.conf"
 
         # DRM kernel mode setting (nvidia-drm.modeset=1)
-        # TODO: ADD GRUB SUPPORT
-        sudo sed -i "s/vt.global_cursor_default=0 rw/vt.global_cursor_default=0 nvidia-drm.modeset=1 rw/g" "/boot/loader/entries/arch.conf"
+        sudo sed -i "s/quiet splash nvidia-drm.modeset=1/quiet splash/g" "/boot/loader/entries/arch.conf"
+        sudo sed -i "s/quiet/nvidia-drm.modeset=1 quiet/g" "/boot/grub/grub.cfg"
 
         # Rebuild
         sudo mkinitcpio -P
@@ -77,11 +77,11 @@ install() {
         paru --noconfirm --needed --sudoloop -S lib32-nvidia-390xx-utils lib32-opencl-nvidia-390xx lib32-virtualgl
 
         # Early Loading
-        sudo sed -i "s/MODULES=(ext4)/MODULES=(nvidia nvidia_modeset nvidia_uvm nvidia_drm)/g" "/etc/mkinitcpio.conf"
+        sudo sed -i "s/MODULES=(ext4)/MODULES=(ext4 nvidia nvidia_modeset nvidia_uvm nvidia_drm)/g" "/etc/mkinitcpio.conf"
 
         # DRM kernel mode setting (nvidia-drm.modeset=1)
-        # TODO: ADD GRUB SUPPORT
-        sudo sed -i "s/vt.global_cursor_default=0 rw/vt.global_cursor_default=0 nvidia-drm.modeset=1 rw/g" "/boot/loader/entries/arch.conf"
+        sudo sed -i "s/quiet splash nvidia-drm.modeset=1/quiet splash/g" "/boot/loader/entries/arch.conf"
+        sudo sed -i "s/quiet/nvidia-drm.modeset=1 quiet/g" "/boot/grub/grub.cfg"
 
         # Rebuild
         sudo mkinitcpio -P
@@ -138,7 +138,7 @@ X-GNOME-Autostart-Phase=DisplayServer' >/tmp/optimus.desktop
         sudo systemctl enable bumblebeed.service
 
         # Early Loading
-        sudo sed -i "s/MODULES=(ext4)/MODULES=(i915)/g" "/etc/mkinitcpio.conf"
+        sudo sed -i "s/MODULES=(ext4)/MODULES=(ext4 i915)/g" "/etc/mkinitcpio.conf"
 
         # Rebuild
         sudo mkinitcpio -P
@@ -155,11 +155,13 @@ remove() {
     paru --noconfirm --sudoloop -Rsn nvidia-390xx-dkms nvidia-390xx-settings nvidia-390xx-utils lib32-nvidia-390xx-utils opencl-nvidia-390xx lib32-opencl-nvidia-390xx lib32-virtualgl
     paru --noconfirm --sudoloop -Rsn xf86-video-nouveau
 
-    sudo sed -i "s/MODULES=(i915)/MODULES=(ext4)/g" "/etc/mkinitcpio.conf"
-    sudo sed -i "s/MODULES=(nouveau)/MODULES=(ext4)/g" "/etc/mkinitcpio.conf"
-    sudo sed -i "s/MODULES=(nvidia nvidia_modeset nvidia_uvm nvidia_drm)/MODULES=(ext4)/g" "/etc/mkinitcpio.conf"
+    sudo sed -i "s/MODULES=(ext4 i915)/MODULES=(ext4)/g" "/etc/mkinitcpio.conf"
+    sudo sed -i "s/MODULES=(ext4 nouveau)/MODULES=(ext4)/g" "/etc/mkinitcpio.conf"
+    sudo sed -i "s/MODULES=(ext4 nvidia nvidia_modeset nvidia_uvm nvidia_drm)/MODULES=(ext4)/g" "/etc/mkinitcpio.conf"
 
-    sudo sed -i "s/vt.global_cursor_default=0 nvidia-drm.modeset=1 rw/vt.global_cursor_default=0 rw/g" "/boot/loader/entries/arch.conf"
+    sudo sed -i "s/quiet splash nvidia-drm.modeset=1/quiet splash/g" "/boot/loader/entries/arch.conf"
+    sudo sed -i "s/nvidia-drm.modeset=1 quiet/quiet/g" "/boot/grub/grub.cfg"
+
     sudo mkinitcpio -P
 
     sudo rm -f /etc/X11/xorg.conf.d/30-nvidia-ignoreabi.conf
