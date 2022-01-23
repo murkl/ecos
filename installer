@@ -696,7 +696,7 @@ exec_install_chroot() {
 
         local grub_root=""
         [ "$uefi_mode" = "true" ] && grub_root="hd1,gpt1"
-        [ "$uefi_mode" = "false" ] && grub_root="hd0,2"
+        [ "$uefi_mode" = "false" ] && grub_root="hd0,gpt2"
         {
             echo -e "insmod all_video"
             echo -e "insmod gzio"
