@@ -1,5 +1,5 @@
 #!/bin/bash
-VERSION=1.0.9
+VERSION=1.1.0
 
 #/////////////////////////////////////////////////////
 # SOURCES
@@ -207,7 +207,6 @@ tui_core_installer_menu() {
 tui_install_ecos_core() {
 
     local uefi_mode="$1"
-    core_log "UEFI MODE: $uefi_mode"
 
     #----------------------------------------
     # Ask for reset core config
@@ -318,7 +317,6 @@ exec_install_core() {
     local uefi_mode="$1"
     local password_encryption="$2"
     local progress_result_file="$3"
-    core_log "UEFI MODE: $uefi_mode"
 
     #----------------------------------------
     # Source config
@@ -326,7 +324,6 @@ exec_install_core() {
     . "$INSTALLER_CONFIG_FILE"
 
     core_log "!!! INSTALLATION START !!!"
-    core_log "UEFI Mode: $uefi_mode"
     if [ "$password_encryption" = "" ]; then core_log e "ERROR: Encryption Password is missing" && exit 1; fi
     core_log "Encryption Password is set!"
 
@@ -507,7 +504,6 @@ exec_install_chroot() {
 
     local uefi_mode="$1"
     local password_encryption="$2"
-    core_log "UEFI MODE: $uefi_mode"
 
     #----------------------------------------
     # Source config
@@ -1039,7 +1035,6 @@ check_config_disk() {
 tui_open_recovery() {
 
     local uefi_mode="$1"
-    core_log "UEFI MODE: $uefi_mode"
 
     #----------------------------------------
     # Select Disk
