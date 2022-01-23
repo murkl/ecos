@@ -360,14 +360,14 @@ exec_install_core() {
 
     else
 
-        # BIOS only: 1MiB partition is needed for GRUB (if GPT is used instead of MBR)
-        #exec_command_wrap sgdisk -n 0:0:+1MiB -t 0:ef02 -c 0:grub "$DISK"
-
         # /boot partition: 512MiB
-        exec_command_wrap sgdisk -n 0:0:+512MiB -t 0:ef02 -c 0:boot "$DISK"
+        exec_command_wrap sgdisk -n 0:0:+512MiB -t 0:8300 -c 0:boot "$DISK"
 
         # / partition: Rest of space
-        exec_command_wrap sgdisk -n 0:0:0 -t 0:8300 -c 0:root "$DISK"
+        exec_command_wrap sgdisk -n 0:0:-1MiB -t 0:8300 -c 0:root "$DISK"
+
+        # BIOS only: 1MiB partition is needed for GRUB (if GPT is used instead of MBR)
+        exec_command_wrap sgdisk -n 0:0:0 -t 0:ef02 -c 0:grub "$DISK"
     fi
 
     #----------------------------------------
@@ -414,7 +414,7 @@ exec_install_core() {
 
     # Format /boot
     if [ "$uefi_mode" = "true" ]; then exec_command_wrap mkfs.fat -F 32 -n boot "$BOOT_PARTITION"; fi
-    if [ "$uefi_mode" = "false" ]; then exec_command_wrap mkfs.fat -F 32 -n boot "$BOOT_PARTITION"; fi
+    if [ "$uefi_mode" = "false" ]; then exec_command_wrap mkfs.ext4 -L boot "$BOOT_PARTITION"; fi
 
     # Format / (crypted)
     exec_command_wrap mkfs.ext4 -L root /dev/mapper/main-root
@@ -1308,6 +1308,7 @@ replace_property_array_value() {
 
 tui_init() {
     rm -f "$TUI_FILE"
+    clear
     local uefi_info="BIOS Mode"
     [ "$UEFI_ENABLED" = "true" ] && uefi_info="UEFI Mode"
     echo -e '
