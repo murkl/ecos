@@ -276,7 +276,8 @@ tui_install_ecos_core() {
     #----------------------------------------
     tui_init 0 "Core Installation..."
     exec_install_core "$uefi_mode" "$password_encryption" "$PROGRESS_FILE" | whiptail --gauge "$(cat "$TUI_FILE")" "$TUI_HEIGHT" "$TUI_WIDTH" 0 3>&1 1>&2 2>&3
-
+    wait
+    
     # Finish
     local progress_status=$(<"$PROGRESS_FILE")
     rm -rf "$PROGRESS_FILE"
