@@ -1314,7 +1314,7 @@ tui_init() {
     rm -f "$TUI_FILE"
     local uefi_info=""
     local disk_info=""
-    local version_info="VERSION: $VERSION"
+    local version_info="VERSION: "$(<VERSION)""
     [ ! -z "$UEFI_ENABLED" ] && uefi_info="| UEFI: $UEFI_ENABLED"
     [ ! -z "$DISK" ] && disk_info="| DISK: $DISK"
     echo -e '
