@@ -19,6 +19,7 @@ INSTALLER_WORKING_DIR="$(cd "$(dirname "$0")" >/dev/null 2>&1 && pwd)"
 INSTALLER_SCRIPT_FILE="$INSTALLER_WORKING_DIR/$(basename "$0")"
 INSTALLER_CONFIG_FILE="$INSTALLER_WORKING_DIR/$INSTALLER_ID.conf"
 INSTALLER_LOG_FILE="$INSTALLER_WORKING_DIR/$INSTALLER_ID.log"
+UEFI_ENABLED=''
 
 # DEFAULT PASSWORD
 ECOS_DEFAULT_PASSWORD='ecos'
@@ -158,12 +159,11 @@ tui_core_installer_menu() {
     #----------------------------------------
     # Check UEFI boot
     #----------------------------------------
-    local uefi_mode=''
-    [ -d /sys/firmware/efi ] && uefi_mode='true' || uefi_mode='false'
+    [ -d /sys/firmware/efi ] && UEFI_ENABLED='true' || UEFI_ENABLED='false'
     # if [ -x "$(command -v efivar)" ] && [ "$(efivar -l >/dev/null)" != "" ]; then
     #if [ -x "$(command -v efivar)" ] && [ "$(efivar -l >/dev/null)" != "" ]; then; fi
 
-    core_log "UEFI MODE: $uefi_mode"
+    core_log "UEFI MODE: $UEFI_ENABLED"
 
     #----------------------------------------
     # Show TUI menu
@@ -177,7 +177,7 @@ tui_core_installer_menu() {
     # Install core
     #----------------------------------------
     if [ "$menu_input" = "1" ]; then
-        tui_install_ecos_core "$uefi_mode"
+        tui_install_ecos_core "$UEFI_ENABLED"
         exit $?
     fi
 
@@ -185,7 +185,7 @@ tui_core_installer_menu() {
     # Recovery
     #----------------------------------------
     if [ "$menu_input" = "2" ]; then
-        tui_open_recovery "$uefi_mode"
+        tui_open_recovery "$UEFI_ENABLED"
         tui_core_installer_menu
         exit 0
     fi
@@ -1312,18 +1312,20 @@ replace_property_array_value() {
 
 tui_init() {
     rm -f "$TUI_FILE"
-    local sys_info="VERSION:\t$VERSION"
-    [ ! -z "$UEFI_ENABLED" ] && sys_info="$sys_info\nUEFI:\t\t'$UEFI_ENABLED'"
-    [ ! -z "$DISK" ] && sys_info="$sys_info\nDISK:\t\t'$DISK'"
+    local uefi_info=""
+    local disk_info=""
+    local version_info="VERSION: $VERSION"
+    [ ! -z "$UEFI_ENABLED" ] && uefi_info="| UEFI: $UEFI_ENABLED"
+    [ ! -z "$DISK" ] && disk_info="| DISK: $DISK"
     echo -e '
              ███████  ██████  ██████  ███████ 
              ██      ██      ██    ██ ██      
              █████   ██      ██    ██ ███████ 
              ██      ██      ██    ██      ██ 
              ███████  ██████  ██████  ███████
-             ---------------------------------
-             '$sys_info'
-             ---------------------------------
+  +------------------------------------------------------+
+    '$version_info' '$uefi_info' '$disk_info'
+  +------------------------------------------------------+
     ' >"$TUI_FILE"
     tui_add "$1" "$2"
 }
