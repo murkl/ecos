@@ -38,7 +38,7 @@
 - Set Boot Mode to UEFI (Legacy BIOS supported)
 - Connect to Internet via cable (recommended)
 
-## WLAN
+## Optional: Connect to WLAN
 
 Execute `iwctl` and you will enter the WLAN config console. Enter the commands in **iwctl console** and connect to your WLAN:
 
@@ -61,17 +61,6 @@ exit
 # Documentation
 
 ECOS is a full automatic TUI based installation script for Arch Linux. This script will install a minimal installation of Arch Linux including encryption (LUKS) and your prefered Dotfiles from Git repository (optional). It is seperated in two installation steps.
-
-## WLAN Installation
-
-Execute `iwctl` and you will enter the WLAN config console. Enter the commands in **iwctl console** and connect to your WLAN:
-
-```
-device list
-station wlan0 get-networks
-station wlan0 connect "WLAN Name"
-exit
-```
 
 ## 1. Step: Core Installation (installer script)
 
