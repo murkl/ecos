@@ -65,6 +65,7 @@ X11_KEYBOARD_LAYOUT=''
 X11_KEYBOARD_VARIANT=''
 DUALBOOT='default' # windows10
 BOOTLOADER='grub'  # systemd
+BOOTLOADER_RESOLUTION='1024x768x32'
 WIPE_DISK='false'
 AUTO_UNMOUNT='true'
 CUSTOM_PACKAGES=''
@@ -362,6 +363,9 @@ exec_install_core() {
         # BIOS only: 1MiB partition is needed for GRUB (if GPT is used instead of MBR)
         exec_command_wrap sgdisk -n 0:0:+1MiB -t 0:ef02 -c 0:grub "$DISK"
 
+        # /boot partition: 512MiB
+        exec_command_wrap sgdisk -n 0:0:+512MiB -t 0:8300 -c 0:boot "$DISK"
+
         # / partition: Rest of space
         exec_command_wrap sgdisk -n 0:0:0 -t 0:8300 -c 0:root "$DISK"
     fi
@@ -408,21 +412,19 @@ exec_install_core() {
     #----------------------------------------
     gauge_tui_update 12 "Format $DISK"
 
-    # Format /boot (UEFI)
+    # Format /boot
     if [ "$uefi_mode" = "true" ]; then exec_command_wrap mkfs.fat -F 32 -n boot "$BOOT_PARTITION"; fi
+    if [ "$uefi_mode" = "false" ]; then exec_command_wrap mkfs.ext4 -L boot "$BOOT_PARTITION"; fi
 
-    # Format crypted /
+    # Format / (crypted)
     exec_command_wrap mkfs.ext4 -L root /dev/mapper/main-root
 
     #----------------------------------------
     # Mount disk to /mnt
     #----------------------------------------
     exec_command_wrap mount /dev/mapper/main-root /mnt
-
-    if [ "$uefi_mode" = "true" ]; then
-        exec_command_wrap mkdir /mnt/boot
-        exec_command_wrap mount "$BOOT_PARTITION" /mnt/boot
-    fi
+    exec_command_wrap mkdir /mnt/boot
+    exec_command_wrap mount "$BOOT_PARTITION" /mnt/boot
 
     #----------------------------------------
     # Pacstrap base arch packages
@@ -676,33 +678,38 @@ exec_install_chroot() {
         if [ "$uefi_mode" = "true" ]; then
             exec_command_wrap grub-install --target=x86_64-efi --efi-directory=/boot --bootloader-id="ECOS" --recheck
         else
-            exec_command_wrap grub-install --no-floppy "$DISK" --recheck
+            exec_command_wrap grub-install --no-floppy "$BOOT_PARTITION" --recheck
         fi
 
-        # GRUB Config
-        # echo 'GRUB_CMDLINE_LINUX="cryptdevice='$ROOT_PARTITION':main root=/dev/mapper/main-root '$BOOT_ARGS'"' >/etc/default/grub
-        # echo 'GRUB_DISABLE_OS_PROBER="false"' >>/etc/default/grub
-        # echo 'GRUB_DISABLE_RECOVERY="false"' >>/etc/default/grub
-        # echo 'GRUB_DISABLE_LINUX_UUID="false"' >>/etc/default/grub
-        # echo 'GRUB_CMDLINE_LINUX_DEFAULT="quiet"' >>/etc/default/grub
-        # echo 'GRUB_TIMEOUT="2"' >>/etc/default/grub
+        # GRUB Config (not needed)
+        echo 'GRUB_CMDLINE_LINUX="cryptdevice='$ROOT_PARTITION':main root=/dev/mapper/main-root '$BOOT_ARGS'"' >/etc/default/grub
+        echo 'GRUB_CMDLINE_LINUX_DEFAULT="quiet"' >>/etc/default/grub
+        echo 'GRUB_DISABLE_OS_PROBER="false"' >>/etc/default/grub
+        echo 'GRUB_DISABLE_RECOVERY="false"' >>/etc/default/grub
+        echo 'GRUB_DISABLE_LINUX_UUID="false"' >>/etc/default/grub
+        [ "$uefi_mode" = "false" ] && echo 'GRUB_PRELOAD_MODULES="lvm"' >>/etc/default/grub
+        echo 'GRUB_DISABLE_LINUX_UUID="false"' >>/etc/default/grub
+        echo 'GRUB_TIMEOUT="2"' >>/etc/default/grub
         # exec_command_wrap grub-mkconfig -o /boot/grub/grub.cfg
 
-        local grub_root="hd0,2" # hd0,gpt2
+        local ucode_line=""
+        [ "$UCODE" != "disabled" ] && ucode_line="initrd	/intel-ucode.img /initramfs-linux.img\n"
+
+        local grub_root=""
         [ "$uefi_mode" = "true" ] && grub_root="hd1,gpt1"
+        [ "$uefi_mode" = "false" ] && grub_root="hd0,3"
         {
-            echo "insmod all_video"
-            echo "insmod gzio"
-            echo "insmod part_gpt"
-            echo "insmod fat"
-            echo "set timeout=2"
-            echo "set default=0"
-            echo 'menuentry "Arch Linux" {'
-            echo '	set root="'$grub_root'"'
-            echo '	gfxpayload=1024x768x32'
-            echo '	linux	/vmlinuz-linux root=/dev/mapper/main-root rw cryptdevice='$ROOT_PARTITION':main root=/dev/mapper/main-root '$BOOT_ARGS' quiet'
-            echo '	initrd	/intel-ucode.img /initramfs-linux.img'
-            echo '}'
+            echo -e "insmod all_video"
+            echo -e "insmod gzio"
+            echo -e "insmod part_gpt"
+            echo -e "insmod fat"
+            echo -e "set timeout=2"
+            echo -e "set default=0"
+            echo -e 'menuentry "ECOS" {'
+            echo -e '	set root="'$grub_root'"'
+            echo -e '	gfxpayload='$BOOTLOADER_RESOLUTION''
+            echo -e '	linux	/vmlinuz-linux root=/dev/mapper/main-root rw cryptdevice='$ROOT_PARTITION':main root=/dev/mapper/main-root '$BOOT_ARGS' quiet'
+            echo -e '	'$ucode_line'}'
         } >/boot/grub/grub.cfg
     fi
 
@@ -957,6 +964,7 @@ check_config() {
     # Add default values
     #----------------------------------------
     check_config_key "$INSTALLER_CONFIG_FILE" "BOOTLOADER" "$BOOTLOADER"
+    check_config_key "$INSTALLER_CONFIG_FILE" "BOOTLOADER_RESOLUTION" "$BOOTLOADER_RESOLUTION"
     check_config_key "$INSTALLER_CONFIG_FILE" "BOOT_ARGS" "$BOOT_ARGS"
     check_config_key "$INSTALLER_CONFIG_FILE" "DUALBOOT" "$DUALBOOT"
     check_config_key "$INSTALLER_CONFIG_FILE" "WIPE_DISK" "$WIPE_DISK"
