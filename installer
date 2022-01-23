@@ -614,9 +614,25 @@ exec_install_chroot() {
     exec_command_wrap systemctl enable NetworkManager
 
     #----------------------------------------
+    # Modify HOOKS
+    #----------------------------------------
+    core_log "Modify /etc/mkinitcpio.conf"
+    sed -i "s/MODULES=()/MODULES=(ext4)/g" /etc/mkinitcpio.conf
+    sed -i "s/filesystems keyboard fsck/filesystems fsck/g" /etc/mkinitcpio.conf
+    sed -i "s/udev autodetect/udev keyboard autodetect/g" /etc/mkinitcpio.conf
+    sed -i "s/block filesystems fsck/block keymap encrypt filesystems fsck/g" /etc/mkinitcpio.conf
+    sed -i "s/encrypt filesystems fsck/encrypt lvm2 filesystems fsck shutdown/g" /etc/mkinitcpio.conf
+
+    #----------------------------------------
+    # Rebuild initrc
+    #----------------------------------------
+    gauge_tui_update 82 "Rebuild Initial Ramdisk"
+    exec_command_wrap mkinitcpio -P
+
+    #----------------------------------------
     # Bootloader: systemd-boot (UEFI)
     #----------------------------------------
-    gauge_tui_update 82 "Install Bootloader"
+    gauge_tui_update 85 "Install Bootloader"
 
     if [ "$BOOTLOADER" = "systemd" ] && [ "$uefi_mode" = "true" ]; then
 
@@ -684,10 +700,11 @@ exec_install_chroot() {
         # ----------------------------------------------------------------------------
 
         # Modify /etc/default/grub before execute grub-install!
-        echo 'GRUB_PRELOAD_MODULES="lvm"' >/etc/default/grub
+        #echo 'GRUB_PRELOAD_MODULES="lvm"' >/etc/default/grub
         echo 'GRUB_CMDLINE_LINUX="cryptdevice='$ROOT_PARTITION':main root=/dev/mapper/main-root '$BOOT_ARGS'"' >>/etc/default/grub
         # Automatically disabled in recovery mode
-        echo 'GRUB_CMDLINE_LINUX_DEFAULT="quiet splash loglevel=3 rd.systemd.show_status=false rd.udev.log_priority=3 vt.global_cursor_default=0"' >>/etc/default/grub
+        #echo 'GRUB_CMDLINE_LINUX_DEFAULT="quiet splash loglevel=3 rd.systemd.show_status=false rd.udev.log_priority=3 vt.global_cursor_default=0"' >>/etc/default/grub
+        echo 'GRUB_CMDLINE_LINUX_DEFAULT="quiet"' >>/etc/default/grub
         echo 'GRUB_TIMEOUT="2"' >>/etc/default/grub
 
         # Install GRUB
@@ -700,22 +717,6 @@ exec_install_chroot() {
         # Make Grub config
         exec_command_wrap grub-mkconfig -o /boot/grub/grub.cfg
     fi
-
-    #----------------------------------------
-    # Modify HOOKS
-    #----------------------------------------
-    core_log "Modify /etc/mkinitcpio.conf"
-    sed -i "s/MODULES=()/MODULES=(ext4)/g" /etc/mkinitcpio.conf
-    sed -i "s/filesystems keyboard fsck/filesystems fsck/g" /etc/mkinitcpio.conf
-    sed -i "s/udev autodetect/udev keyboard autodetect/g" /etc/mkinitcpio.conf
-    sed -i "s/block filesystems fsck/block keymap encrypt filesystems fsck/g" /etc/mkinitcpio.conf
-    sed -i "s/encrypt filesystems fsck/encrypt lvm2 filesystems fsck shutdown/g" /etc/mkinitcpio.conf
-
-    #----------------------------------------
-    # Rebuild initrc
-    #----------------------------------------
-    gauge_tui_update 85 "Rebuild Initial Ramdisk"
-    exec_command_wrap mkinitcpio -P
 
     #----------------------------------------
     # Create new user
