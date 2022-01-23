@@ -709,9 +709,9 @@ exec_install_chroot() {
 
         # Install GRUB
         if [ "$uefi_mode" = "true" ]; then
-            exec_command_wrap grub-install --target=x86_64-efi --efi-directory=/boot --bootloader-id="Arch Linux"
+            exec_command_wrap grub-install --target=x86_64-efi --efi-directory=/boot --bootloader-id="Arch Linux" --recheck
         else
-            exec_command_wrap grub-install --no-floppy "$DISK"
+            exec_command_wrap grub-install --no-floppy "$DISK" --recheck
         fi
 
         # Make Grub config
