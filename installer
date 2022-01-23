@@ -1,5 +1,5 @@
 #!/bin/bash
-VERSION=1.0.6
+VERSION=1.0.7
 
 #/////////////////////////////////////////////////////
 # VARIABLES
@@ -1266,7 +1266,7 @@ gauge_tui_update() {
     local percent="$1"
     local text="$2"
     tui_init 0 "$text"
-    echo -e "XXX\n$percent\n$(cat "$TUI_FILE")\nXXX"
+    echo -e "XXX\n$percent\n$(cat "$TUI_FILE")\nDISK:\t$DISK\nUEFI:\t$UEFI_ENABLED\n\nXXX"
 }
 
 check_config_key() {
