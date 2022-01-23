@@ -1,5 +1,5 @@
 #!/bin/bash
-VERSION=1.0.4
+VERSION=1.0.5
 
 #/////////////////////////////////////////////////////
 # VARIABLES
@@ -151,11 +151,10 @@ tui_core_installer_menu() {
     # Check UEFI boot
     #----------------------------------------
     local uefi_mode=''
-    if [ -x "$(command -v efivar)" ] && [ "$(efivar -l >/dev/null)" != "" ]; then
-        uefi_mode='false'
-    else
-        uefi_mode='true'
-    fi
+    [ -d /sys/firmware/efi ] && echo uefi_mode='true' || echo uefi_mode='false'
+    # if [ -x "$(command -v efivar)" ] && [ "$(efivar -l >/dev/null)" != "" ]; then
+    #if [ -x "$(command -v efivar)" ] && [ "$(efivar -l >/dev/null)" != "" ]; then; fi
+
     core_log "UEFI MODE: $uefi_mode"
 
     #----------------------------------------
