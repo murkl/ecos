@@ -672,67 +672,6 @@ exec_install_chroot() {
             mount -t efivarfs efivarfs /sys/firmware/efi/efivars
         fi
 
-        # GRUB < 2.06 (luks1)
-        # ----------------------------------------------------------------------------
-
-        # # Create a keyfile to prevent enter the encryption password twice
-        # local crypt_key="/crypto_keyfile.bin"
-
-        # exec_command_wrap dd bs=512 count=4 if=/dev/random of="$crypt_key" iflag=fullblock
-        # exec_command_wrap chmod 600 "$crypt_key"
-
-        # # When initramfs' permissions are set to 644 (by default), then all users will be able to dump the keyfile
-        # exec_command_wrap chmod 600 /boot/initramfs-linux*
-
-        # local crypt_cmd="cryptsetup luksAddKey $ROOT_PARTITION $crypt_key"
-        # if ! echo -n "$password_encryption" | $crypt_cmd -d - >/dev/null; then
-        #     core_log "e" "$crypt_cmd"
-        #     exit 1
-        # else
-        #     core_log "c" "$crypt_cmd"
-        # fi
-
-        # sed -i 's^FILES=()^FILES=('$crypt_key')^g' /etc/mkinitcpio.conf
-        # exec_command_wrap mkinitcpio -P
-
-        # echo 'GRUB_ENABLE_CRYPTODISK=y' >/etc/default/grub
-
-        # ----------------------------------------------------------------------------
-
-
-
-
-insmod all_video
-insmod gzio
-insmod part_gpt
-insmod fat
-
-set timeout=2
-set default=0
-
-menuentry "Arch Linux" {
-	set root='hd0,gpt1'
-	gfxpayload=1024x768x32
-	linux	/vmlinuz-linux root=/dev/mapper/main-root rw cryptdevice=/dev/sda2:main root=/dev/mapper/main-root lang=de locale=de_DE.UTF-8 quiet splash loglevel=3 rd.systemd.show_status=false rd.udev.log_priority=3 vt.global_cursor_default=0
-	initrd	/intel-ucode.img /initramfs-linux.img
-}
-
-
-        {
-            echo ""
-        } >/boot/grub/grub.cfg
-
-        # Modify /etc/default/grub before execute grub-install!
-        echo 'GRUB_CMDLINE_LINUX="cryptdevice='$ROOT_PARTITION':main root=/dev/mapper/main-root '$BOOT_ARGS'"' >/etc/default/grub
-        echo 'GRUB_DISABLE_OS_PROBER="false"' >>/etc/default/grub
-        echo 'GRUB_DISABLE_RECOVERY="false"' >>/etc/default/grub
-        echo 'GRUB_DISABLE_LINUX_UUID="false"' >>/etc/default/grub
-        #echo 'GRUB_PRELOAD_MODULES="lvm"' >>/etc/default/grub
-        # This line is automatically disabled in recovery mode
-        #echo 'GRUB_CMDLINE_LINUX_DEFAULT="quiet splash loglevel=3 rd.systemd.show_status=false rd.udev.log_priority=3 vt.global_cursor_default=0"' >>/etc/default/grub
-        echo 'GRUB_CMDLINE_LINUX_DEFAULT="quiet"' >>/etc/default/grub
-        echo 'GRUB_TIMEOUT="2"' >>/etc/default/grub
-
         # Install GRUB
         if [ "$uefi_mode" = "true" ]; then
             exec_command_wrap grub-install --target=x86_64-efi --efi-directory=/boot --bootloader-id="Arch Linux" --recheck
@@ -741,7 +680,25 @@ menuentry "Arch Linux" {
         fi
 
         # Make Grub config
-        exec_command_wrap grub-mkconfig -o /boot/grub/grub.cfg
+        # exec_command_wrap grub-mkconfig -o /boot/grub/grub.cfg
+
+        # GRUB Config
+        local grub_root="hd1,gpt1"
+        [ "$uefi_mode" = "true" ] && grub_root="hd1,gpt1"
+        {
+            echo "insmod all_video"
+            echo "insmod gzio"
+            echo "insmod part_gpt"
+            echo "insmod fat"
+            echo "set timeout=2"
+            echo "set default=0"
+            echo 'menuentry "Arch Linux" {'
+            echo '	set root="'$grub_root'"'
+            echo '	gfxpayload=1024x768x32'
+            echo '	linux	/vmlinuz-linux root=/dev/mapper/main-root rw cryptdevice='$ROOT_PARTITION':main root=/dev/mapper/main-root lang=de locale=de_DE.UTF-8 quiet'
+            echo '	initrd	/intel-ucode.img /initramfs-linux.img'
+            echo '}'
+        } >/boot/grub/grub.cfg
     fi
 
     #----------------------------------------
