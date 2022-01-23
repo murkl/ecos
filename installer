@@ -1308,7 +1308,6 @@ replace_property_array_value() {
 
 tui_init() {
     rm -f "$TUI_FILE"
-    clear
     local uefi_info="BIOS Mode"
     [ "$UEFI_ENABLED" = "true" ] && uefi_info="UEFI Mode"
     echo -e '
