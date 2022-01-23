@@ -1,5 +1,5 @@
 #!/bin/bash
-VERSION=1.0.5
+VERSION=1.0.6
 
 #/////////////////////////////////////////////////////
 # VARIABLES
@@ -458,6 +458,9 @@ exec_install_core() {
     else
         core_log "c" "$log_txt"
     fi
+
+    cat "/mnt/$INSTALLER_ID.log" >>"$INSTALLER_LOG_FILE"
+    cp "/mnt/$INSTALLER_ID.error" "$INSTALLER_WORKING_DIR/$INSTALLER_ID.error"
 
     #----------------------------------------
     # Merge ecos logs
