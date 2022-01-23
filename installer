@@ -643,7 +643,7 @@ exec_install_chroot() {
         echo 'initrd  /initramfs-linux-fallback.img' >>/boot/loader/entries/arch-fallback.conf
 
         # Boot parameter
-        echo "options cryptdevice=$ROOT_PARTITION:main root=/dev/mapper/main-root quiet splash init=/usr/lib/systemd/systemd loglevel=3 rd.systemd.show_status=false rd.udev.log_priority=3 vt.global_cursor_default=0 rw" >>/boot/loader/entries/arch.conf
+        echo "options cryptdevice=$ROOT_PARTITION:lvm root=/dev/mapper/main-root quiet splash init=/usr/lib/systemd/systemd loglevel=3 rd.systemd.show_status=false rd.udev.log_priority=3 vt.global_cursor_default=0 rw" >>/boot/loader/entries/arch.conf
     fi
 
     #----------------------------------------
@@ -686,7 +686,7 @@ exec_install_chroot() {
 
         # Modify /etc/default/grub before execute grub-install!
         echo 'GRUB_PRELOAD_MODULES="lvm"' >/etc/default/grub
-        echo 'GRUB_CMDLINE_LINUX="cryptdevice='$ROOT_PARTITION':main root=/dev/mapper/main-root '$BOOT_ARGS'"' >>/etc/default/grub
+        echo 'GRUB_CMDLINE_LINUX="cryptdevice='$ROOT_PARTITION':lvm root=/dev/mapper/main-root '$BOOT_ARGS'"' >>/etc/default/grub
         # Automatically disabled in recovery mode
         echo 'GRUB_CMDLINE_LINUX_DEFAULT="quiet splash loglevel=3 rd.systemd.show_status=false rd.udev.log_priority=3 vt.global_cursor_default=0"' >>/etc/default/grub
         echo 'GRUB_TIMEOUT="2"' >>/etc/default/grub
