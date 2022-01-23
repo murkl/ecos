@@ -53,7 +53,7 @@ install() {
         sudo sed -i "s/MODULES=(ext4)/MODULES=(ext4 nvidia nvidia_modeset nvidia_uvm nvidia_drm)/g" "/etc/mkinitcpio.conf"
 
         # DRM kernel mode setting (nvidia-drm.modeset=1)
-        sudo sed -i "s/quiet splash nvidia-drm.modeset=1/quiet splash/g" "/boot/loader/entries/arch.conf"
+        sudo sed -i "s/quiet splash nvidia-drm.modeset=1/quiet splash/g" "/boot/loader/entries/ecos.conf"
         sudo sed -i "s/quiet/nvidia-drm.modeset=1 quiet/g" "/boot/grub/grub.cfg"
 
         # Rebuild
@@ -80,7 +80,7 @@ install() {
         sudo sed -i "s/MODULES=(ext4)/MODULES=(ext4 nvidia nvidia_modeset nvidia_uvm nvidia_drm)/g" "/etc/mkinitcpio.conf"
 
         # DRM kernel mode setting (nvidia-drm.modeset=1)
-        sudo sed -i "s/quiet splash nvidia-drm.modeset=1/quiet splash/g" "/boot/loader/entries/arch.conf"
+        sudo sed -i "s/quiet splash nvidia-drm.modeset=1/quiet splash/g" "/boot/loader/entries/ecos.conf"
         sudo sed -i "s/quiet/nvidia-drm.modeset=1 quiet/g" "/boot/grub/grub.cfg"
 
         # Rebuild
@@ -159,7 +159,7 @@ remove() {
     sudo sed -i "s/MODULES=(ext4 nouveau)/MODULES=(ext4)/g" "/etc/mkinitcpio.conf"
     sudo sed -i "s/MODULES=(ext4 nvidia nvidia_modeset nvidia_uvm nvidia_drm)/MODULES=(ext4)/g" "/etc/mkinitcpio.conf"
 
-    sudo sed -i "s/quiet splash nvidia-drm.modeset=1/quiet splash/g" "/boot/loader/entries/arch.conf"
+    sudo sed -i "s/quiet splash nvidia-drm.modeset=1/quiet splash/g" "/boot/loader/entries/ecos.conf"
     sudo sed -i "s/nvidia-drm.modeset=1 quiet/quiet/g" "/boot/grub/grub.cfg"
 
     sudo mkinitcpio -P

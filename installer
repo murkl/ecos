@@ -642,25 +642,24 @@ exec_install_chroot() {
         exec_command_wrap bootctl --path=/boot install
 
         # Create bootloader config
-        echo 'default arch.conf' >/boot/loader/loader.conf
+        echo 'default ecos.conf' >/boot/loader/loader.conf
         echo 'console-mode auto' >>/boot/loader/loader.conf
         echo 'timeout 0' >>/boot/loader/loader.conf
         echo 'editor  yes' >>/boot/loader/loader.conf
 
         # Create arch default entry
-        echo 'title   Arch Linux' >/boot/loader/entries/arch.conf
-        echo 'linux   /vmlinuz-linux' >>/boot/loader/entries/arch.conf
-        [ "$UCODE" != "disabled" ] && echo "initrd  /$UCODE.img" >>/boot/loader/entries/arch.conf
-        echo 'initrd  /initramfs-linux.img' >>/boot/loader/entries/arch.conf
+        echo 'title   ECOS' >/boot/loader/entries/ecos.conf
+        echo 'linux   /vmlinuz-linux' >>/boot/loader/entries/ecos.conf
+        [ "$UCODE" != "disabled" ] && echo "initrd  /$UCODE.img" >>/boot/loader/entries/ecos.conf
+        echo 'initrd  /initramfs-linux.img' >>/boot/loader/entries/ecos.conf
+        echo "options cryptdevice=$ROOT_PARTITION:main root=/dev/mapper/main-root init=/usr/lib/systemd/systemd quiet splash loglevel=3 rd.systemd.show_status=false rd.udev.log_priority=3 vt.global_cursor_default=0 rw" >>/boot/loader/entries/ecos.conf
 
         # Create arch fallback entry
-        echo 'title   Arch Linux Fallback' >/boot/loader/entries/arch-fallback.conf
-        echo 'linux   /vmlinuz-linux' >>/boot/loader/entries/arch-fallback.conf
-        [ "$UCODE" != "disabled" ] && echo "initrd  /$UCODE.img" >>/boot/loader/entries/arch-fallback.conf
-        echo 'initrd  /initramfs-linux-fallback.img' >>/boot/loader/entries/arch-fallback.conf
-
-        # Boot parameter
-        echo "options cryptdevice=$ROOT_PARTITION:main root=/dev/mapper/main-root init=/usr/lib/systemd/systemd quiet splash loglevel=3 rd.systemd.show_status=false rd.udev.log_priority=3 vt.global_cursor_default=0 rw" >>/boot/loader/entries/arch.conf
+        echo 'title   ECOS Fallback' >/boot/loader/entries/ecos-fallback.conf
+        echo 'linux   /vmlinuz-linux' >>/boot/loader/entries/ecos-fallback.conf
+        [ "$UCODE" != "disabled" ] && echo "initrd  /$UCODE.img" >>/boot/loader/entries/ecos-fallback.conf
+        echo 'initrd  /initramfs-linux-fallback.img' >>/boot/loader/entries/ecos-fallback.conf
+        echo "options cryptdevice=$ROOT_PARTITION:main root=/dev/mapper/main-root init=/usr/lib/systemd/systemd rw" >>/boot/loader/entries/ecos-fallback.conf
     fi
 
     #----------------------------------------

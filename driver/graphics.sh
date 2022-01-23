@@ -76,7 +76,7 @@ nvidia_all() {
         sh -c 'echo $root_password | sudo -S sed -i "s/MODULES=(ext4)/MODULES=(ext4 nvidia nvidia_modeset nvidia_uvm nvidia_drm)/g" "/etc/mkinitcpio.conf"'
 
         # DRM kernel mode setting (nvidia-drm.modeset=1)
-        sudo sed -i "s/quiet splash nvidia-drm.modeset=1/quiet splash/g" "/boot/loader/entries/arch.conf"
+        sudo sed -i "s/quiet splash nvidia-drm.modeset=1/quiet splash/g" "/boot/loader/entries/ecos.conf"
         sudo sed -i "s/quiet/nvidia-drm.modeset=1 quiet/g" "/boot/grub/grub.cfg"
 
         # Rebuild
