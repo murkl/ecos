@@ -19,8 +19,11 @@ INSTALLER_SCRIPT_FILE="$INSTALLER_WORKING_DIR/$(basename "$0")"
 INSTALLER_CONFIG_FILE="$INSTALLER_WORKING_DIR/$INSTALLER_ID.conf"
 INSTALLER_LOG_FILE="$INSTALLER_WORKING_DIR/$INSTALLER_ID.log"
 INSTALLER_VERSION_FILE="$INSTALLER_WORKING_DIR/VERSION"
-VERSION="$(<$INSTALLER_VERSION_FILE)"
 UEFI_ENABLED=''
+
+# VERSION
+VERSION=''
+[ -f "$INSTALLER_VERSION_FILE" ] && VERSION="$(<$INSTALLER_VERSION_FILE)"
 
 # DEFAULT PASSWORD
 ECOS_DEFAULT_PASSWORD='ecos'
@@ -1317,8 +1320,9 @@ tui_init() {
     rm -f "$TUI_FILE"
     local uefi_info=""
     local disk_info=""
-    local version_info="VERSION: "$(<VERSION)""
-    [ ! -z "$UEFI_ENABLED" ] && uefi_info="| UEFI: $UEFI_ENABLED"
+    local version_info=""
+    [ ! -z "$UEFI_ENABLED" ] && uefi_info="UEFI: $UEFI_ENABLED"
+    [ -f "$INSTALLER_VERSION_FILE" ] && version_info="| VERSION: "$(<VERSION)""
     [ ! -z "$DISK" ] && disk_info="| DISK: $DISK"
     echo -e '
              ███████  ██████  ██████  ███████ 
@@ -1327,7 +1331,7 @@ tui_init() {
              ██      ██      ██    ██      ██ 
              ███████  ██████  ██████  ███████\n
   +-----------------------------------------------------+
-    '$version_info' '$uefi_info' '$disk_info'
+    '$uefi_info' '$version_info' '$disk_info'
   +-----------------------------------------------------+\n
     ' >"$TUI_FILE"
     tui_add "$1" "$2"
