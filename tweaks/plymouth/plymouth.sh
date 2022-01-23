@@ -30,7 +30,7 @@ install() {
     #----------------------------------------
     echo 'CONFIGURE MKINITCPIO'
     # Intel graphic support (other: https://wiki.archlinux.org/index.php/Kernel_mode_setting#Early_KMS_start)
-    if ! sudo sed -i "s/keymap encrypt lvm2  filesystems/keymap plymouth plymouth-encrypt lvm2 filesystems/g" "$MKINIT_CONF"; then echo "ERROR" && exit 1; fi
+    if ! sudo sed -i "s/keymap encrypt lvm2 filesystems/keymap plymouth plymouth-encrypt lvm2 filesystems/g" "$MKINIT_CONF"; then echo "ERROR" && exit 1; fi
     echo -e 'OK'
 
     #----------------------------------------

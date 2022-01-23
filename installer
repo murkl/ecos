@@ -699,11 +699,34 @@ exec_install_chroot() {
 
         # ----------------------------------------------------------------------------
 
+
+
+
+insmod all_video
+insmod gzio
+insmod part_gpt
+insmod fat
+
+set timeout=2
+set default=0
+
+menuentry "Arch Linux" {
+	set root='hd0,gpt1'
+	gfxpayload=1024x768x32
+	linux	/vmlinuz-linux root=/dev/mapper/main-root rw cryptdevice=/dev/sda2:main root=/dev/mapper/main-root lang=de locale=de_DE.UTF-8 quiet splash loglevel=3 rd.systemd.show_status=false rd.udev.log_priority=3 vt.global_cursor_default=0
+	initrd	/intel-ucode.img /initramfs-linux.img
+}
+
+
+        {
+            echo ""
+        } >/boot/grub/grub.cfg
+
         # Modify /etc/default/grub before execute grub-install!
         echo 'GRUB_CMDLINE_LINUX="cryptdevice='$ROOT_PARTITION':main root=/dev/mapper/main-root '$BOOT_ARGS'"' >/etc/default/grub
-        echo 'GRUB_DISABLE_OS_PROBER=false"' >>/etc/default/grub
-        echo 'GRUB_DISABLE_RECOVERY=false"' >>/etc/default/grub
-        echo 'GRUB_DISABLE_LINUX_UUID=false"' >>/etc/default/grub
+        echo 'GRUB_DISABLE_OS_PROBER="false"' >>/etc/default/grub
+        echo 'GRUB_DISABLE_RECOVERY="false"' >>/etc/default/grub
+        echo 'GRUB_DISABLE_LINUX_UUID="false"' >>/etc/default/grub
         #echo 'GRUB_PRELOAD_MODULES="lvm"' >>/etc/default/grub
         # This line is automatically disabled in recovery mode
         #echo 'GRUB_CMDLINE_LINUX_DEFAULT="quiet splash loglevel=3 rd.systemd.show_status=false rd.udev.log_priority=3 vt.global_cursor_default=0"' >>/etc/default/grub
