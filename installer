@@ -674,15 +674,20 @@ exec_install_chroot() {
 
         # Install GRUB
         if [ "$uefi_mode" = "true" ]; then
-            exec_command_wrap grub-install --target=x86_64-efi --efi-directory=/boot --bootloader-id="Arch Linux" --recheck
+            exec_command_wrap grub-install --target=x86_64-efi --efi-directory=/boot --bootloader-id="ECOS" --recheck
         else
             exec_command_wrap grub-install --no-floppy "$DISK" --recheck
         fi
 
-        # Make Grub config
+        # GRUB Config
+        # echo 'GRUB_CMDLINE_LINUX="cryptdevice='$ROOT_PARTITION':main root=/dev/mapper/main-root '$BOOT_ARGS'"' >/etc/default/grub
+        # echo 'GRUB_DISABLE_OS_PROBER="false"' >>/etc/default/grub
+        # echo 'GRUB_DISABLE_RECOVERY="false"' >>/etc/default/grub
+        # echo 'GRUB_DISABLE_LINUX_UUID="false"' >>/etc/default/grub
+        # echo 'GRUB_CMDLINE_LINUX_DEFAULT="quiet"' >>/etc/default/grub
+        # echo 'GRUB_TIMEOUT="2"' >>/etc/default/grub
         # exec_command_wrap grub-mkconfig -o /boot/grub/grub.cfg
 
-        # GRUB Config
         local grub_root="hd1,gpt1"
         [ "$uefi_mode" = "true" ] && grub_root="hd1,gpt1"
         {
@@ -695,7 +700,7 @@ exec_install_chroot() {
             echo 'menuentry "Arch Linux" {'
             echo '	set root="'$grub_root'"'
             echo '	gfxpayload=1024x768x32'
-            echo '	linux	/vmlinuz-linux root=/dev/mapper/main-root rw cryptdevice='$ROOT_PARTITION':main root=/dev/mapper/main-root lang=de locale=de_DE.UTF-8 quiet'
+            echo '	linux	/vmlinuz-linux root=/dev/mapper/main-root rw cryptdevice='$ROOT_PARTITION':main root=/dev/mapper/main-root '$BOOT_ARGS' quiet'
             echo '	initrd	/intel-ucode.img /initramfs-linux.img'
             echo '}'
         } >/boot/grub/grub.cfg
