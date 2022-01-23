@@ -38,6 +38,17 @@
 - Set Boot Mode to UEFI (Legacy BIOS supported)
 - Connect to Internet via cable (recommended)
 
+## WLAN
+
+Execute `iwctl` and you will enter the WLAN config console. Enter the commands in **iwctl console** and connect to your WLAN:
+
+```
+device list
+station wlan0 get-networks
+station wlan0 connect "WLAN Name"
+exit
+```
+
 # Installation
 
 - Create bootable USB Stick
