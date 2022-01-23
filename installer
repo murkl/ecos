@@ -1,5 +1,5 @@
 #!/bin/bash
-VERSION=1.0.3
+VERSION=1.0.4
 
 #/////////////////////////////////////////////////////
 # VARIABLES
@@ -200,6 +200,8 @@ tui_core_installer_menu() {
 tui_install_ecos_core() {
 
     local uefi_mode="$1"
+        core_log "UEFI MODE: $uefi_mode"
+
 
     #----------------------------------------
     # Ask for reset core config
@@ -309,6 +311,8 @@ exec_install_core() {
     local uefi_mode="$1"
     local password_encryption="$2"
     local progress_result_file="$3"
+        core_log "UEFI MODE: $uefi_mode"
+
 
     #----------------------------------------
     # Source config
@@ -354,7 +358,7 @@ exec_install_core() {
     else
 
         # BIOS only: 1MiB partition is needed for GRUB (if GPT is used instead of MBR)
-        exec_command_wrap sgdisk -n 0:0:+1MiB -t 0:ef02 -c 0:boot "$DISK"
+        exec_command_wrap sgdisk -n 0:0:+1MiB -t 0:ef02 -c 0:grub "$DISK"
 
         # / partition: Rest of space
         exec_command_wrap sgdisk -n 0:0:0 -t 0:8300 -c 0:root "$DISK"
@@ -498,6 +502,8 @@ exec_install_chroot() {
 
     local uefi_mode="$1"
     local password_encryption="$2"
+        core_log "UEFI MODE: $uefi_mode"
+
 
     #----------------------------------------
     # Source config
@@ -637,8 +643,7 @@ exec_install_chroot() {
         echo 'initrd  /initramfs-linux-fallback.img' >>/boot/loader/entries/arch-fallback.conf
 
         # Boot parameter
-        /dev/mapper/main-root
-        echo "options cryptdevice=/dev/mapper/main-root:main root=/dev/mapper/main-root quiet splash init=/usr/lib/systemd/systemd loglevel=3 rd.systemd.show_status=false rd.udev.log_priority=3 vt.global_cursor_default=0 rw" >>/boot/loader/entries/arch.conf
+        echo "options cryptdevice=$ROOT_PARTITION:main root=/dev/mapper/main-root quiet splash init=/usr/lib/systemd/systemd loglevel=3 rd.systemd.show_status=false rd.udev.log_priority=3 vt.global_cursor_default=0 rw" >>/boot/loader/entries/arch.conf
     fi
 
     #----------------------------------------
@@ -652,25 +657,30 @@ exec_install_chroot() {
             mount -t efivarfs efivarfs /sys/firmware/efi/efivars
         fi
 
-        # Create a keyfile to prevent enter the encryption password twice
-        local crypt_key="/crypto_keyfile.bin"
+        # GRUB < 2.06 (luks1)
+        # ----------------------------------------------------------------------------
 
-        exec_command_wrap dd bs=512 count=4 if=/dev/random of="$crypt_key" iflag=fullblock
-        exec_command_wrap chmod 600 "$crypt_key"
+        # # Create a keyfile to prevent enter the encryption password twice
+        # local crypt_key="/crypto_keyfile.bin"
 
-        # When initramfs' permissions are set to 644 (by default), then all users will be able to dump the keyfile
-        exec_command_wrap chmod 600 /boot/initramfs-linux*
+        # exec_command_wrap dd bs=512 count=4 if=/dev/random of="$crypt_key" iflag=fullblock
+        # exec_command_wrap chmod 600 "$crypt_key"
 
-        local crypt_cmd="cryptsetup luksAddKey $ROOT_PARTITION $crypt_key"
-        if ! echo -n "$password_encryption" | $crypt_cmd -d - >/dev/null; then
-            core_log "e" "$crypt_cmd"
-            exit 1
-        else
-            core_log "c" "$crypt_cmd"
-        fi
+        # # When initramfs' permissions are set to 644 (by default), then all users will be able to dump the keyfile
+        # exec_command_wrap chmod 600 /boot/initramfs-linux*
 
-        sed -i 's^FILES=()^FILES=('$crypt_key')^g' /etc/mkinitcpio.conf
-        exec_command_wrap mkinitcpio -P
+        # local crypt_cmd="cryptsetup luksAddKey $ROOT_PARTITION $crypt_key"
+        # if ! echo -n "$password_encryption" | $crypt_cmd -d - >/dev/null; then
+        #     core_log "e" "$crypt_cmd"
+        #     exit 1
+        # else
+        #     core_log "c" "$crypt_cmd"
+        # fi
+
+        # sed -i 's^FILES=()^FILES=('$crypt_key')^g' /etc/mkinitcpio.conf
+        # exec_command_wrap mkinitcpio -P
+
+        # ----------------------------------------------------------------------------
 
         # Modify /etc/default/grub before execute grub-install!
         echo 'GRUB_ENABLE_CRYPTODISK=y' >/etc/default/grub
@@ -681,7 +691,6 @@ exec_install_chroot() {
 
         # Install GRUB
         if [ "$uefi_mode" = "true" ]; then
-            mount -t efivarfs efivarfs /sys/firmware/efi/efivars
             exec_command_wrap grub-install --target=x86_64-efi --efi-directory=/boot --bootloader-id="Arch Linux"
         else
             exec_command_wrap grub-install --no-floppy "$DISK"
@@ -1026,6 +1035,8 @@ check_config_disk() {
 tui_open_recovery() {
 
     local uefi_mode="$1"
+        core_log "UEFI MODE: $uefi_mode"
+
 
     #----------------------------------------
     # Select Disk
