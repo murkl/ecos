@@ -38,7 +38,7 @@
 - Set Boot Mode to UEFI (Legacy BIOS supported)
 - Connect to Internet via cable (recommended)
 
-## Optional: Connect to WLAN
+## Connect to WLAN (optional)
 
 Execute `iwctl` and you will enter the WLAN config console. Enter the commands in **iwctl console** and connect to your WLAN:
 
