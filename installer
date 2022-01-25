@@ -387,10 +387,7 @@ exec_install_core() {
     else
         # GRUB < 2.06: luks2 is not implemented!
         # BUG: There is a bug on GRUB with luks2 and encrypted /boot (https://wiki.archlinux.org/title/GRUB#Encrypted_/boot)
-        #crypt_cmd="cryptsetup -c aes-xts-plain -s 512 luksFormat --type luks1 $ROOT_PARTITION"
-        # TEST
-        crypt_cmd="cryptsetup -c aes-xts-plain -s 512 luksFormat $ROOT_PARTITION"
-
+        crypt_cmd="cryptsetup -c aes-xts-plain -s 512 luksFormat --type luks1 $ROOT_PARTITION"
     fi
 
     # !! DO NOT USE exec_command_wrap
