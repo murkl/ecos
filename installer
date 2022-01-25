@@ -156,18 +156,11 @@ main() {
 tui_core_installer_menu() {
 
     #----------------------------------------
-    # Reset logfile
-    #----------------------------------------
-    mv -f "$INSTALLER_LOG_FILE" "$INSTALLER_LOG_FILE"".backup"
-
-    #----------------------------------------
     # Check UEFI boot
     #----------------------------------------
     [ -d /sys/firmware/efi ] && UEFI_ENABLED='true' || UEFI_ENABLED='false'
     # if [ -x "$(command -v efivar)" ] && [ "$(efivar -l >/dev/null)" != "" ]; then
     #if [ -x "$(command -v efivar)" ] && [ "$(efivar -l >/dev/null)" != "" ]; then; fi
-
-    core_log "UEFI MODE: $UEFI_ENABLED"
 
     #----------------------------------------
     # Show TUI menu
@@ -213,6 +206,15 @@ tui_install_ecos_core() {
     local uefi_mode="$1"
 
     #----------------------------------------
+    # Reset logfile
+    #----------------------------------------
+    if [ -f "$INSTALLER_LOG_FILE" ]; then
+        mv -f "$INSTALLER_LOG_FILE" "$INSTALLER_LOG_FILE"".backup"
+    fi
+
+    core_log "UEFI MODE: $UEFI_ENABLED"
+
+    #----------------------------------------
     # Ask for reset core config
     #----------------------------------------
     if [ -f "$INSTALLER_CONFIG_FILE" ]; then
@@ -223,11 +225,6 @@ tui_install_ecos_core() {
             # Reset config
             if [ -f "$INSTALLER_CONFIG_FILE" ]; then
                 mv -f "$INSTALLER_CONFIG_FILE" "$INSTALLER_CONFIG_FILE"".backup"
-            fi
-
-            # Reset logs
-            if [ -f "$INSTALLER_LOG_FILE" ]; then
-                mv -f "$INSTALLER_LOG_FILE" "$INSTALLER_LOG_FILE"".backup"
             fi
 
             core_log "Reset successfully!"
@@ -494,10 +491,9 @@ cleanup() {
     # Unmount
     #----------------------------------------
     if [ "$AUTO_UNMOUNT" = "true" ]; then
-        exec_command_wrap swapoff -a
-        exec_command_wrap umount -R /mnt
+        swapoff -a
+        umount -R /mnt
     fi
-
 }
 
 #/////////////////////////////////////////////////////
@@ -675,9 +671,6 @@ exec_install_chroot() {
         # Load EFI Variables
         # mount -t efivarfs efivarfs /sys/firmware/efi/efivars
 
-        # Install GRUB
-        exec_command_wrap grub-install --target=x86_64-efi --efi-directory=/efi --bootloader-id="ECOS" --recheck
-
         # GRUB Configuration
         {
             echo -e "insmod all_video"
@@ -700,6 +693,19 @@ exec_install_chroot() {
             echo -e '   initrd /boot/initramfs-linux.img'
             echo -e '}'
         } >/boot/grub/grub.cfg
+
+        # GRUB Configuration
+        # -------------------------------------
+
+        echo 'GRUB_CMDLINE_LINUX="cryptdevice='$ROOT_PARTITION':main root=/dev/mapper/main-root '$BOOT_ARGS'"' >/etc/default/grub
+        echo 'GRUB_CMDLINE_LINUX_DEFAULT="quiet"' >>/etc/default/grub
+        echo 'GRUB_ENABLE_CRYPTODISK=y' >>/etc/default/grub
+        echo 'GRUB_PRELOAD_MODULES="lvm"' >>/etc/default/grub
+        echo 'GRUB_TIMEOUT="2"' >>/etc/default/grub
+
+        # Install GRUB
+        exec_command_wrap grub-install --target=x86_64-efi --efi-directory=/efi --bootloader-id="ECOS" --recheck
+        exec_command_wrap grub-mkconfig -o /boot/grub/grub.cfg
     fi
 
     #----------------------------------------
