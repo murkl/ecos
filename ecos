@@ -1273,6 +1273,8 @@ tui_add() {
 }
 
 print_header() {
+    local print_version="${ECOS_STATE_VERSION_INSTALLED}"
+    [ "$version" = "" ] && print_version="$SCRIPT_VERSION"
     echo -e "
         ${TERM_COLOR_PURPLE}
         ███████╗ ██████╗ ██████╗ ███████╗
@@ -1281,7 +1283,7 @@ print_header() {
         ██╔══╝  ██║     ██║   ██║╚════██║
         ███████╗╚██████╗╚██████╔╝███████║
         ╚══════╝ ╚═════╝ ╚═════╝ ╚══════╝${TERM_COLOR_NULL}
-                                  ${TERM_COLOR_GREEN}v.${ECOS_STATE_VERSION_INSTALLED}${TERM_COLOR_NULL}"
+                                  ${TERM_COLOR_GREEN}v.${print_version}${TERM_COLOR_NULL}"
 }
 
 print_title() {
