@@ -693,7 +693,7 @@ exec_install_chroot() {
             echo -e "set default=0"
             echo -e ""
             echo -e 'menuentry "ECOS" {'
-            echo -e '   set root=(hd1,gpt1)'
+            echo -e '   set root=(hd0,gpt1)'
             echo -e '   gfxpayload='$BOOTLOADER_RESOLUTION''
             echo -e '   linux /vmlinuz-linux cryptdevice='$ROOT_PARTITION':main root=/dev/mapper/main-root rw '$BOOT_ARGS' quiet'
             [ "$UCODE" != "disabled" ] && echo -e '   initrd /'$UCODE'.img'
