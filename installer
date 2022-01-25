@@ -8,6 +8,8 @@
 # https://www.timoschindler.de/arch-linux-uefi-boot-mit-grub-und-verschluesseltem-lvm/
 # https://wiki.archlinux.de/title/GRUB
 # https://www.rohlix.eu/post/linux-disk-encryption-with-bios-uefi-using-mbr-gpt-luks-lvm-and-grub/
+# https://wiki.archlinux.de/title/Dm-crypt
+# https://gist.github.com/mattiaslundberg/8620837
 
 #/////////////////////////////////////////////////////
 # VARIABLES
@@ -353,19 +355,22 @@ exec_install_core() {
 
     if [ "$uefi_mode" = "true" ]; then
 
+        # efi partition: 512MiB
+        exec_command_wrap sgdisk -n 0:0:+512MiB -t 0:ef00 -c 1:boot "$DISK"
+
         # /boot partition: 512MiB
-        exec_command_wrap sgdisk -n 0:0:+512MiB -t 0:ef00 -c 0:boot "$DISK"
+        exec_command_wrap sgdisk -n 0:0:+512MiB -t 0:ef00 -c 2:boot "$DISK"
 
         # / partition: Rest of space
-        exec_command_wrap sgdisk -n 0:0:0 -t 0:8300 -c 1:root "$DISK"
+        exec_command_wrap sgdisk -n 0:0:0 -t 0:8300 -c 3:root "$DISK"
 
     else
 
         # BIOS only: 1MiB partition is needed for GRUB (if GPT is used instead of MBR) with no filesystem
-        exec_command_wrap sgdisk -n 0:0:+1MiB -t 0:ef02 -c 0:grub "$DISK"
+        exec_command_wrap sgdisk -n 0:0:+1MiB -t 0:ef02 -c 1:grub "$DISK"
 
         # / partition: Rest of space
-        exec_command_wrap sgdisk -n 0:0:0 -t 0:8300 -c 1:root "$DISK"
+        exec_command_wrap sgdisk -n 0:0:0 -t 0:8300 -c 2:root "$DISK"
     fi
 
     #----------------------------------------
@@ -374,10 +379,15 @@ exec_install_core() {
     gauge_tui_update 10 "Encrypt $DISK"
 
     # Create encryption
-    # GRUB < 2.06: luks2 is not implemented!
-    # local crypt_cmd="cryptsetup -c aes-xts-plain -s 512 luksFormat --type luks1 $ROOT_PARTITION"
     # Set encrypt command
-    local crypt_cmd="cryptsetup -c aes-xts-plain -s 512 luksFormat $ROOT_PARTITION"
+    local crypt_cmd=""
+    if [ "$uefi_mode" = "true" ]; then
+        crypt_cmd="cryptsetup -c aes-xts-plain -s 512 luksFormat $ROOT_PARTITION"
+    else
+        # GRUB < 2.06: luks2 is not implemented!
+        # BUG: There is a bug on GRUB with luks2 and encrypted /boot (https://wiki.archlinux.org/title/GRUB#Encrypted_/boot)
+        crypt_cmd="cryptsetup -c aes-xts-plain -s 512 luksFormat --type luks1 $ROOT_PARTITION"
+    fi
 
     # !! DO NOT USE exec_command_wrap
     if ! echo -n "$password_encryption" | $crypt_cmd -d - >/dev/null; then
@@ -662,63 +672,89 @@ exec_install_chroot() {
     fi
 
     #----------------------------------------
-    # Bootloader: GRUB ( UEFI legacy BIOS support)
+    # Bootloader: GRUB (UEFI)
     #----------------------------------------
 
-    if [ "$BOOTLOADER" = "grub" ] || [ "$uefi_mode" = "false" ]; then
+    if [ "$BOOTLOADER" = "grub" ] && [ "$uefi_mode" = "true" ]; then
 
         # Load EFI Variables
-        # if [ "$uefi_mode" = "true" ]; then
-        #     mount -t efivarfs efivarfs /sys/firmware/efi/efivars
-        # fi
+        # mount -t efivarfs efivarfs /sys/firmware/efi/efivars
 
-        # Install GRUB (UEFI)
-        if [ "$uefi_mode" = "true" ]; then
-            exec_command_wrap grub-install --target=x86_64-efi --efi-directory=/boot --bootloader-id="ECOS" --recheck
+        # Install GRUB
+        exec_command_wrap grub-install --target=x86_64-efi --efi-directory=/boot --bootloader-id="ECOS" --recheck
 
-            local ucode_line=""
-            [ "$UCODE" != "disabled" ] && ucode_line="initrd /intel-ucode.img /initramfs-linux.img\n"
+        # GRUB Configuration
+        {
+            echo -e "insmod all_video"
+            echo -e "insmod gzio"
+            echo -e "insmod part_gpt"
+            echo -e "insmod fat"
+            echo -e "insmod lvm"
+            echo -e ""
+            echo -e "set timeout=2"
+            echo -e "set default=0"
+            echo -e ""
+            echo -e 'menuentry "ECOS" {'
+            echo -e '   set root=(hd1,gpt1)'
+            echo -e '   gfxpayload='$BOOTLOADER_RESOLUTION''
+            echo -e '   linux /vmlinuz-linux cryptdevice='$ROOT_PARTITION':main root=/dev/mapper/main-root rw '$BOOT_ARGS' quiet'
+            [ "$UCODE" != "disabled" ] && echo -e '   initrd /'$UCODE'.img'
+            echo -e '   initrd /boot/initramfs-linux.img'
+            echo -e '}'
+        } >/boot/grub/grub.cfg
+    fi
 
-            local grub_root=""
-            [ "$uefi_mode" = "true" ] && grub_root="hd1,gpt1"
-            [ "$uefi_mode" = "false" ] && grub_root="hd0,gpt2"
-            {
-                [ "$uefi_mode" = "false" ] && echo -e "set prefix=(hd0,gpt3)/boot/grub"
-                echo -e "insmod all_video"
-                echo -e "insmod gzio"
-                echo -e "insmod part_gpt"
-                echo -e "insmod fat"
-                echo -e "insmod lvm"
-                echo -e ""
-                echo -e "set timeout=2"
-                echo -e "set default=0"
-                echo -e ""
-                echo -e 'menuentry "ECOS" {'
-                echo -e 'set root="'$grub_root'"'
-                echo -e 'gfxpayload='$BOOTLOADER_RESOLUTION''
-                echo -e 'linux /vmlinuz-linux root=/dev/mapper/main-root rw cryptdevice='$ROOT_PARTITION':main '$BOOT_ARGS' quiet'
-                echo -e "$ucode_line"
-                echo -e '}'
-            } >/boot/grub/grub.cfg
+    #----------------------------------------
+    # Bootloader: GRUB (BIOS)
+    #----------------------------------------
+
+    if [ "$uefi_mode" = "false" ]; then
+
+        # [ "$uefi_mode" = "false" ] && grub_root="(hd0,gpt2)"
+        # [ "$uefi_mode" = "false" ] && echo -e "set prefix=(hd0,gpt1)/boot/grub"
+
+        # Create Kryptfile
+        # -------------------------------------
+
+        # Create a keyfile to prevent enter the encryption password twice
+        local crypt_key="/crypto_keyfile.bin"
+
+        #exec_command_wrap dd if=/dev/random of="$crypt_key" bs=512 count=4 iflag=fullblock
+        exec_command_wrap dd if=/dev/random of="$crypt_key" bs=512 count=8 iflag=fullblock
+        exec_command_wrap chmod 600 "$crypt_key"
+
+        # When initramfs' permissions are set to 644 (by default), then all users will be able to dump the keyfile
+        exec_command_wrap chmod 600 /boot/initramfs-linux*
+
+        local crypt_cmd="cryptsetup luksAddKey $ROOT_PARTITION $crypt_key"
+        if ! echo -n "$password_encryption" | $crypt_cmd -d - >/dev/null; then
+            core_log "e" "$crypt_cmd"
+            exit 1
+        else
+            core_log "c" "$crypt_cmd"
         fi
 
-        # Install GRUB (BIOS)
-        if [ "$uefi_mode" = "false" ]; then
+        #sed -i 's^FILES=()^FILES=('$crypt_key')^g' /etc/mkinitcpio.conf
+        sed -i 's/FILES=(/FILES=(\/'$crypt_key'/g' /etc/mkinitcpio.conf
 
-            # GRUB Config (not needed)
-            #echo 'GRUB_CMDLINE_LINUX="cryptdevice='$ROOT_PARTITION':main root=/dev/mapper/main-root '$BOOT_ARGS'"' >/etc/default/grub
-            echo 'GRUB_CMDLINE_LINUX="cryptdevice=UUID='$(blkid -s UUID -o value $ROOT_PARTITION)':main '$BOOT_ARGS'"' >/etc/default/grub
-            echo 'GRUB_CMDLINE_LINUX_DEFAULT="quiet"' >>/etc/default/grub
-            echo 'GRUB_ENABLE_CRYPTODISK=y' >>/etc/default/grub
-            echo 'GRUB_PRELOAD_MODULES="lvm"' >>/etc/default/grub
-            echo 'GRUB_DISABLE_OS_PROBER="false"' >>/etc/default/grub
-            echo 'GRUB_DISABLE_RECOVERY="false"' >>/etc/default/grub
-            echo 'GRUB_DISABLE_LINUX_UUID="false"' >>/etc/default/grub
-            echo 'GRUB_TIMEOUT="2"' >>/etc/default/grub
-            exec_command_wrap grub-install --target=i386-pc --no-floppy --recheck "$DISK" --modules="part_gpt part_msdos"
-            exec_command_wrap grub-mkconfig -o /boot/grub/grub.cfg
-        fi
+        exec_command_wrap mkinitcpio -P
 
+        # GRUB Configuration
+        # -------------------------------------
+        # Modify before execute grub-install!
+
+        # echo 'GRUB_CMDLINE_LINUX="cryptdevice='$ROOT_PARTITION':cryptroot cryptkey=rootfs:'$crypt_key'"' >>/etc/default/grub
+        # echo 'GRUB_CMDLINE_LINUX="cryptdevice='$ROOT_PARTITION':main root=/dev/mapper/main-root '$BOOT_ARGS'"' >/etc/default/grub
+        echo 'GRUB_CMDLINE_LINUX="cryptdevice=UUID='$(blkid -s UUID -o value $ROOT_PARTITION)':main '$BOOT_ARGS'"' >/etc/default/grub
+        echo 'GRUB_CMDLINE_LINUX_DEFAULT="quiet"' >>/etc/default/grub
+        echo 'GRUB_ENABLE_CRYPTODISK=y' >>/etc/default/grub
+        echo 'GRUB_PRELOAD_MODULES="lvm"' >>/etc/default/grub
+        #echo 'GRUB_DISABLE_OS_PROBER="false"' >>/etc/default/grub
+        #echo 'GRUB_DISABLE_RECOVERY="false"' >>/etc/default/grub
+        #echo 'GRUB_DISABLE_LINUX_UUID="false"' >>/etc/default/grub
+        echo 'GRUB_TIMEOUT="2"' >>/etc/default/grub
+        exec_command_wrap grub-install --target=i386-pc --no-floppy --recheck "$DISK" --modules="part_gpt part_msdos"
+        exec_command_wrap grub-mkconfig -o /boot/grub/grub.cfg
     fi
 
     #----------------------------------------
