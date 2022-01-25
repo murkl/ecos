@@ -6,9 +6,9 @@
 
 # https://wiki.archlinux.de/title/Installation_mit_UEFI_und_Verschl%C3%BCsselung
 # https://www.timoschindler.de/arch-linux-uefi-boot-mit-grub-und-verschluesseltem-lvm/
+# https://wiki.archlinux.de/title/Dm-crypt
 # https://wiki.archlinux.de/title/GRUB
 # https://www.rohlix.eu/post/linux-disk-encryption-with-bios-uefi-using-mbr-gpt-luks-lvm-and-grub/
-# https://wiki.archlinux.de/title/Dm-crypt
 # https://gist.github.com/mattiaslundberg/8620837
 # https://gist.github.com/huntrar/e42aee630bee3295b2c671d098c81268
 
@@ -357,13 +357,10 @@ exec_install_core() {
     if [ "$uefi_mode" = "true" ]; then
 
         # efi partition: 512MiB
-        exec_command_wrap sgdisk -n 0:0:+512MiB -t 0:ef00 -c 1:boot "$DISK"
-
-        # /boot partition: 512MiB
-        exec_command_wrap sgdisk -n 0:0:+512MiB -t 0:ef00 -c 2:boot "$DISK"
+        exec_command_wrap sgdisk -n 0:0:+512MiB -t 0:ef00 -c 1:efi "$DISK"
 
         # / partition: Rest of space
-        exec_command_wrap sgdisk -n 0:0:0 -t 0:8300 -c 3:root "$DISK"
+        exec_command_wrap sgdisk -n 0:0:0 -t 0:8300 -c 2:root "$DISK"
 
     else
 
@@ -378,17 +375,10 @@ exec_install_core() {
     # Encrypt disk
     #----------------------------------------
     gauge_tui_update 10 "Encrypt $DISK"
-
-    # Create encryption
-    # Set encrypt command
-    local crypt_cmd=""
-    if [ "$uefi_mode" = "true" ]; then
-        crypt_cmd="cryptsetup -c aes-xts-plain -s 512 luksFormat $ROOT_PARTITION"
-    else
-        # GRUB < 2.06: luks2 is not implemented!
-        # BUG: There is a bug on GRUB with luks2 and encrypted /boot (https://wiki.archlinux.org/title/GRUB#Encrypted_/boot)
-        crypt_cmd="cryptsetup -c aes-xts-plain -s 512 luksFormat --type luks1 $ROOT_PARTITION"
-    fi
+    # GRUB < 2.06: luks2 is not implemented!
+    # BUG: There is a bug on GRUB with luks2 and encrypted /boot (https://wiki.archlinux.org/title/GRUB#Encrypted_/boot)
+    # local crypt_cmd="cryptsetup -c aes-xts-plain -s 512 luksFormat $ROOT_PARTITION"
+    local crypt_cmd="cryptsetup -c aes-xts-plain -s 512 luksFormat --type luks1 $ROOT_PARTITION"
 
     # !! DO NOT USE exec_command_wrap
     if ! echo -n "$password_encryption" | $crypt_cmd -d - >/dev/null; then
@@ -421,8 +411,8 @@ exec_install_core() {
     #----------------------------------------
     gauge_tui_update 12 "Format $DISK"
 
-    # Format /boot
-    if [ "$uefi_mode" = "true" ]; then exec_command_wrap mkfs.fat -F 32 -n boot "$BOOT_PARTITION"; fi
+    # Format /efi
+    if [ "$uefi_mode" = "true" ]; then exec_command_wrap mkfs.fat -F 32 -n efi "$BOOT_PARTITION"; fi
 
     # Format / (crypted)
     exec_command_wrap mkfs.ext4 -L root /dev/mapper/main-root
@@ -433,8 +423,8 @@ exec_install_core() {
     exec_command_wrap mount /dev/mapper/main-root /mnt
     # Mount boot partition (UEFI only)
     if [ "$uefi_mode" = "true" ]; then
-        exec_command_wrap mkdir /mnt/boot
-        exec_command_wrap mount "$BOOT_PARTITION" /mnt/boot
+        exec_command_wrap mkdir /mnt/efi
+        exec_command_wrap mount "$BOOT_PARTITION" /mnt/efi
     fi
     #----------------------------------------
     # Pacstrap base arch packages
@@ -487,10 +477,13 @@ exec_install_core() {
 cleanup() {
 
     #----------------------------------------
-    # Merge ecos logs
+    # Merge ECOS logs
     #----------------------------------------
     wait && cat "/mnt/$INSTALLER_ID.log" >>"$INSTALLER_LOG_FILE"
-    wait && cat "/mnt/$INSTALLER_ID.error" >>"$INSTALLER_LOG_FILE"
+
+    #----------------------------------------
+    # Remove files from new system
+    #----------------------------------------
     rm -f "/mnt/$INSTALLER_ID"
     rm -f "/mnt/$INSTALLER_ID.conf"
     rm -f "/mnt/$INSTALLER_ID.log"
@@ -649,7 +642,8 @@ exec_install_chroot() {
     if [ "$BOOTLOADER" = "systemd" ] && [ "$uefi_mode" = "true" ]; then
 
         # Install boot loeader
-        exec_command_wrap bootctl --path=/boot install
+        # systemd-boot will try to locate the ESP at /efi, /boot, and /boot/efi
+        exec_command_wrap bootctl --esp-path=/efi install
 
         # Create bootloader config
         echo 'default ecos.conf' >/boot/loader/loader.conf
@@ -682,7 +676,7 @@ exec_install_chroot() {
         # mount -t efivarfs efivarfs /sys/firmware/efi/efivars
 
         # Install GRUB
-        exec_command_wrap grub-install --target=x86_64-efi --efi-directory=/boot --bootloader-id="ECOS" --recheck
+        exec_command_wrap grub-install --target=x86_64-efi --efi-directory=/efi --bootloader-id="ECOS" --recheck
 
         # GRUB Configuration
         {
@@ -1305,6 +1299,8 @@ exec_command_wrap() {
         return 0
     else
         core_log "e" "$command_txt"
+        cat "$tmp_error" >>"$INSTALLER_LOG_FILE"
+        rm -f "$tmp_error"
         exit 1
     fi
 }
