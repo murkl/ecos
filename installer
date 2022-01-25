@@ -10,6 +10,7 @@
 # https://www.rohlix.eu/post/linux-disk-encryption-with-bios-uefi-using-mbr-gpt-luks-lvm-and-grub/
 # https://wiki.archlinux.de/title/Dm-crypt
 # https://gist.github.com/mattiaslundberg/8620837
+# https://gist.github.com/huntrar/e42aee630bee3295b2c671d098c81268
 
 #/////////////////////////////////////////////////////
 # VARIABLES
@@ -386,7 +387,10 @@ exec_install_core() {
     else
         # GRUB < 2.06: luks2 is not implemented!
         # BUG: There is a bug on GRUB with luks2 and encrypted /boot (https://wiki.archlinux.org/title/GRUB#Encrypted_/boot)
-        crypt_cmd="cryptsetup -c aes-xts-plain -s 512 luksFormat --type luks1 $ROOT_PARTITION"
+        #crypt_cmd="cryptsetup -c aes-xts-plain -s 512 luksFormat --type luks1 $ROOT_PARTITION"
+        # TEST
+        crypt_cmd="cryptsetup -c aes-xts-plain -s 512 luksFormat $ROOT_PARTITION"
+
     fi
 
     # !! DO NOT USE exec_command_wrap
@@ -690,6 +694,9 @@ exec_install_chroot() {
             echo -e "insmod part_gpt"
             echo -e "insmod fat"
             echo -e "insmod lvm"
+            echo -e "insmod cryptodisk"
+            echo -e "insmod luks"
+            echo -e "insmod ext2"
             echo -e ""
             echo -e "set timeout=2"
             echo -e "set default=0"
@@ -713,7 +720,7 @@ exec_install_chroot() {
         # [ "$uefi_mode" = "false" ] && grub_root="(hd0,gpt2)"
         # [ "$uefi_mode" = "false" ] && echo -e "set prefix=(hd0,gpt1)/boot/grub"
 
-        # Create Kryptfile
+        # Create Kryptfile - to avoid having to enter the encryption passphrase twice (once for GRUB, once for initramfs)
         # -------------------------------------
 
         # Create a keyfile to prevent enter the encryption password twice
@@ -734,8 +741,8 @@ exec_install_chroot() {
             core_log "c" "$crypt_cmd"
         fi
 
-        #sed -i 's^FILES=()^FILES=('$crypt_key')^g' /etc/mkinitcpio.conf
-        sed -i 's/FILES=(/FILES=(\/'$crypt_key'/g' /etc/mkinitcpio.conf
+        #sed -i 's/FILES=(/FILES=(\/'$crypt_key'/g' /etc/mkinitcpio.conf
+        sed -i 's^FILES=()^FILES=('$crypt_key')^g' /etc/mkinitcpio.conf
 
         exec_command_wrap mkinitcpio -P
 
@@ -745,7 +752,7 @@ exec_install_chroot() {
 
         # echo 'GRUB_CMDLINE_LINUX="cryptdevice='$ROOT_PARTITION':cryptroot cryptkey=rootfs:'$crypt_key'"' >>/etc/default/grub
         # echo 'GRUB_CMDLINE_LINUX="cryptdevice='$ROOT_PARTITION':main root=/dev/mapper/main-root '$BOOT_ARGS'"' >/etc/default/grub
-        echo 'GRUB_CMDLINE_LINUX="cryptdevice=UUID='$(blkid -s UUID -o value $ROOT_PARTITION)':main '$BOOT_ARGS'"' >/etc/default/grub
+        echo 'GRUB_CMDLINE_LINUX="cryptdevice=UUID='$(blkid -s UUID -o value $ROOT_PARTITION)':main cryptkey=rootfs:'$crypt_key' root=/dev/mapper/main-root '$BOOT_ARGS'"' >/etc/default/grub
         echo 'GRUB_CMDLINE_LINUX_DEFAULT="quiet"' >>/etc/default/grub
         echo 'GRUB_ENABLE_CRYPTODISK=y' >>/etc/default/grub
         echo 'GRUB_PRELOAD_MODULES="lvm"' >>/etc/default/grub
@@ -753,7 +760,8 @@ exec_install_chroot() {
         #echo 'GRUB_DISABLE_RECOVERY="false"' >>/etc/default/grub
         #echo 'GRUB_DISABLE_LINUX_UUID="false"' >>/etc/default/grub
         echo 'GRUB_TIMEOUT="2"' >>/etc/default/grub
-        exec_command_wrap grub-install --target=i386-pc --no-floppy --recheck "$DISK" --modules="part_gpt part_msdos"
+        #exec_command_wrap grub-install --target=i386-pc --no-floppy --recheck "$DISK" --modules="part_gpt part_msdos"
+        exec_command_wrap grub-install --target=i386-pc --no-floppy --recheck "$DISK"
         exec_command_wrap grub-mkconfig -o /boot/grub/grub.cfg
     fi
 
