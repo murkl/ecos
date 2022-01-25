@@ -733,7 +733,9 @@ exec_install_chroot() {
         local root_uuid="$(blkid -s UUID -o value $ROOT_PARTITION)"
         # echo 'GRUB_CMDLINE_LINUX="cryptdevice='$ROOT_PARTITION':cryptroot cryptkey=rootfs:'$crypt_key'"' >>/etc/default/grub
         # echo 'GRUB_CMDLINE_LINUX="cryptdevice='$ROOT_PARTITION':main root=/dev/mapper/main-root '$BOOT_ARGS'"' >/etc/default/grub
-        echo 'GRUB_CMDLINE_LINUX="cryptdevice=UUID='$root_uuid':main cryptkey=rootfs:'$crypt_key' root=/dev/mapper/main-root '$BOOT_ARGS'"' >/etc/default/grub
+        #echo 'GRUB_CMDLINE_LINUX="cryptdevice=UUID='$root_uuid':main cryptkey=rootfs:'$crypt_key' root=/dev/mapper/main-root '$BOOT_ARGS'"' >/etc/default/grub
+        echo 'GRUB_CMDLINE_LINUX="cryptdevice='$ROOT_PARTITION':main '$BOOT_ARGS'"' >/etc/default/grub
+
         echo 'GRUB_CMDLINE_LINUX_DEFAULT="quiet"' >>/etc/default/grub
         echo 'GRUB_ENABLE_CRYPTODISK=y' >>/etc/default/grub
         echo 'GRUB_PRELOAD_MODULES="lvm"' >>/etc/default/grub
