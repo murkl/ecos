@@ -360,14 +360,11 @@ exec_install_core() {
 
     else
 
-        # /boot partition: 512MiB
-        exec_command_wrap sgdisk -n 0:0:+512MiB -t 0:8300 -c 0:boot "$DISK"
+        # BIOS only: 1MiB partition is needed for GRUB (if GPT is used instead of MBR) with no filesystem
+        exec_command_wrap sgdisk -n 0:0:0 -t 0:ef02 -c 0:grub "$DISK"
 
         # / partition: Rest of space
         exec_command_wrap sgdisk -n 0:0:-1MiB -t 0:8300 -c 0:root "$DISK"
-
-        # BIOS only: 1MiB partition is needed for GRUB (if GPT is used instead of MBR)
-        exec_command_wrap sgdisk -n 0:0:0 -t 0:ef02 -c 0:grub "$DISK"
     fi
 
     #----------------------------------------
@@ -414,7 +411,6 @@ exec_install_core() {
 
     # Format /boot
     if [ "$uefi_mode" = "true" ]; then exec_command_wrap mkfs.fat -F 32 -n boot "$BOOT_PARTITION"; fi
-    if [ "$uefi_mode" = "false" ]; then exec_command_wrap mkfs.ext4 -L boot "$BOOT_PARTITION"; fi
 
     # Format / (crypted)
     exec_command_wrap mkfs.ext4 -L root /dev/mapper/main-root
@@ -423,9 +419,11 @@ exec_install_core() {
     # Mount disk to /mnt
     #----------------------------------------
     exec_command_wrap mount /dev/mapper/main-root /mnt
-    exec_command_wrap mkdir /mnt/boot
-    exec_command_wrap mount "$BOOT_PARTITION" /mnt/boot
-
+    # Mount boot partition (UEFI only)
+    if [ "$uefi_mode" = "true" ]; then
+        exec_command_wrap mkdir /mnt/boot
+        exec_command_wrap mount "$BOOT_PARTITION" /mnt/boot
+    fi
     #----------------------------------------
     # Pacstrap base arch packages
     #----------------------------------------
@@ -673,45 +671,49 @@ exec_install_chroot() {
         #     mount -t efivarfs efivarfs /sys/firmware/efi/efivars
         # fi
 
-        # Install GRUB
+        # Install GRUB (UEFI)
         if [ "$uefi_mode" = "true" ]; then
             exec_command_wrap grub-install --target=x86_64-efi --efi-directory=/boot --bootloader-id="ECOS" --recheck
-        else
-            exec_command_wrap grub-install --no-floppy "$DISK" --recheck
+
+            local ucode_line=""
+            [ "$UCODE" != "disabled" ] && ucode_line="initrd /intel-ucode.img /initramfs-linux.img\n"
+
+            local grub_root=""
+            [ "$uefi_mode" = "true" ] && grub_root="hd1,gpt1"
+            [ "$uefi_mode" = "false" ] && grub_root="hd0,gpt2"
+            {
+                [ "$uefi_mode" = "false" ] && echo -e "set prefix=(hd0,gpt3)/boot/grub"
+                echo -e "insmod all_video"
+                echo -e "insmod gzio"
+                echo -e "insmod part_gpt"
+                echo -e "insmod fat"
+                echo -e "set timeout=2"
+                echo -e "set default=0"
+                echo -e ""
+                echo -e 'menuentry "ECOS" {'
+                echo -e 'set root="'$grub_root'"'
+                echo -e 'gfxpayload='$BOOTLOADER_RESOLUTION''
+                echo -e 'linux /vmlinuz-linux root=/dev/mapper/main-root rw cryptdevice='$ROOT_PARTITION':main root=/dev/mapper/main-root '$BOOT_ARGS' quiet'
+                echo -e "$ucode_line"
+                echo -e '}'
+            } >/boot/grub/grub.cfg
         fi
 
-        # GRUB Config (not needed)
-        echo 'GRUB_CMDLINE_LINUX="cryptdevice='$ROOT_PARTITION':main root=/dev/mapper/main-root '$BOOT_ARGS'"' >/etc/default/grub
-        echo 'GRUB_CMDLINE_LINUX_DEFAULT="quiet"' >>/etc/default/grub
-        echo 'GRUB_DISABLE_OS_PROBER="false"' >>/etc/default/grub
-        echo 'GRUB_DISABLE_RECOVERY="false"' >>/etc/default/grub
-        #[ "$uefi_mode" = "false" ] && echo 'GRUB_PRELOAD_MODULES="lvm"' >>/etc/default/grub
-        echo 'GRUB_DISABLE_LINUX_UUID="false"' >>/etc/default/grub
-        echo 'GRUB_TIMEOUT="2"' >>/etc/default/grub
-        # exec_command_wrap grub-mkconfig -o /boot/grub/grub.cfg
+        # Install GRUB (BIOS)
+        if [ "$uefi_mode" = "false" ]; then
 
-        local ucode_line=""
-        [ "$UCODE" != "disabled" ] && ucode_line="initrd /intel-ucode.img /initramfs-linux.img\n"
+            # GRUB Config (not needed)
+            echo 'GRUB_CMDLINE_LINUX="cryptdevice='$ROOT_PARTITION':main root=/dev/mapper/main-root '$BOOT_ARGS'"' >/etc/default/grub
+            echo 'GRUB_CMDLINE_LINUX_DEFAULT="quiet"' >>/etc/default/grub
+            echo 'GRUB_DISABLE_OS_PROBER="false"' >>/etc/default/grub
+            echo 'GRUB_DISABLE_RECOVERY="false"' >>/etc/default/grub
+            [ "$uefi_mode" = "false" ] && echo 'GRUB_PRELOAD_MODULES="lvm"' >>/etc/default/grub
+            echo 'GRUB_DISABLE_LINUX_UUID="false"' >>/etc/default/grub
+            echo 'GRUB_TIMEOUT="2"' >>/etc/default/grub
+            exec_command_wrap grub-install --target=i386-pc --no-floppy --recheck "$DISK"
+            exec_command_wrap grub-mkconfig -o /boot/grub/grub.cfg
+        fi
 
-        local grub_root=""
-        [ "$uefi_mode" = "true" ] && grub_root="hd1,gpt1"
-        [ "$uefi_mode" = "false" ] && grub_root="hd0,gpt2"
-        {
-            [ "$uefi_mode" = "false" ] && echo -e "set prefix=(hd0,gpt3)/boot/grub"
-            echo -e "insmod all_video"
-            echo -e "insmod gzio"
-            echo -e "insmod part_gpt"
-            echo -e "insmod fat"
-            echo -e "set timeout=2"
-            echo -e "set default=0"
-            echo -e ""
-            echo -e 'menuentry "ECOS" {'
-            echo -e 'set root="'$grub_root'"'
-            echo -e 'gfxpayload='$BOOTLOADER_RESOLUTION''
-            echo -e 'linux /vmlinuz-linux root=/dev/mapper/main-root rw cryptdevice='$ROOT_PARTITION':main root=/dev/mapper/main-root '$BOOT_ARGS' quiet'
-            echo -e "$ucode_line"
-            echo -e '}'
-        } >/boot/grub/grub.cfg
     fi
 
     #----------------------------------------
@@ -1055,8 +1057,11 @@ tui_open_recovery() {
     print_info "MOUNT TO" "$mnt_recovery"
     mkdir -p "$mnt_recovery"
     mount /dev/mapper/main-root "$mnt_recovery"
-    mkdir -p "$mnt_recovery/boot"
-    mount "$BOOT_PARTITION" "$mnt_recovery/boot"
+
+    if [ "$UEFI_ENABLED" = "true" ]; then
+        mkdir -p "$mnt_recovery/boot"
+        mount "$BOOT_PARTITION" "$mnt_recovery/boot"
+    fi
 
     #----------------------------------------
     # Chroot
@@ -1065,7 +1070,7 @@ tui_open_recovery() {
     print_info "CHROOT" "$mnt_recovery"
 
     # Mount /boot in recovery system (UEFI only)
-    if [ "$uefi_mode" = "true" ]; then
+    if [ "$UEFI_ENABLED" = "true" ]; then
         if ! arch-chroot "$mnt_recovery" mount $BOOT_PARTITION /boot; then
             echo "ERROR: CHROOT Mount /boot"
             exit 1
