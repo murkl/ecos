@@ -374,10 +374,8 @@ exec_install_core() {
     gauge_tui_update 10 "Encrypt $DISK"
     # GRUB < 2.06: luks2 is not implemented!
     # BUG: There is a bug on GRUB with luks2 and encrypted /boot (https://wiki.archlinux.org/title/GRUB#Encrypted_/boot)
-
-    # TEST
-    local crypt_cmd="cryptsetup -c aes-xts-plain -s 512 luksFormat $ROOT_PARTITION"
-    #local crypt_cmd="cryptsetup -c aes-xts-plain -s 512 luksFormat --type luks1 $ROOT_PARTITION"
+    #local crypt_cmd="cryptsetup -c aes-xts-plain -s 512 luksFormat $ROOT_PARTITION"
+    local crypt_cmd="cryptsetup -c aes-xts-plain -s 512 luksFormat --type luks1 $ROOT_PARTITION"
 
     # !! DO NOT USE exec_command_wrap
     if ! echo -n "$password_encryption" | $crypt_cmd -d - >/dev/null; then
@@ -633,15 +631,15 @@ exec_install_chroot() {
     exec_command_wrap mkinitcpio -P
 
     #----------------------------------------
-    # Bootloader: systemd-boot (UEFI)
+    # Bootloader: systemd-boot (UEFI only)
     #----------------------------------------
     gauge_tui_update 85 "Install Bootloader"
 
     if [ "$BOOTLOADER" = "systemd" ] && [ "$uefi_mode" = "true" ]; then
 
         # Install boot loeader
-        # systemd-boot will try to locate the ESP at /efi, /boot, and /boot/efi. Use custom dir: --esp-path=/efi
-        exec_command_wrap bootctl install
+        # systemd-boot will try to locate the ESP at /efi, /boot, and /boot/efi
+        exec_command_wrap bootctl --esp-path=/efi install
 
         # Create bootloader config
         echo 'default ecos.conf' >/boot/loader/loader.conf
@@ -665,15 +663,48 @@ exec_install_chroot() {
     fi
 
     #----------------------------------------
-    # Bootloader: GRUB (UEFI)
+    # Bootloader: GRUB (UEFI & BIOS)
     #----------------------------------------
 
-    if [ "$BOOTLOADER" = "grub" ] && [ "$uefi_mode" = "true" ]; then
+    if [ "$BOOTLOADER" = "grub" ] || [ "$uefi_mode" = "false" ]; then
 
         # Load EFI Variables
         # mount -t efivarfs efivarfs /sys/firmware/efi/efivars
 
-        # GRUB Configuration
+        # ----------------------------------------
+        # Create Kryptfile - to avoid having to enter the encryption passphrase twice (once for GRUB, once for initramfs)
+        # ----------------------------------------
+
+        # Create a keyfile to prevent enter the encryption password twice
+        local crypt_key="/crypto_keyfile.bin"
+
+        #exec_command_wrap dd if=/dev/random of="$crypt_key" bs=512 count=4 iflag=fullblock
+        exec_command_wrap dd if=/dev/random of="$crypt_key" bs=512 count=8 iflag=fullblock
+        exec_command_wrap chmod 600 "$crypt_key"
+
+        # When initramfs' permissions are set to 644 (by default), then all users will be able to dump the keyfile
+        exec_command_wrap chmod 600 /boot/initramfs-linux*
+
+        local crypt_cmd="cryptsetup luksAddKey $ROOT_PARTITION $crypt_key"
+        if ! echo -n "$password_encryption" | $crypt_cmd -d - >/dev/null; then
+            core_log "e" "$crypt_cmd"
+            exit 1
+        else
+            core_log "c" "$crypt_cmd"
+        fi
+
+        #sed -i 's/FILES=(/FILES=(\/'$crypt_key'/g' /etc/mkinitcpio.conf
+        sed -i 's^FILES=()^FILES=('$crypt_key')^g' /etc/mkinitcpio.conf
+
+        exec_command_wrap mkinitcpio -P
+
+        # ----------------------------------------
+        # TODO: Manual GRUB Configuration
+        # ----------------------------------------
+
+        # !! This config will be overriden in next step !!
+        # [ "$uefi_mode" = "false" ] && grub_root="(hd0,gpt2)"
+        # [ "$uefi_mode" = "false" ] && echo -e "set prefix=(hd0,gpt1)/boot/grub"
         {
             echo -e "insmod all_video"
             echo -e "insmod gzio"
@@ -699,68 +730,25 @@ exec_install_chroot() {
         # GRUB Configuration
         # -------------------------------------
 
-        echo 'GRUB_CMDLINE_LINUX="cryptdevice='$ROOT_PARTITION':main root=/dev/mapper/main-root '$BOOT_ARGS'"' >/etc/default/grub
+        local root_uuid="$(blkid -s UUID -o value $ROOT_PARTITION)"
+        # echo 'GRUB_CMDLINE_LINUX="cryptdevice='$ROOT_PARTITION':cryptroot cryptkey=rootfs:'$crypt_key'"' >>/etc/default/grub
+        # echo 'GRUB_CMDLINE_LINUX="cryptdevice='$ROOT_PARTITION':main root=/dev/mapper/main-root '$BOOT_ARGS'"' >/etc/default/grub
+        echo 'GRUB_CMDLINE_LINUX="cryptdevice=UUID='$root_uuid':main cryptkey=rootfs:'$crypt_key' root=/dev/mapper/main-root '$BOOT_ARGS'"' >/etc/default/grub
         echo 'GRUB_CMDLINE_LINUX_DEFAULT="quiet"' >>/etc/default/grub
         echo 'GRUB_ENABLE_CRYPTODISK=y' >>/etc/default/grub
         echo 'GRUB_PRELOAD_MODULES="lvm"' >>/etc/default/grub
         echo 'GRUB_TIMEOUT="2"' >>/etc/default/grub
-
-        # Install GRUB
-        exec_command_wrap grub-install --target=x86_64-efi --efi-directory=/efi --bootloader-id="ECOS" --recheck
-        exec_command_wrap grub-mkconfig -o /boot/grub/grub.cfg
-    fi
-
-    #----------------------------------------
-    # Bootloader: GRUB (BIOS)
-    #----------------------------------------
-
-    if [ "$uefi_mode" = "false" ]; then
-
-        # [ "$uefi_mode" = "false" ] && grub_root="(hd0,gpt2)"
-        # [ "$uefi_mode" = "false" ] && echo -e "set prefix=(hd0,gpt1)/boot/grub"
-
-        # Create Kryptfile - to avoid having to enter the encryption passphrase twice (once for GRUB, once for initramfs)
-        # -------------------------------------
-
-        # Create a keyfile to prevent enter the encryption password twice
-        local crypt_key="/crypto_keyfile.bin"
-
-        #exec_command_wrap dd if=/dev/random of="$crypt_key" bs=512 count=4 iflag=fullblock
-        exec_command_wrap dd if=/dev/random of="$crypt_key" bs=512 count=8 iflag=fullblock
-        exec_command_wrap chmod 600 "$crypt_key"
-
-        # When initramfs' permissions are set to 644 (by default), then all users will be able to dump the keyfile
-        exec_command_wrap chmod 600 /boot/initramfs-linux*
-
-        local crypt_cmd="cryptsetup luksAddKey $ROOT_PARTITION $crypt_key"
-        if ! echo -n "$password_encryption" | $crypt_cmd -d - >/dev/null; then
-            core_log "e" "$crypt_cmd"
-            exit 1
-        else
-            core_log "c" "$crypt_cmd"
-        fi
-
-        #sed -i 's/FILES=(/FILES=(\/'$crypt_key'/g' /etc/mkinitcpio.conf
-        sed -i 's^FILES=()^FILES=('$crypt_key')^g' /etc/mkinitcpio.conf
-
-        exec_command_wrap mkinitcpio -P
-
-        # GRUB Configuration
-        # -------------------------------------
-        # Modify before execute grub-install!
-
-        # echo 'GRUB_CMDLINE_LINUX="cryptdevice='$ROOT_PARTITION':cryptroot cryptkey=rootfs:'$crypt_key'"' >>/etc/default/grub
-        # echo 'GRUB_CMDLINE_LINUX="cryptdevice='$ROOT_PARTITION':main root=/dev/mapper/main-root '$BOOT_ARGS'"' >/etc/default/grub
-        echo 'GRUB_CMDLINE_LINUX="cryptdevice=UUID='$(blkid -s UUID -o value $ROOT_PARTITION)':main cryptkey=rootfs:'$crypt_key' root=/dev/mapper/main-root '$BOOT_ARGS'"' >/etc/default/grub
-        echo 'GRUB_CMDLINE_LINUX_DEFAULT="quiet"' >>/etc/default/grub
-        echo 'GRUB_ENABLE_CRYPTODISK=y' >>/etc/default/grub
-        echo 'GRUB_PRELOAD_MODULES="lvm"' >>/etc/default/grub
         #echo 'GRUB_DISABLE_OS_PROBER="false"' >>/etc/default/grub
         #echo 'GRUB_DISABLE_RECOVERY="false"' >>/etc/default/grub
         #echo 'GRUB_DISABLE_LINUX_UUID="false"' >>/etc/default/grub
-        echo 'GRUB_TIMEOUT="2"' >>/etc/default/grub
+
+        # Install GRUB
         #exec_command_wrap grub-install --target=i386-pc --no-floppy --recheck "$DISK" --modules="part_gpt part_msdos"
-        exec_command_wrap grub-install --target=i386-pc --no-floppy --recheck "$DISK"
+
+        [ "$uefi_mode" = "true" ] && exec_command_wrap grub-install --target=x86_64-efi --efi-directory=/efi --bootloader-id="ECOS" --recheck
+        [ "$uefi_mode" = "false" ] && exec_command_wrap grub-install --target=i386-pc --no-floppy --recheck "$DISK"
+
+        # Create GRUB Config
         exec_command_wrap grub-mkconfig -o /boot/grub/grub.cfg
     fi
 
