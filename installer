@@ -7,6 +7,7 @@
 # https://wiki.archlinux.de/title/Installation_mit_UEFI_und_Verschl%C3%BCsselung
 # https://www.timoschindler.de/arch-linux-uefi-boot-mit-grub-und-verschluesseltem-lvm/
 # https://wiki.archlinux.de/title/GRUB
+# https://www.rohlix.eu/post/linux-disk-encryption-with-bios-uefi-using-mbr-gpt-luks-lvm-and-grub/
 
 #/////////////////////////////////////////////////////
 # VARIABLES
@@ -434,9 +435,9 @@ exec_install_core() {
     # Generate /etc/fstab
     #----------------------------------------
     gauge_tui_update 52 "Generate /etc/fstab"
-    local log_txt="genfstab -Lp /mnt >>/mnt/etc/fstab"
-    # genfstab -U
-    if ! genfstab -Lp /mnt >>/mnt/etc/fstab; then
+    local log_txt="genfstab -U /mnt >>/mnt/etc/fstab"
+    # genfstab -Lp /mnt
+    if ! genfstab -U /mnt >>/mnt/etc/fstab; then
         core_log "e" "$log_txt"
         exit 1
     else
@@ -687,13 +688,15 @@ exec_install_chroot() {
                 echo -e "insmod gzio"
                 echo -e "insmod part_gpt"
                 echo -e "insmod fat"
+                echo -e "insmod lvm"
+                echo -e ""
                 echo -e "set timeout=2"
                 echo -e "set default=0"
                 echo -e ""
                 echo -e 'menuentry "ECOS" {'
                 echo -e 'set root="'$grub_root'"'
                 echo -e 'gfxpayload='$BOOTLOADER_RESOLUTION''
-                echo -e 'linux /vmlinuz-linux root=/dev/mapper/main-root rw cryptdevice='$ROOT_PARTITION':main root=/dev/mapper/main-root '$BOOT_ARGS' quiet'
+                echo -e 'linux /vmlinuz-linux root=/dev/mapper/main-root rw cryptdevice='$ROOT_PARTITION':main '$BOOT_ARGS' quiet'
                 echo -e "$ucode_line"
                 echo -e '}'
             } >/boot/grub/grub.cfg
@@ -703,14 +706,16 @@ exec_install_chroot() {
         if [ "$uefi_mode" = "false" ]; then
 
             # GRUB Config (not needed)
-            echo 'GRUB_CMDLINE_LINUX="cryptdevice='$ROOT_PARTITION':main root=/dev/mapper/main-root '$BOOT_ARGS'"' >/etc/default/grub
+            #echo 'GRUB_CMDLINE_LINUX="cryptdevice='$ROOT_PARTITION':main root=/dev/mapper/main-root '$BOOT_ARGS'"' >/etc/default/grub
+            echo 'GRUB_CMDLINE_LINUX="cryptdevice=UUID='$(blkid -s UUID -o value $ROOT_PARTITION)':main '$BOOT_ARGS'"' >/etc/default/grub
             echo 'GRUB_CMDLINE_LINUX_DEFAULT="quiet"' >>/etc/default/grub
+            echo 'GRUB_ENABLE_CRYPTODISK=y' >>/etc/default/grub
+            echo 'GRUB_PRELOAD_MODULES="lvm"' >>/etc/default/grub
             echo 'GRUB_DISABLE_OS_PROBER="false"' >>/etc/default/grub
             echo 'GRUB_DISABLE_RECOVERY="false"' >>/etc/default/grub
-            [ "$uefi_mode" = "false" ] && echo 'GRUB_PRELOAD_MODULES="lvm"' >>/etc/default/grub
             echo 'GRUB_DISABLE_LINUX_UUID="false"' >>/etc/default/grub
             echo 'GRUB_TIMEOUT="2"' >>/etc/default/grub
-            exec_command_wrap grub-install --target=i386-pc --no-floppy --recheck "$DISK"
+            exec_command_wrap grub-install --target=i386-pc --no-floppy --recheck "$DISK" --modules="part_gpt part_msdos"
             exec_command_wrap grub-mkconfig -o /boot/grub/grub.cfg
         fi
 
