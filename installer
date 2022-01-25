@@ -374,8 +374,10 @@ exec_install_core() {
     gauge_tui_update 10 "Encrypt $DISK"
     # GRUB < 2.06: luks2 is not implemented!
     # BUG: There is a bug on GRUB with luks2 and encrypted /boot (https://wiki.archlinux.org/title/GRUB#Encrypted_/boot)
-    # local crypt_cmd="cryptsetup -c aes-xts-plain -s 512 luksFormat $ROOT_PARTITION"
-    local crypt_cmd="cryptsetup -c aes-xts-plain -s 512 luksFormat --type luks1 $ROOT_PARTITION"
+
+    # TEST
+    local crypt_cmd="cryptsetup -c aes-xts-plain -s 512 luksFormat $ROOT_PARTITION"
+    #local crypt_cmd="cryptsetup -c aes-xts-plain -s 512 luksFormat --type luks1 $ROOT_PARTITION"
 
     # !! DO NOT USE exec_command_wrap
     if ! echo -n "$password_encryption" | $crypt_cmd -d - >/dev/null; then
@@ -638,8 +640,8 @@ exec_install_chroot() {
     if [ "$BOOTLOADER" = "systemd" ] && [ "$uefi_mode" = "true" ]; then
 
         # Install boot loeader
-        # systemd-boot will try to locate the ESP at /efi, /boot, and /boot/efi
-        exec_command_wrap bootctl --esp-path=/efi install
+        # systemd-boot will try to locate the ESP at /efi, /boot, and /boot/efi. Use custom dir: --esp-path=/efi
+        exec_command_wrap bootctl install
 
         # Create bootloader config
         echo 'default ecos.conf' >/boot/loader/loader.conf
