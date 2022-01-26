@@ -38,6 +38,6 @@ workspace=true
 workspace-background-corner-size=0
 workspace-popup=false
 workspace-switcher-should-show=false
-workspace-switcher-size=24
+workspace-switcher-size=15
 workspace-wrap-around=false
 workspaces-in-app-grid=true
