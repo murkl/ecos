@@ -637,7 +637,8 @@ exec_install_chroot() {
 
     if [ "$BOOTLOADER" = "systemd" ] && [ "$uefi_mode" = "true" ]; then
 
-        # Install boot loeader
+        # TODO: handle partitions
+        # Install boot loader
         # systemd-boot will try to locate the ESP at /efi, /boot, and /boot/efi
         exec_command_wrap bootctl --esp-path=/efi install
 
