@@ -7,9 +7,11 @@ THEME_GIT_URL="https://github.com/vinceliuice/WhiteSur-gtk-theme.git"
 THEME_INSTALL_DIR="/usr/share/themes/WhiteSur-light"
 
 install() {
-    rm -rf "$THEME_REPO_DIR"
-    mkdir -p "$THEME_REPO_DIR"
-    git clone "$THEME_GIT_URL" "$THEME_REPO_DIR"
+
+    if [ ! -d $THEME_REPO_DIR ]; then
+        mkdir -p "$THEME_REPO_DIR"
+        git clone "$THEME_GIT_URL" "$THEME_REPO_DIR"
+    fi
     update
 }
 
@@ -29,7 +31,8 @@ update() {
     git pull
 
     # Install Theme
-    sudo $THEME_REPO_DIR/install.sh --silent-mode --highdefinition --monterey --icon simple --nautilus-style mojave --background blank --theme default --normalshowapps
+    # --monterey
+    sudo $THEME_REPO_DIR/install.sh --silent-mode --highdefinition --icon simple --nautilus-style mojave --background blank --theme default --normalshowapps --color light
 
     # Firefox must have been started once:
     sudo $THEME_REPO_DIR/tweaks.sh --silent-mode --firefox
