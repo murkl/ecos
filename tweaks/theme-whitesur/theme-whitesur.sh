@@ -28,11 +28,17 @@ update() {
     git reset --hard
     git pull
 
-    # $THEME_REPO_DIR/install.sh --color light --icon simple --nautilus-style glassy --monterey --size 280 --background default --highdefinition --theme default --normalshowapps --panel-opacity 30
-    sudo $THEME_REPO_DIR/install.sh --silent-mode --icon simple --nautilus-style glassy --size 280 --background blank --theme default --normalshowapps
+    # Install Theme
+    sudo $THEME_REPO_DIR/install.sh --silent-mode --highdefinition --monterey --icon simple --nautilus-style mojave --background blank --theme default --normalshowapps
 
     # Firefox must have been started once:
     sudo $THEME_REPO_DIR/tweaks.sh --silent-mode --firefox
+
+    # Dash to Dock
+    sudo $THEME_REPO_DIR/tweaks.sh --dash-to-dock --color light
+
+    # GDM
+    sudo $THEME_REPO_DIR/tweaks.sh --gdm
 
     # Disable App Icon
     local APP_START='#panel .panel-button .app-menu-icon {'
