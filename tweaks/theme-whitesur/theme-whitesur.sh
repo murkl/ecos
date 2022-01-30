@@ -3,14 +3,12 @@ TWEAK_RES_DIR="$2" && if [ -z "$2" ]; then TWEAK_RES_DIR="$(pwd)"; fi
 TWEAK_CACHE_DIR="$3" && if [ -z "$3" ]; then TWEAK_CACHE_DIR="$(pwd)"; fi
 
 THEME_REPO_DIR="$TWEAK_CACHE_DIR/repo"
-THEME_GIT_URL="https://github.com/vinceliuice/WhiteSur-gtk-theme.git"
-THEME_INSTALL_DIR="/usr/share/themes/ECOS-light"
 
 install() {
 
     if [ ! -d $THEME_REPO_DIR ]; then
         mkdir -p "$THEME_REPO_DIR"
-        git clone "$THEME_GIT_URL" "$THEME_REPO_DIR"
+        git clone "https://github.com/vinceliuice/WhiteSur-gtk-theme.git" "$THEME_REPO_DIR"
     fi
     update
 }
@@ -27,6 +25,7 @@ remove() {
 update() {
     cd "$THEME_REPO_DIR" || exit 1
 
+    # Update git repo
     git reset --hard
     git pull
 
@@ -34,14 +33,14 @@ update() {
     # --monterey
     sudo $THEME_REPO_DIR/install.sh --silent-mode --name 'ECOS' --icon simple --nautilus-style mojave --background blank --theme default --normalshowapps --color light
 
-    # Firefox must have been started once:
+    # Install GDM theme
+    sudo $THEME_REPO_DIR/tweaks.sh --silent-mode --gdm
+
+    # Install Firefox theme (Firefox must have been started once)
     sudo $THEME_REPO_DIR/tweaks.sh --silent-mode --firefox
 
-    # Dash to Dock
-    #sudo $THEME_REPO_DIR/tweaks.sh --silent-mode --dash-to-dock --color light
-
-    # GDM
-    sudo $THEME_REPO_DIR/tweaks.sh --silent-mode --gdm
+    # Install Dash to Dock theme
+    # sudo $THEME_REPO_DIR/tweaks.sh --silent-mode --dash-to-dock --color light
 
     # Disable App Icon
     local APP_START='#panel .panel-button .app-menu-icon {'
@@ -60,9 +59,15 @@ update() {
     # https://fahdshariff.blogspot.com/2012/12/sed-mutli-line-replacement-between-two.html
     local THEME_CSS_FILE="$THEME_INSTALL_DIR/gnome-shell/gnome-shell.css"
 
-    sudo sed -ni "/$STATUS_START/{p;:a;N;/$STATUS_END/!ba;s/.*\n/$STATUS_CONTENT\n/};p" "$THEME_CSS_FILE"
-    sudo sed -ni "/$STATUS_PADDING_START/{p;:a;N;/$STATUS_PADDING_END/!ba;s/.*\n/$STATUS_PADDING_CONTENT\n/};p" "$THEME_CSS_FILE"
-    sudo sed -ni "/$APP_START/{p;:a;N;/$APP_END/!ba;s/.*\n/$APP_CONTENT\n/};p" "$THEME_CSS_FILE"
+    modify_theme() {
+        sudo sed -ni "/$STATUS_START/{p;:a;N;/$STATUS_END/!ba;s/.*\n/$STATUS_CONTENT\n/};p" "$1"
+        sudo sed -ni "/$STATUS_PADDING_START/{p;:a;N;/$STATUS_PADDING_END/!ba;s/.*\n/$STATUS_PADDING_CONTENT\n/};p" "$1"
+        sudo sed -ni "/$APP_START/{p;:a;N;/$APP_END/!ba;s/.*\n/$APP_CONTENT\n/};p" "$1"
+    }
+
+    modify_theme "/usr/share/themes/ECOS-light"
+    modify_theme "/usr/share/themes/ECOS-light-solid"
+
 }
 
 if [ "$1" = "--install" ]; then install "$@"; fi
