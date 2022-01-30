@@ -42,33 +42,36 @@ update() {
     # Install Dash to Dock theme
     # sudo $THEME_REPO_DIR/tweaks.sh --silent-mode --dash-to-dock --color light
 
-    # Disable App Icon
-    local APP_START='#panel .panel-button .app-menu-icon {'
-    local APP_CONTENT='  width: 0;\n  height: 0;\n  margin: 0;'
-    local APP_END='}'
-
-    # Modify Tray Icon Space
-    local STATUS_START='#panel .panel-button .system-status-icon {'
-    local STATUS_CONTENT='  icon-size: 16px;\n  padding: 4px 10px;\n  margin: 0 1px;'
-    local STATUS_END='}'
-
-    local STATUS_PADDING_START='#panel .panel-button {'
-    local STATUS_PADDING_CONTENT='  -natural-hpadding: 4px;\n  -minimum-hpadding: 4px;\n  font-weight: normal;\n  color: white;\n  transition-duration: 150ms;\n  border-radius: 6px;'
-    local STATUS_PADDING_END='}'
-
-    # https://fahdshariff.blogspot.com/2012/12/sed-mutli-line-replacement-between-two.html
-    local THEME_CSS_FILE="$THEME_INSTALL_DIR/gnome-shell/gnome-shell.css"
-
     modify_theme() {
-        sudo sed -ni "/$STATUS_START/{p;:a;N;/$STATUS_END/!ba;s/.*\n/$STATUS_CONTENT\n/};p" "$1"
-        sudo sed -ni "/$STATUS_PADDING_START/{p;:a;N;/$STATUS_PADDING_END/!ba;s/.*\n/$STATUS_PADDING_CONTENT\n/};p" "$1"
-        sudo sed -ni "/$APP_START/{p;:a;N;/$APP_END/!ba;s/.*\n/$APP_CONTENT\n/};p" "$1"
+
+        # Theme css file
+        local css_file="$1"
+
+        # Disable App Icon
+        local theme_app_icon_start='#panel .panel-button .app-menu-icon {'
+        local theme_app_icon_content='  width: 0;\n  height: 0;\n  margin: 0;'
+        local theme_app_icon_end='}'
+
+        # Modify Tray Icon Space
+        local theme_tray_icon_start='#panel .panel-button .system-status-icon {'
+        local theme_tray_icon_content='  icon-size: 16px;\n  padding: 4px 10px;\n  margin: 0 1px;'
+        local theme_tray_icon_end='}'
+
+        local theme_tray_padding_start='#panel .panel-button {'
+        local theme_tray_padding_content='  -natural-hpadding: 4px;\n  -minimum-hpadding: 4px;\n  font-weight: normal;\n  color: white;\n  transition-duration: 150ms;\n  border-radius: 6px;'
+        local theme_tray_padding_end='}'
+
+        # https://fahdshariff.blogspot.com/2012/12/sed-mutli-line-replacement-between-two.html
+        sudo sed -ni "/$theme_tray_icon_start/{p;:a;N;/$theme_tray_icon_end/!ba;s/.*\n/$theme_tray_icon_content\n/};p" "$css_file"
+        sudo sed -ni "/$theme_tray_padding_start/{p;:a;N;/$theme_tray_padding_end/!ba;s/.*\n/$theme_tray_padding_content\n/};p" "$css_file"
+        sudo sed -ni "/$theme_app_icon_start/{p;:a;N;/$theme_app_icon_end/!ba;s/.*\n/$theme_app_icon_content\n/};p" "$css_file"
     }
 
-    modify_theme "/usr/share/themes/ECOS-light"
-    modify_theme "/usr/share/themes/ECOS-light-solid"
-    modify_theme "/usr/share/themes/ECOS-dark"
-    modify_theme "/usr/share/themes/ECOS-dark-solid"
+    # Modify theme variants
+    modify_theme "/usr/share/themes/ECOS-light/gnome-shell/gnome-shell.css"
+    modify_theme "/usr/share/themes/ECOS-light-solid/gnome-shell/gnome-shell.css"
+    modify_theme "/usr/share/themes/ECOS-dark/gnome-shell/gnome-shell.css"
+    modify_theme "/usr/share/themes/ECOS-dark-solid/gnome-shell/gnome-shell.css"
 
 }
 
