@@ -68,8 +68,7 @@ BOOT_ARGS=''
 X11_KEYBOARD_LAYOUT=''
 X11_KEYBOARD_VARIANT=''
 DUALBOOT='default' # windows10
-BOOTLOADER='grub'  # systemd
-BOOTLOADER_RESOLUTION='1024x768x32'
+BOOTLOADER_RESOLUTION='auto'
 WIPE_DISK='false'
 AUTO_UNMOUNT='true'
 CUSTOM_PACKAGES=''
@@ -521,9 +520,8 @@ exec_install_chroot() {
     # Boootloader, Microcode Kernel Updates for CPU & Core Tools
     # os-prober will detect existings operating systems like Windows or other Linux Distributions
     gauge_tui_update 58 "$gauge_txt"
-    local bootloader_pkgs="os-prober"
+    local bootloader_pkgs="grub os-prober"
     [ "$uefi_mode" = "true" ] && bootloader_pkgs="$bootloader_pkgs efibootmgr"
-    [ "$BOOTLOADER" = "grub" ] || [ "$uefi_mode" = "false" ] && bootloader_pkgs="$bootloader_pkgs grub"
 
     local ucode_pkg="$UCODE"
     [ "$ucode_pkg" = "disabled" ] && ucode_pkg=""
@@ -631,129 +629,55 @@ exec_install_chroot() {
     exec_command_wrap mkinitcpio -P
 
     #----------------------------------------
-    # Bootloader: systemd-boot (UEFI only)
+    # Bootloader: GRUB (UEFI & BIOS)
     #----------------------------------------
     gauge_tui_update 85 "Install Bootloader"
 
-    if [ "$BOOTLOADER" = "systemd" ] && [ "$uefi_mode" = "true" ]; then
-
-        # TODO: handle partitions
-        # Install boot loader
-        # systemd-boot will try to locate the ESP at /efi, /boot, and /boot/efi
-        exec_command_wrap bootctl --esp-path=/efi install
-
-        # Create bootloader config
-        echo 'default ecos.conf' >/boot/loader/loader.conf
-        echo 'console-mode auto' >>/boot/loader/loader.conf
-        echo 'timeout 0' >>/boot/loader/loader.conf
-        echo 'editor  yes' >>/boot/loader/loader.conf
-
-        # Create arch default entry
-        echo 'title   ECOS' >/boot/loader/entries/ecos.conf
-        echo 'linux   /vmlinuz-linux' >>/boot/loader/entries/ecos.conf
-        [ "$UCODE" != "disabled" ] && echo "initrd  /$UCODE.img" >>/boot/loader/entries/ecos.conf
-        echo 'initrd  /initramfs-linux.img' >>/boot/loader/entries/ecos.conf
-        echo "options cryptdevice=$ROOT_PARTITION:main root=/dev/mapper/main-root init=/usr/lib/systemd/systemd quiet splash loglevel=3 rd.systemd.show_status=false rd.udev.log_priority=3 vt.global_cursor_default=0 rw" >>/boot/loader/entries/ecos.conf
-
-        # Create arch fallback entry
-        echo 'title   ECOS Fallback' >/boot/loader/entries/ecos-fallback.conf
-        echo 'linux   /vmlinuz-linux' >>/boot/loader/entries/ecos-fallback.conf
-        [ "$UCODE" != "disabled" ] && echo "initrd  /$UCODE.img" >>/boot/loader/entries/ecos-fallback.conf
-        echo 'initrd  /initramfs-linux-fallback.img' >>/boot/loader/entries/ecos-fallback.conf
-        echo "options cryptdevice=$ROOT_PARTITION:main root=/dev/mapper/main-root init=/usr/lib/systemd/systemd rw" >>/boot/loader/entries/ecos-fallback.conf
-    fi
-
+    # Create cryptfile - to avoid having to enter the encryption passphrase twice (once for GRUB, once for initramfs)
     #----------------------------------------
-    # Bootloader: GRUB (UEFI & BIOS)
-    #----------------------------------------
-
-    if [ "$BOOTLOADER" = "grub" ] || [ "$uefi_mode" = "false" ]; then
-
-        # Load EFI Variables
-        # mount -t efivarfs efivarfs /sys/firmware/efi/efivars
-
-        # ----------------------------------------
-        # Create Kryptfile - to avoid having to enter the encryption passphrase twice (once for GRUB, once for initramfs)
-        # ----------------------------------------
-
-        # Create a keyfile to prevent enter the encryption password twice
-        local crypt_key="/crypto_keyfile.bin"
-
-        #exec_command_wrap dd if=/dev/random of="$crypt_key" bs=512 count=4 iflag=fullblock
-        exec_command_wrap dd if=/dev/random of="$crypt_key" bs=512 count=8 iflag=fullblock
-        exec_command_wrap chmod 600 "$crypt_key"
-
-        # When initramfs' permissions are set to 644 (by default), then all users will be able to dump the keyfile
-        exec_command_wrap chmod 600 /boot/initramfs-linux*
-
-        local crypt_cmd="cryptsetup luksAddKey $ROOT_PARTITION $crypt_key"
-        if ! echo -n "$password_encryption" | $crypt_cmd -d - >/dev/null; then
-            core_log "e" "$crypt_cmd"
-            exit 1
-        else
-            core_log "c" "$crypt_cmd"
-        fi
-
-        #sed -i 's/FILES=(/FILES=(\/'$crypt_key'/g' /etc/mkinitcpio.conf
-        sed -i 's^FILES=()^FILES=('$crypt_key')^g' /etc/mkinitcpio.conf
-
-        exec_command_wrap mkinitcpio -P
-
-        # ----------------------------------------
-        # TODO: Manual GRUB Configuration
-        # ----------------------------------------
-
-        # !! This config will be overriden in next step !!
-        # [ "$uefi_mode" = "false" ] && grub_root="(hd0,gpt2)"
-        # [ "$uefi_mode" = "false" ] && echo -e "set prefix=(hd0,gpt1)/boot/grub"
-        {
-            echo -e "insmod all_video"
-            echo -e "insmod gzio"
-            echo -e "insmod part_gpt"
-            echo -e "insmod fat"
-            echo -e "insmod lvm"
-            echo -e "insmod cryptodisk"
-            echo -e "insmod luks"
-            echo -e "insmod ext2"
-            echo -e ""
-            echo -e "set timeout=2"
-            echo -e "set default=0"
-            echo -e ""
-            echo -e 'menuentry "ECOS" {'
-            echo -e '   set root=(hd0,gpt1)'
-            echo -e '   gfxpayload='$BOOTLOADER_RESOLUTION''
-            echo -e '   linux /vmlinuz-linux cryptdevice='$ROOT_PARTITION':main root=/dev/mapper/main-root rw '$BOOT_ARGS' quiet'
-            [ "$UCODE" != "disabled" ] && echo -e '   initrd /'$UCODE'.img'
-            echo -e '   initrd /boot/initramfs-linux.img'
-            echo -e '}'
-        } >/boot/grub/grub.cfg
-
-        # GRUB Configuration
-        # -------------------------------------
-
-        local root_uuid="$(blkid -s UUID -o value $ROOT_PARTITION)"
-        # echo 'GRUB_CMDLINE_LINUX="cryptdevice='$ROOT_PARTITION':cryptroot cryptkey=rootfs:'$crypt_key'"' >>/etc/default/grub
-        # echo 'GRUB_CMDLINE_LINUX="cryptdevice='$ROOT_PARTITION':main root=/dev/mapper/main-root '$BOOT_ARGS'"' >/etc/default/grub
-        #echo 'GRUB_CMDLINE_LINUX="cryptdevice=UUID='$root_uuid':main cryptkey=rootfs:'$crypt_key' root=/dev/mapper/main-root '$BOOT_ARGS'"' >/etc/default/grub
-        echo 'GRUB_CMDLINE_LINUX="cryptdevice='$ROOT_PARTITION':main '$BOOT_ARGS'"' >/etc/default/grub
-
-        echo 'GRUB_CMDLINE_LINUX_DEFAULT="quiet"' >>/etc/default/grub
-        echo 'GRUB_ENABLE_CRYPTODISK=y' >>/etc/default/grub
-        echo 'GRUB_PRELOAD_MODULES="lvm"' >>/etc/default/grub
-        echo 'GRUB_TIMEOUT="2"' >>/etc/default/grub
-        #echo 'GRUB_DISABLE_OS_PROBER="false"' >>/etc/default/grub
-        #echo 'GRUB_DISABLE_RECOVERY="false"' >>/etc/default/grub
-        #echo 'GRUB_DISABLE_LINUX_UUID="false"' >>/etc/default/grub
-
-        # Install GRUB
-        #exec_command_wrap grub-install --target=i386-pc --no-floppy --recheck "$DISK" --modules="part_gpt part_msdos"
-
-        [ "$uefi_mode" = "true" ] && exec_command_wrap grub-install --target=x86_64-efi --efi-directory=/efi --bootloader-id="ECOS" --recheck
-        [ "$uefi_mode" = "false" ] && exec_command_wrap grub-install --target=i386-pc --no-floppy --recheck "$DISK"
-
-        # Create GRUB Config
-        exec_command_wrap grub-mkconfig -o /boot/grub/grub.cfg
+    local crypt_key="/crypto_keyfile.bin"
+    exec_command_wrap dd if=/dev/random of="$crypt_key" bs=512 count=8 iflag=fullblock
+    exec_command_wrap chmod 600 "$crypt_key"
+    # When initramfs' permissions are set to 644 (by default), then all users will be able to dump the keyfile
+    exec_command_wrap chmod 600 /boot/initramfs-linux*
+    local crypt_cmd="cryptsetup luksAddKey $ROOT_PARTITION $crypt_key"
+    if ! echo -n "$password_encryption" | $crypt_cmd -d - >/dev/null; then
+        core_log "e" "$crypt_cmd"
+        exit 1
+    else
+        core_log "c" "$crypt_cmd"
     fi
+    sed -i 's^FILES=()^FILES=('$crypt_key')^g' /etc/mkinitcpio.conf
+    exec_command_wrap mkinitcpio -P
+
+    # GRUB Configuration
+    #----------------------------------------
+    # cryptdevice='$ROOT_PARTITION':main
+    # root=/dev/mapper/main-root
+    # cryptkey=rootfs:'$crypt_key'
+    mv -f "/etc/default/grub" "/etc/default/grub.bak"
+    echo 'GRUB_DISTRIBUTOR="ECOS"' >/etc/default/grub
+    echo 'GRUB_CMDLINE_LINUX="cryptdevice=UUID='$(blkid -s UUID -o value $ROOT_PARTITION)':main '$BOOT_ARGS'"' >>/etc/default/grub
+    echo 'GRUB_CMDLINE_LINUX_DEFAULT="quiet loglevel=3 rd.systemd.show_status=false rd.udev.log_priority=3 vt.global_cursor_default=0 splash"' >>/etc/default/grub
+    echo 'GRUB_ENABLE_CRYPTODISK="y"' >>/etc/default/grub
+    echo 'GRUB_PRELOAD_MODULES="part_gpt part_msdos lvm"' >>/etc/default/grub
+    echo 'GRUB_DEFAULT="saved"' >>/etc/default/grub
+    echo 'GRUB_SAVEDEFAULT="true"' >>/etc/default/grub
+    echo 'GRUB_TERMINAL_INPUT="console"' >>/etc/default/grub
+    echo 'GRUB_TIMEOUT="0"' >>/etc/default/grub
+    echo 'GRUB_TIMEOUT_STYLE="menu"' >>/etc/default/grub
+    echo 'GRUB_RECORDFAIL_TIMEOUT="$GRUB_HIDDEN_TIMEOUT"' >>/etc/default/grub
+    echo 'GRUB_GFXMODE="'$BOOTLOADER_RESOLUTION'"' >>/etc/default/grub
+    echo 'GRUB_GFXPAYLOAD_LINUX="keep"' >>/etc/default/grub
+    echo 'GRUB_DISABLE_RECOVERY="true"' >>/etc/default/grub
+    echo 'GRUB_DISABLE_OS_PROBER="false"' >>/etc/default/grub
+
+    # Install GRUB
+    [ "$uefi_mode" = "true" ] && exec_command_wrap grub-install --target=x86_64-efi --efi-directory=/efi --bootloader-id="ECOS" --recheck
+    [ "$uefi_mode" = "false" ] && exec_command_wrap grub-install --target=i386-pc --no-floppy --recheck "$DISK"
+
+    # Create GRUB Config
+    exec_command_wrap grub-mkconfig -o /boot/grub/grub.cfg
 
     #----------------------------------------
     # Create new user
@@ -1005,7 +929,6 @@ check_config() {
     #----------------------------------------
     # Add default values
     #----------------------------------------
-    check_config_key "$INSTALLER_CONFIG_FILE" "BOOTLOADER" "$BOOTLOADER"
     check_config_key "$INSTALLER_CONFIG_FILE" "BOOTLOADER_RESOLUTION" "$BOOTLOADER_RESOLUTION"
     check_config_key "$INSTALLER_CONFIG_FILE" "BOOT_ARGS" "$BOOT_ARGS"
     check_config_key "$INSTALLER_CONFIG_FILE" "DUALBOOT" "$DUALBOOT"
