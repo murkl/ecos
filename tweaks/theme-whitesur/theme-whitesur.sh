@@ -4,7 +4,7 @@ TWEAK_CACHE_DIR="$3" && if [ -z "$3" ]; then TWEAK_CACHE_DIR="$(pwd)"; fi
 
 THEME_REPO_DIR="$TWEAK_CACHE_DIR/repo"
 THEME_GIT_URL="https://github.com/vinceliuice/WhiteSur-gtk-theme.git"
-THEME_INSTALL_DIR="/usr/share/themes/WhiteSur-light"
+THEME_INSTALL_DIR="/usr/share/themes/ECOS-light"
 
 install() {
 
