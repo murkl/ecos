@@ -32,16 +32,16 @@ update() {
 
     # Install Theme
     # --monterey
-    sudo $THEME_REPO_DIR/install.sh --silent-mode --highdefinition --icon simple --nautilus-style mojave --background blank --theme default --normalshowapps --color light
+    sudo $THEME_REPO_DIR/install.sh --silent-mode --icon simple --nautilus-style mojave --background blank --theme default --normalshowapps --color light
 
     # Firefox must have been started once:
     sudo $THEME_REPO_DIR/tweaks.sh --silent-mode --firefox
 
     # Dash to Dock
-    sudo $THEME_REPO_DIR/tweaks.sh --dash-to-dock --color light
+    sudo $THEME_REPO_DIR/tweaks.sh --silent-mode --dash-to-dock --color light
 
     # GDM
-    sudo $THEME_REPO_DIR/tweaks.sh --gdm
+    sudo $THEME_REPO_DIR/tweaks.sh --silent-mode --gdm
 
     # Disable App Icon
     local APP_START='#panel .panel-button .app-menu-icon {'
