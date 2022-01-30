@@ -67,6 +67,8 @@ update() {
 
     modify_theme "/usr/share/themes/ECOS-light"
     modify_theme "/usr/share/themes/ECOS-light-solid"
+    modify_theme "/usr/share/themes/ECOS-dark"
+    modify_theme "/usr/share/themes/ECOS-dark-solid"
 
 }
 
