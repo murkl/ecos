@@ -877,14 +877,6 @@ update_ecos_system() {
     create_autostart_file
     echo -e ">> DONE"
 
-    # Ask for system upgrade
-    print_title 'CONTINUE SYSTEM UPGRADE'
-    read -p "Enter q to quit: " user_input
-    if [ "$user_input" = "q" ]; then
-        echo ">>> Skipped..."
-        exit 0
-    fi
-
     # FETCH PACKAGES
     print_title 'FETCH PACMAN/AUR PACKAGES'
     paru -Syy
@@ -896,7 +888,7 @@ update_ecos_system() {
     fi
 
     # Ask for system upgrade
-    print_title 'UPGRADE PACKAGES'
+    print_title 'CONTINUE SYSTEM UPGRADE'
     read -p "Enter q to quit: " user_input
     if [ "$user_input" = "q" ]; then
         echo ">>> Skipped..."
@@ -905,6 +897,7 @@ update_ecos_system() {
 
     # PACKAGE UPGRADE
     print_title 'UPADE PACMAN/AUR PACKAGES'
+    paru -Syu --noconfirm archlinux-keyring
     paru -Su --noconfirm
 
     # CHECK NEW INIT SCRIPT VERSION
