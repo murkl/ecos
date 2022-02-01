@@ -68,7 +68,7 @@ KERNEL_PARAMETER=''
 X11_KEYBOARD_LAYOUT=''
 X11_KEYBOARD_VARIANT=''
 DUALBOOT='default' # windows10
-BOOTLOADER_RESOLUTION=''
+BOOTLOADER_RESOLUTION='auto'
 WIPE_DISK='false'
 AUTO_UNMOUNT='true'
 CUSTOM_PACKAGES=''
@@ -668,7 +668,7 @@ exec_install_chroot() {
     echo 'GRUB_TIMEOUT_STYLE="menu"' >>/etc/default/grub
     echo 'GRUB_RECORDFAIL_TIMEOUT="$GRUB_HIDDEN_TIMEOUT"' >>/etc/default/grub
     echo 'GRUB_GFXMODE="auto"' >>/etc/default/grub
-    [ "$BOOTLOADER_RESOLUTION" != "" ] && echo 'GRUB_GFXMODE="'$BOOTLOADER_RESOLUTION',auto"' >>/etc/default/grub
+    [ "$BOOTLOADER_RESOLUTION" != "auto" ] && echo 'GRUB_GFXMODE="'$BOOTLOADER_RESOLUTION',auto"' >>/etc/default/grub
     echo 'GRUB_GFXPAYLOAD_LINUX="keep"' >>/etc/default/grub
     echo 'GRUB_DISABLE_RECOVERY="true"' >>/etc/default/grub
     echo 'GRUB_DISABLE_OS_PROBER="false"' >>/etc/default/grub
