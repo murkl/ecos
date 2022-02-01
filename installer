@@ -57,7 +57,7 @@ HOSTNAME=''
 WORKSTATION=''
 SWAP_SIZE='0'
 DISK=''
-BOOT_PARTITION=''
+EFI_PARTITION=''
 ROOT_PARTITION=''
 UCODE=''
 LOCALE_LANG=''
@@ -68,7 +68,7 @@ BOOT_ARGS=''
 X11_KEYBOARD_LAYOUT=''
 X11_KEYBOARD_VARIANT=''
 DUALBOOT='default' # windows10
-BOOTLOADER_RESOLUTION='auto'
+BOOTLOADER_RESOLUTION=''
 WIPE_DISK='false'
 AUTO_UNMOUNT='true'
 CUSTOM_PACKAGES=''
@@ -360,7 +360,7 @@ exec_install_core() {
 
     else
 
-        # BIOS only: 1MiB partition is needed for GRUB (if GPT is used instead of MBR) with no filesystem
+        # BIOS only: 1MiB partition is needed for GRUB (if GPT is used instead of MBR) with no filesystem and no mount point
         exec_command_wrap sgdisk -n 0:0:+1MiB -t 0:ef02 -c 1:grub "$DISK"
 
         # / partition: Rest of space
@@ -408,7 +408,7 @@ exec_install_core() {
     gauge_tui_update 12 "Format $DISK"
 
     # Format /efi
-    if [ "$uefi_mode" = "true" ]; then exec_command_wrap mkfs.fat -F 32 -n efi "$BOOT_PARTITION"; fi
+    if [ "$uefi_mode" = "true" ]; then exec_command_wrap mkfs.fat -F 32 -n efi "$EFI_PARTITION"; fi
 
     # Format / (crypted)
     exec_command_wrap mkfs.ext4 -L root /dev/mapper/main-root
@@ -420,7 +420,7 @@ exec_install_core() {
     # Mount boot partition (UEFI only)
     if [ "$uefi_mode" = "true" ]; then
         exec_command_wrap mkdir /mnt/efi
-        exec_command_wrap mount "$BOOT_PARTITION" /mnt/efi
+        exec_command_wrap mount "$EFI_PARTITION" /mnt/efi
     fi
     #----------------------------------------
     # Pacstrap base arch packages
@@ -658,7 +658,7 @@ exec_install_chroot() {
     mv -f "/etc/default/grub" "/etc/default/grub.bak"
     echo 'GRUB_DISTRIBUTOR="ECOS"' >/etc/default/grub
     echo 'GRUB_CMDLINE_LINUX="cryptdevice=UUID='$(blkid -s UUID -o value $ROOT_PARTITION)':main '$BOOT_ARGS'"' >>/etc/default/grub
-    echo 'GRUB_CMDLINE_LINUX_DEFAULT="quiet loglevel=3 rd.systemd.show_status=false rd.udev.log_priority=3 vt.global_cursor_default=0 splash"' >>/etc/default/grub
+    echo 'GRUB_CMDLINE_LINUX_DEFAULT="quiet splash loglevel=2 rd.systemd.show_status=false rd.udev.log_priority=3 vt.global_cursor_default=0"' >>/etc/default/grub
     echo 'GRUB_ENABLE_CRYPTODISK="y"' >>/etc/default/grub
     echo 'GRUB_PRELOAD_MODULES="part_gpt part_msdos lvm"' >>/etc/default/grub
     echo 'GRUB_DEFAULT="saved"' >>/etc/default/grub
@@ -667,13 +667,14 @@ exec_install_chroot() {
     echo 'GRUB_TIMEOUT="0"' >>/etc/default/grub
     echo 'GRUB_TIMEOUT_STYLE="menu"' >>/etc/default/grub
     echo 'GRUB_RECORDFAIL_TIMEOUT="$GRUB_HIDDEN_TIMEOUT"' >>/etc/default/grub
-    echo 'GRUB_GFXMODE="'$BOOTLOADER_RESOLUTION'"' >>/etc/default/grub
+    echo 'GRUB_GFXMODE="auto"' >>/etc/default/grub
+    [ "$BOOTLOADER_RESOLUTION" != "" ] && echo 'GRUB_GFXMODE="'$BOOTLOADER_RESOLUTION',auto"' >>/etc/default/grub
     echo 'GRUB_GFXPAYLOAD_LINUX="keep"' >>/etc/default/grub
     echo 'GRUB_DISABLE_RECOVERY="true"' >>/etc/default/grub
     echo 'GRUB_DISABLE_OS_PROBER="false"' >>/etc/default/grub
 
     # Install GRUB
-    [ "$uefi_mode" = "true" ] && exec_command_wrap grub-install --target=x86_64-efi --efi-directory=/efi --bootloader-id="ECOS" --recheck
+    [ "$uefi_mode" = "true" ] && exec_command_wrap grub-install --target=x86_64-efi --efi-directory=/efi --bootloader-id="ECOS" --no-floppy --recheck "$DISK"
     [ "$uefi_mode" = "false" ] && exec_command_wrap grub-install --target=i386-pc --no-floppy --recheck "$DISK"
 
     # Create GRUB Config
@@ -923,7 +924,9 @@ check_config() {
     #----------------------------------------
     check_config_disk
     replace_property_value "$INSTALLER_CONFIG_FILE" "DISK" "$DISK"
-    replace_property_value "$INSTALLER_CONFIG_FILE" "BOOT_PARTITION" "$BOOT_PARTITION"
+    if [ "$UEFI_ENABLED" = "true" ]; then
+        replace_property_value "$INSTALLER_CONFIG_FILE" "EFI_PARTITION" "$EFI_PARTITION"
+    fi
     replace_property_value "$INSTALLER_CONFIG_FILE" "ROOT_PARTITION" "$ROOT_PARTITION"
 
     #----------------------------------------
@@ -959,7 +962,7 @@ check_config() {
 
 check_config_disk() {
 
-    if [ "$1" = "--force" ] || [ "$DISK" = "" ] || [ "$BOOT_PARTITION" = "" ] || [ "$ROOT_PARTITION" = "" ]; then
+    if [ "$1" = "--force" ] || [ "$DISK" = "" ] || [ "$ROOT_PARTITION" = "" ]; then
 
         local disk_array=()
         while read disk_line; do
@@ -980,12 +983,12 @@ check_config_disk() {
             exit 0
         fi
 
-        BOOT_PARTITION="${DISK}1"
+        EFI_PARTITION="${DISK}1"
         ROOT_PARTITION="${DISK}2"
 
         # NVM Express
         if [[ "$DISK" = "/dev/nvm"* ]]; then
-            BOOT_PARTITION="${DISK}p1"
+            EFI_PARTITION="${DISK}p1"
             ROOT_PARTITION="${DISK}p2"
         fi
     fi
@@ -1021,8 +1024,8 @@ tui_open_recovery() {
     mount /dev/mapper/main-root "$mnt_recovery"
 
     if [ "$UEFI_ENABLED" = "true" ]; then
-        mkdir -p "$mnt_recovery/boot"
-        mount "$BOOT_PARTITION" "$mnt_recovery/boot"
+        mkdir -p "$mnt_recovery/efi"
+        mount "$EFI_PARTITION" "$mnt_recovery/efi"
     fi
 
     #----------------------------------------
@@ -1031,10 +1034,10 @@ tui_open_recovery() {
     clear
     print_info "CHROOT" "$mnt_recovery"
 
-    # Mount /boot in recovery system (UEFI only)
+    # Mount /efi in recovery system (UEFI only)
     if [ "$UEFI_ENABLED" = "true" ]; then
-        if ! arch-chroot "$mnt_recovery" mount $BOOT_PARTITION /boot; then
-            echo "ERROR: CHROOT Mount /boot"
+        if ! arch-chroot "$mnt_recovery" mount $EFI_PARTITION /efi; then
+            echo "ERROR: CHROOT Mount /efi"
             exit 1
         fi
     fi
