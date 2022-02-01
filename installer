@@ -709,7 +709,8 @@ exec_install_chroot() {
     # Allow users in group wheel to use sudo
     #----------------------------------------
     core_log "Enable sudo in /etc/sudoers"
-    sed -i '/%wheel\sALL=(ALL)\sALL/s/^#\s//g' /etc/sudoers
+    #sed -i '/%wheel\sALL=(ALL)\sALL/s/^#\s//g' /etc/sudoers
+    sed -i 's^# %wheel ALL=(ALL:ALL) ALL^%wheel ALL=(ALL:ALL) ALL^g' /etc/sudoers
 
     #----------------------------------------
     # Auto login tty1
