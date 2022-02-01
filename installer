@@ -7,6 +7,7 @@
 # https://wiki.archlinux.de/title/Installation_mit_UEFI_und_Verschl%C3%BCsselung
 # https://www.timoschindler.de/arch-linux-uefi-boot-mit-grub-und-verschluesseltem-lvm/
 # https://wiki.archlinux.de/title/Dm-crypt
+# https://wiki.archlinux.org/title/Dm-crypt/Encrypting_an_entire_system
 # https://wiki.archlinux.de/title/GRUB
 # https://www.rohlix.eu/post/linux-disk-encryption-with-bios-uefi-using-mbr-gpt-luks-lvm-and-grub/
 # https://gist.github.com/mattiaslundberg/8620837
@@ -58,7 +59,8 @@ HOSTNAME=''
 WORKSTATION=''
 SWAP_SIZE='0'
 DISK=''
-EFI_PARTITION=''
+BIOS_PARTITION=''
+BOOT_PARTITION=''
 ROOT_PARTITION=''
 UCODE=''
 LOCALE_LANG=''
@@ -328,11 +330,13 @@ exec_install_core() {
     core_log "Encryption Password is set!"
 
     #----------------------------------------
-    # Wipe disk
+    # Wipe Disk
     #----------------------------------------
     gauge_tui_update 4 "Wipe $DISK"
+
     # Destroy GPT and MBR data structures
     exec_command_wrap sgdisk -Z "$DISK"
+
     # Override complete disk with 0
     if [ "$WIPE_DISK" = "true" ]; then
         gauge_tui_update 6 "Wipe $DISK and override with zero (this will take a while...)"
@@ -340,7 +344,7 @@ exec_install_core() {
     fi
 
     #----------------------------------------
-    # Partition disk
+    # Partition Disk
     #----------------------------------------
     gauge_tui_update 8 "Partition $DISK"
 
@@ -352,8 +356,8 @@ exec_install_core() {
 
     if [ "$uefi_mode" = "true" ]; then
 
-        # efi partition: 512MiB
-        exec_command_wrap sgdisk -n 0:0:+512MiB -t 0:ef00 -c 1:efi "$DISK"
+        # /boot efi partition: 512MiB
+        exec_command_wrap sgdisk -n 0:0:+512MiB -t 0:ef00 -c 1:boot "$DISK"
 
         # / partition: Rest of space
         exec_command_wrap sgdisk -n 0:0:0 -t 0:8300 -c 2:root "$DISK"
@@ -361,33 +365,36 @@ exec_install_core() {
     else
 
         # BIOS only: 1MiB partition is needed for GRUB (if GPT is used instead of MBR) with no filesystem and no mount point
-        exec_command_wrap sgdisk -n 0:0:+1MiB -t 0:ef02 -c 1:grub "$DISK"
+        exec_command_wrap sgdisk -n 0:0:+1MiB -t 0:ef02 -c 1:bios "$DISK"
+
+        # /boot partition: 512 MB
+        exec_command_wrap sgdisk -n 0:0:+512MiB -t 0:8300 -c 2:boot "$DISK"
 
         # / partition: Rest of space
-        exec_command_wrap sgdisk -n 0:0:0 -t 0:8300 -c 2:root "$DISK"
+        exec_command_wrap sgdisk -n 0:0:0 -t 0:8300 -c 3:root "$DISK"
     fi
 
     #----------------------------------------
-    # Encrypt disk
+    # Encrypt Disk
     #----------------------------------------
     gauge_tui_update 10 "Encrypt $DISK"
+
     # GRUB < 2.06: luks2 is not implemented!
     # BUG: There is a bug on GRUB with luks2 and encrypted /boot (https://wiki.archlinux.org/title/GRUB#Encrypted_/boot)
-    #local crypt_cmd="cryptsetup -c aes-xts-plain -s 512 luksFormat $ROOT_PARTITION"
-    local crypt_cmd="cryptsetup -c aes-xts-plain -s 512 luksFormat --type luks1 $ROOT_PARTITION"
 
-    # !! DO NOT USE exec_command_wrap
-    if ! echo -n "$password_encryption" | $crypt_cmd -d - >/dev/null; then
+    # Encrypt disk
+    #local crypt_cmd="cryptsetup -c aes-xts-plain -s 512 luksFormat --type luks1 $ROOT_PARTITION"
+    local crypt_cmd="cryptsetup -c aes-xts-plain -s 512 luksFormat $ROOT_PARTITION"
+    if ! echo -n "$password_encryption" | $crypt_cmd -d - >/dev/null; then # !! DO NOT USE exec_command_wrap
         core_log "e" "$crypt_cmd"
         exit 1
     else
         core_log "c" "$crypt_cmd"
     fi
 
-    # Open encrypt
+    # Open encrypted disk
     crypt_cmd="cryptsetup open $ROOT_PARTITION lvm"
-    # !! DO NOT USE exec_command_wrap
-    if ! echo -n "$password_encryption" | $crypt_cmd -d - >/dev/null; then
+    if ! echo -n "$password_encryption" | $crypt_cmd -d - >/dev/null; then # !! DO NOT USE exec_command_wrap
         core_log "e" "$crypt_cmd"
         exit 1
     else
@@ -397,31 +404,37 @@ exec_install_core() {
     #----------------------------------------
     # LVM
     #----------------------------------------
-    gauge_tui_update 10 "Create LVM ($DISK)"
+    gauge_tui_update 11 "Create LVM ($DISK)"
     exec_command_wrap pvcreate /dev/mapper/lvm
     exec_command_wrap vgcreate main /dev/mapper/lvm
     exec_command_wrap lvcreate -l 100%FREE -n root main
 
     #----------------------------------------
-    # Format disk
+    # Format /
     #----------------------------------------
-    gauge_tui_update 12 "Format $DISK"
-
-    # Format /efi
-    if [ "$uefi_mode" = "true" ]; then exec_command_wrap mkfs.fat -F 32 -n efi "$EFI_PARTITION"; fi
-
-    # Format / (crypted)
+    gauge_tui_update 12 "Format $ROOT_PARTITION"
     exec_command_wrap mkfs.ext4 -L root /dev/mapper/main-root
 
     #----------------------------------------
-    # Mount disk to /mnt
+    # Format /boot
     #----------------------------------------
+    gauge_tui_update 13 "Format $BOOT_PARTITION"
+    if [ "$uefi_mode" = "true" ]; then exec_command_wrap mkfs.fat -F 32 -n efi "$BOOT_PARTITION"; fi
+    if [ "$uefi_mode" = "false" ]; then exec_command_wrap mkfs.ext4 -L root "$BOOT_PARTITION"; fi
+
+    #----------------------------------------
+    # Mount /
+    #----------------------------------------
+    gauge_tui_update 14 "Mount $ROOT_PARTITION"
     exec_command_wrap mount /dev/mapper/main-root /mnt
-    # Mount boot partition (UEFI only)
-    if [ "$uefi_mode" = "true" ]; then
-        exec_command_wrap mkdir /mnt/efi
-        exec_command_wrap mount "$EFI_PARTITION" /mnt/efi
-    fi
+
+    #----------------------------------------
+    # Mount /boot
+    #----------------------------------------
+    gauge_tui_update 15 "Mount $BOOT_PARTITION"
+    exec_command_wrap mkdir /mnt/boot
+    exec_command_wrap mount "$BOOT_PARTITION" /mnt/boot
+
     #----------------------------------------
     # Pacstrap base arch packages
     #----------------------------------------
@@ -444,6 +457,7 @@ exec_install_core() {
     #----------------------------------------
     # Copy ecos installer in chroot env
     #----------------------------------------
+    gauge_tui_update 53 "Copy ECOS files"
     exec_command_wrap cp -f "$INSTALLER_SCRIPT_FILE" /mnt/$INSTALLER_ID
     exec_command_wrap cp -f "$INSTALLER_CONFIG_FILE" /mnt/$INSTALLER_ID.conf
     exec_command_wrap chmod +x /mnt/$INSTALLER_ID
@@ -491,7 +505,7 @@ cleanup() {
     #----------------------------------------
     if [ "$AUTO_UNMOUNT" = "true" ]; then
         swapoff -a
-        umount -R /mnt/efi
+        umount -R /mnt/boot
         umount -R /mnt
     fi
 }
@@ -641,20 +655,20 @@ exec_install_chroot() {
 
     # Create cryptfile - to avoid having to enter the encryption passphrase twice (once for GRUB, once for initramfs)
     #----------------------------------------
-    local crypt_key="/crypto_keyfile.bin"
-    exec_command_wrap dd if=/dev/random of="$crypt_key" bs=512 count=8 iflag=fullblock
-    exec_command_wrap chmod 600 "$crypt_key"
-    # When initramfs' permissions are set to 644 (by default), then all users will be able to dump the keyfile
-    exec_command_wrap chmod 600 /boot/initramfs-linux*
-    local crypt_cmd="cryptsetup luksAddKey $ROOT_PARTITION $crypt_key"
-    if ! echo -n "$password_encryption" | $crypt_cmd -d - >/dev/null; then
-        core_log "e" "$crypt_cmd"
-        exit 1
-    else
-        core_log "c" "$crypt_cmd"
-    fi
-    sed -i 's^FILES=()^FILES=('$crypt_key')^g' /etc/mkinitcpio.conf
-    exec_command_wrap mkinitcpio -P
+    # local crypt_key="/crypto_keyfile.bin"
+    # exec_command_wrap dd if=/dev/random of="$crypt_key" bs=512 count=8 iflag=fullblock
+    # exec_command_wrap chmod 600 "$crypt_key"
+    # # When initramfs' permissions are set to 644 (by default), then all users will be able to dump the keyfile
+    # exec_command_wrap chmod 600 /boot/initramfs-linux*
+    # local crypt_cmd="cryptsetup luksAddKey $ROOT_PARTITION $crypt_key"
+    # if ! echo -n "$password_encryption" | $crypt_cmd -d - >/dev/null; then
+    #     core_log "e" "$crypt_cmd"
+    #     exit 1
+    # else
+    #     core_log "c" "$crypt_cmd"
+    # fi
+    # sed -i 's^FILES=()^FILES=('$crypt_key')^g' /etc/mkinitcpio.conf
+    # exec_command_wrap mkinitcpio -P
 
     # GRUB Configuration
     #----------------------------------------
@@ -663,9 +677,9 @@ exec_install_chroot() {
     # cryptkey=rootfs:'$crypt_key'
     mv -f "/etc/default/grub" "/etc/default/grub.bak"
     echo 'GRUB_DISTRIBUTOR="ECOS"' >/etc/default/grub
-    echo 'GRUB_CMDLINE_LINUX="cryptdevice=UUID='$(blkid -s UUID -o value $ROOT_PARTITION)':main '$KERNEL_PARAMETER'"' >>/etc/default/grub
-    echo 'GRUB_CMDLINE_LINUX_DEFAULT="quiet splash loglevel=2 rd.systemd.show_status=false rd.udev.log_priority=3 vt.global_cursor_default=0"' >>/etc/default/grub
-    echo 'GRUB_ENABLE_CRYPTODISK="y"' >>/etc/default/grub
+    echo 'GRUB_CMDLINE_LINUX="cryptdevice=UUID='$(blkid -s UUID -o value $ROOT_PARTITION)':main"' >>/etc/default/grub
+    echo 'GRUB_CMDLINE_LINUX_DEFAULT="quiet splash vt.global_cursor_default=0 loglevel=2 rd.systemd.show_status=false rd.udev.log_priority=3 '$KERNEL_PARAMETER'"' >>/etc/default/grub
+    #echo 'GRUB_ENABLE_CRYPTODISK="y"' >>/etc/default/grub
     echo 'GRUB_PRELOAD_MODULES="part_gpt part_msdos lvm"' >>/etc/default/grub
     echo 'GRUB_DEFAULT="saved"' >>/etc/default/grub
     echo 'GRUB_SAVEDEFAULT="true"' >>/etc/default/grub
@@ -680,7 +694,7 @@ exec_install_chroot() {
     echo 'GRUB_DISABLE_OS_PROBER="false"' >>/etc/default/grub
 
     # Install GRUB
-    [ "$uefi_mode" = "true" ] && exec_command_wrap grub-install --target=x86_64-efi --efi-directory=/efi --bootloader-id="ECOS" --no-floppy --recheck "$DISK"
+    [ "$uefi_mode" = "true" ] && exec_command_wrap grub-install --target=x86_64-efi --efi-directory=/boot --bootloader-id="ECOS" --no-floppy --recheck "$DISK"
     [ "$uefi_mode" = "false" ] && exec_command_wrap grub-install --target=i386-pc --no-floppy --recheck "$DISK"
 
     # Create GRUB Config
@@ -930,9 +944,8 @@ check_config() {
     #----------------------------------------
     check_config_disk
     replace_property_value "$INSTALLER_CONFIG_FILE" "DISK" "$DISK"
-    if [ "$UEFI_ENABLED" = "true" ]; then
-        replace_property_value "$INSTALLER_CONFIG_FILE" "EFI_PARTITION" "$EFI_PARTITION"
-    fi
+    [ "$UEFI_ENABLED" = "false" ] && replace_property_value "$INSTALLER_CONFIG_FILE" "BIOS_PARTITION" "$BIOS_PARTITION"
+    replace_property_value "$INSTALLER_CONFIG_FILE" "BOOT_PARTITION" "$BOOT_PARTITION"
     replace_property_value "$INSTALLER_CONFIG_FILE" "ROOT_PARTITION" "$ROOT_PARTITION"
 
     #----------------------------------------
@@ -989,15 +1002,16 @@ check_config_disk() {
             exit 0
         fi
 
-        EFI_PARTITION="${DISK}1"
-        ROOT_PARTITION="${DISK}2"
-
-        # NVM Express
-        if [[ "$DISK" = "/dev/nvm"* ]]; then
-            EFI_PARTITION="${DISK}p1"
-            ROOT_PARTITION="${DISK}p2"
+        if [ "$UEFI_ENABLED" = "true" ]; then
+            [[ "$DISK" = "/dev/nvm"* ]] && BOOT_PARTITION="${DISK}p1" || BOOT_PARTITION="${DISK}1"
+            [[ "$DISK" = "/dev/nvm"* ]] && ROOT_PARTITION="${DISK}p2" || ROOT_PARTITION="${DISK}2"
+        else
+            [[ "$DISK" = "/dev/nvm"* ]] && BIOS_PARTITION="${DISK}p1" || BIOS_PARTITION="${DISK}1"
+            [[ "$DISK" = "/dev/nvm"* ]] && BOOT_PARTITION="${DISK}p2" || BOOT_PARTITION="${DISK}2"
+            [[ "$DISK" = "/dev/nvm"* ]] && ROOT_PARTITION="${DISK}p3" || ROOT_PARTITION="${DISK}3"
         fi
     fi
+
 }
 
 #/////////////////////////////////////////////////////
@@ -1028,12 +1042,8 @@ tui_open_recovery() {
     print_info "MOUNT TO" "$mnt_recovery"
     mkdir -p "$mnt_recovery"
     mount /dev/mapper/main-root "$mnt_recovery"
-
-    # Mount /efi in recovery system (UEFI only)
-    if [ "$UEFI_ENABLED" = "true" ]; then
-        mkdir -p "$mnt_recovery/efi"
-        mount "$EFI_PARTITION" "$mnt_recovery/efi"
-    fi
+    mkdir -p "$mnt_recovery/boot"
+    mount "$BOOT_PARTITION" "$mnt_recovery/boot"
 
     #----------------------------------------
     # Chroot
