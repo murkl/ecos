@@ -491,6 +491,7 @@ cleanup() {
     #----------------------------------------
     if [ "$AUTO_UNMOUNT" = "true" ]; then
         swapoff -a
+        umount -R /mnt/efi
         umount -R /mnt
     fi
 }
@@ -503,6 +504,11 @@ exec_install_chroot() {
 
     local uefi_mode="$1"
     local password_encryption="$2"
+
+    #----------------------------------------
+    # Set UEFI Mode
+    #----------------------------------------
+    UEFI_ENABLED="$uefi_mode"
 
     #----------------------------------------
     # Source config
@@ -789,8 +795,8 @@ exec_install_chroot() {
     #----------------------------------------
     # ECOS Repo
     #----------------------------------------
-    gauge_tui_update 92 "Initilize ECOS"
-    core_log "Initilize ECOS in ~/.ecos"
+    gauge_tui_update 92 "Initialize ECOS"
+    core_log "Initialize ECOS in ~/.ecos"
     local ecos_system_dir="/home/$USERNAME/.ecos/.system"
     local ecos_repo_dir="$ecos_system_dir/repo"
     exec_command_wrap mkdir -p "$ecos_system_dir"
@@ -1023,6 +1029,7 @@ tui_open_recovery() {
     mkdir -p "$mnt_recovery"
     mount /dev/mapper/main-root "$mnt_recovery"
 
+    # Mount /efi in recovery system (UEFI only)
     if [ "$UEFI_ENABLED" = "true" ]; then
         mkdir -p "$mnt_recovery/efi"
         mount "$EFI_PARTITION" "$mnt_recovery/efi"
@@ -1033,14 +1040,6 @@ tui_open_recovery() {
     #----------------------------------------
     clear
     print_info "CHROOT" "$mnt_recovery"
-
-    # Mount /efi in recovery system (UEFI only)
-    if [ "$UEFI_ENABLED" = "true" ]; then
-        if ! arch-chroot "$mnt_recovery" mount $EFI_PARTITION /efi; then
-            echo "ERROR: CHROOT Mount /efi"
-            exit 1
-        fi
-    fi
     echo -e "\n"
     echo -e "!! YOUR ARE NOW ON YOUR RECOVERY SYSTEM !!"
     echo -e "        Leave with command 'exit'         "
