@@ -64,7 +64,7 @@ LOCALE_LANG=''
 LOCALE_GEN=('')
 TIMEZONE=''
 VCONSOLE_KEYMAP=''
-BOOT_ARGS=''
+KERNEL_PARAMETER=''
 X11_KEYBOARD_LAYOUT=''
 X11_KEYBOARD_VARIANT=''
 DUALBOOT='default' # windows10
@@ -84,7 +84,7 @@ set_lang_en_US() {
     VCONSOLE_KEYMAP='en-latin1-nodeadkeys'
     X11_KEYBOARD_LAYOUT='en'
     X11_KEYBOARD_VARIANT='nodeadkeys'
-    BOOT_ARGS="lang=en locale=en_US.UTF-8"
+    KERNEL_PARAMETER="lang=en locale=en_US.UTF-8"
 }
 
 set_lang_de_DE() {
@@ -94,7 +94,7 @@ set_lang_de_DE() {
     VCONSOLE_KEYMAP='de-latin1-nodeadkeys'
     X11_KEYBOARD_LAYOUT='de'
     X11_KEYBOARD_VARIANT='nodeadkeys'
-    BOOT_ARGS="lang=de locale=de_DE.UTF-8"
+    KERNEL_PARAMETER="lang=de locale=de_DE.UTF-8"
 }
 
 #/////////////////////////////////////////////////////
@@ -657,7 +657,7 @@ exec_install_chroot() {
     # cryptkey=rootfs:'$crypt_key'
     mv -f "/etc/default/grub" "/etc/default/grub.bak"
     echo 'GRUB_DISTRIBUTOR="ECOS"' >/etc/default/grub
-    echo 'GRUB_CMDLINE_LINUX="cryptdevice=UUID='$(blkid -s UUID -o value $ROOT_PARTITION)':main '$BOOT_ARGS'"' >>/etc/default/grub
+    echo 'GRUB_CMDLINE_LINUX="cryptdevice=UUID='$(blkid -s UUID -o value $ROOT_PARTITION)':main '$KERNEL_PARAMETER'"' >>/etc/default/grub
     echo 'GRUB_CMDLINE_LINUX_DEFAULT="quiet splash loglevel=2 rd.systemd.show_status=false rd.udev.log_priority=3 vt.global_cursor_default=0"' >>/etc/default/grub
     echo 'GRUB_ENABLE_CRYPTODISK="y"' >>/etc/default/grub
     echo 'GRUB_PRELOAD_MODULES="part_gpt part_msdos lvm"' >>/etc/default/grub
@@ -933,7 +933,7 @@ check_config() {
     # Add default values
     #----------------------------------------
     check_config_key "$INSTALLER_CONFIG_FILE" "BOOTLOADER_RESOLUTION" "$BOOTLOADER_RESOLUTION"
-    check_config_key "$INSTALLER_CONFIG_FILE" "BOOT_ARGS" "$BOOT_ARGS"
+    check_config_key "$INSTALLER_CONFIG_FILE" "KERNEL_PARAMETER" "$KERNEL_PARAMETER"
     check_config_key "$INSTALLER_CONFIG_FILE" "DUALBOOT" "$DUALBOOT"
     check_config_key "$INSTALLER_CONFIG_FILE" "WIPE_DISK" "$WIPE_DISK"
     check_config_key "$INSTALLER_CONFIG_FILE" "SWAP_SIZE" "$SWAP_SIZE"
