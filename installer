@@ -182,7 +182,6 @@ tui_core_installer_menu() {
     #----------------------------------------
     if [ "$menu_input" = "2" ]; then
         tui_open_recovery "$UEFI_ENABLED"
-        tui_core_installer_menu
         exit 0
     fi
 
