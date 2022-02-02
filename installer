@@ -811,7 +811,7 @@ exec_install_chroot() {
     # ECOS Repo
     #----------------------------------------
     gauge_tui_update 92 "Initialize ECOS"
-    core_log "Initialize ECOS in ~/.ecos"
+    core_log "Initialize ECOS in /home/$USERNAME/.ecos/"
     local ecos_system_dir="/home/$USERNAME/.ecos/.system"
     local ecos_repo_dir="$ecos_system_dir/repo"
     exec_command_wrap mkdir -p "$ecos_system_dir"
