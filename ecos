@@ -632,6 +632,11 @@ exec_install_ecos() {
     update_ecos_repo
     echo -e ">> DONE"
 
+    # FETCH PACKAGES
+    print_title 'FETCH PACMAN/AUR PACKAGES'
+    paru -Syy
+    echo -e ">> DONE"
+
     # Removing existing init
     print_title "EXECUTE EXISTING INIT REMOVE SCRIPT"
     if [ ! -f "$ECOS_INIT_SCRIPT" ]; then
