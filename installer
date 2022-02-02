@@ -71,6 +71,7 @@ VCONSOLE_FONT=''
 KERNEL_PARAMETER=''
 X11_KEYBOARD_LAYOUT=''
 X11_KEYBOARD_VARIANT=''
+REFLECTOR_COUNTRY=''
 DUALBOOT='default' # windows10
 BOOTLOADER_RESOLUTION='auto'
 WIPE_DISK='false'
@@ -101,6 +102,7 @@ set_lang_de_DE() {
     X11_KEYBOARD_LAYOUT='de'
     X11_KEYBOARD_VARIANT='nodeadkeys'
     KERNEL_PARAMETER="lang=de locale=de_DE.UTF-8"
+    REFLECTOR_COUNTRY='Germany'
 }
 
 #/////////////////////////////////////////////////////
@@ -329,7 +331,7 @@ exec_install_core() {
     . "$INSTALLER_CONFIG_FILE"
 
     core_log "!!! INSTALLATION START !!!"
-    if [ "$password_encryption" = "" ]; then core_log e "ERROR: Encryption Password is missing" && exit 1; fi
+    [ "$password_encryption" = "" ] && core_log e "ERROR: Encryption Password is missing" && exit 1
     core_log "Encryption Password is set!"
 
     #----------------------------------------
@@ -422,8 +424,8 @@ exec_install_core() {
     # Format /boot
     #----------------------------------------
     gauge_tui_update 13 "Format $BOOT_PARTITION"
-    if [ "$uefi_mode" = "true" ]; then exec_command_wrap mkfs.fat -F 32 -n efi "$BOOT_PARTITION"; fi
-    if [ "$uefi_mode" = "false" ]; then exec_command_wrap mkfs.ext4 -L root "$BOOT_PARTITION"; fi
+    [ "$uefi_mode" = "true" ] && exec_command_wrap mkfs.fat -F 32 -n efi "$BOOT_PARTITION"
+    [ "$uefi_mode" = "false" ] && exec_command_wrap mkfs.ext4 -L root "$BOOT_PARTITION"
 
     #----------------------------------------
     # Mount /
@@ -443,7 +445,8 @@ exec_install_core() {
     #----------------------------------------
     gauge_tui_update 16 "Reflector (optimize Pacman)"
     exec_command_wrap pacman --noconfirm --needed -Sy reflector
-    exec_command_wrap reflector --latest 10 --sort rate --save /etc/pacman.d/mirrorlist
+    [ "$REFLECTOR_COUNTRY" != "" ] && exec_command_wrap reflector --country "$REFLECTOR_COUNTRY" --latest 10 --sort rate --save /etc/pacman.d/mirrorlist
+    [ "$REFLECTOR_COUNTRY" = "" ] && exec_command_wrap reflector --latest 10 --sort rate --save /etc/pacman.d/mirrorlist
     exec_command_wrap pacman -Sy
 
     #----------------------------------------
@@ -944,6 +947,7 @@ check_config() {
         replace_property_value "$INSTALLER_CONFIG_FILE" "VCONSOLE_FONT" "$VCONSOLE_FONT"
         replace_property_value "$INSTALLER_CONFIG_FILE" "X11_KEYBOARD_LAYOUT" "$X11_KEYBOARD_LAYOUT"
         replace_property_value "$INSTALLER_CONFIG_FILE" "X11_KEYBOARD_VARIANT" "$X11_KEYBOARD_VARIANT"
+        replace_property_value "$INSTALLER_CONFIG_FILE" "REFLECTOR_COUNTRY" "$REFLECTOR_COUNTRY"
     fi
 
     #----------------------------------------
