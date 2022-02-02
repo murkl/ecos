@@ -67,6 +67,7 @@ LOCALE_LANG=''
 LOCALE_GEN=('')
 TIMEZONE=''
 VCONSOLE_KEYMAP=''
+VCONSOLE_FONT=''
 KERNEL_PARAMETER=''
 X11_KEYBOARD_LAYOUT=''
 X11_KEYBOARD_VARIANT=''
@@ -85,6 +86,7 @@ set_lang_en_US() {
     LOCALE_LANG='en_US.UTF-8'
     LOCALE_GEN=('en_US.UTF-8 UTF-8')
     VCONSOLE_KEYMAP='en-latin1-nodeadkeys'
+    VCONSOLE_FONT='lat9w-16'
     X11_KEYBOARD_LAYOUT='en'
     X11_KEYBOARD_VARIANT='nodeadkeys'
     KERNEL_PARAMETER="lang=en locale=en_US.UTF-8"
@@ -95,6 +97,7 @@ set_lang_de_DE() {
     LOCALE_LANG='de_DE.UTF-8'
     LOCALE_GEN=('de_DE.UTF-8 UTF-8' 'de_DE ISO-8859-1' 'de_DE@euro ISO-8859-15' 'en_US.UTF-8 UTF-8')
     VCONSOLE_KEYMAP='de-latin1-nodeadkeys'
+    VCONSOLE_FONT='lat9w-16'
     X11_KEYBOARD_LAYOUT='de'
     X11_KEYBOARD_VARIANT='nodeadkeys'
     KERNEL_PARAMETER="lang=de locale=de_DE.UTF-8"
@@ -439,8 +442,9 @@ exec_install_core() {
     # Reflector
     #----------------------------------------
     gauge_tui_update 16 "Reflactor (optimize Pacman)"
-    exec_command_wrap pacman -Sy reflector
-    exec_command_wrap pacman -Sy reflector --latest 10 --sort rate --save /etc/pacman.d/mirrorlist
+    exec_command_wrap pacman -S reflector
+    exec_command_wrap reflector --latest 10 --sort rate --save /etc/pacman.d/mirrorlist
+    exec_command_wrap pacman -Sy
 
     #----------------------------------------
     # Pacstrap base arch packages
@@ -606,7 +610,7 @@ exec_install_chroot() {
     #----------------------------------------
     core_log "Create /etc/vconsole.conf"
     echo "KEYMAP=$VCONSOLE_KEYMAP" >/etc/vconsole.conf
-    echo "FONT=lat9w-16" >>/etc/vconsole.conf
+    echo "FONT=$VCONSOLE_FONT" >>/etc/vconsole.conf
 
     #----------------------------------------
     # Locale
@@ -918,7 +922,7 @@ check_config() {
     #----------------------------------------
     # Check Language
     #----------------------------------------
-    if [ "$LOCALE_LANG" = "" ] || [ ${#LOCALE_GEN[@]} = 0 ] || [ "$TIMEZONE" = "" ] || [ "$VCONSOLE_KEYMAP" = "" ] || [ "$X11_KEYBOARD_LAYOUT" = "" ] || [ "$X11_KEYBOARD_VARIANT" = "" ]; then
+    if [ "$LOCALE_LANG" = "" ] || [ ${#LOCALE_GEN[@]} = 0 ] || [ "$TIMEZONE" = "" ] || [ "$VCONSOLE_KEYMAP" = "" ] || [ "$VCONSOLE_FONT" = "" ] || [ "$X11_KEYBOARD_LAYOUT" = "" ] || [ "$X11_KEYBOARD_VARIANT" = "" ]; then
 
         tui_init 19 "Choose Setup Language"
         if ! lang_result=$(whiptail --menu --notags "$(cat "$TUI_FILE")\n" "$TUI_HEIGHT" "$TUI_WIDTH" 2 "en_US" "English" "de_DE" "German" 3>&1 1>&2 2>&3); then
@@ -937,6 +941,7 @@ check_config() {
         replace_property_value "$INSTALLER_CONFIG_FILE" "LOCALE_LANG" "$LOCALE_LANG"
         replace_property_array_value "$INSTALLER_CONFIG_FILE" "LOCALE_GEN" "${LOCALE_GEN[@]}"
         replace_property_value "$INSTALLER_CONFIG_FILE" "VCONSOLE_KEYMAP" "$VCONSOLE_KEYMAP"
+        replace_property_value "$INSTALLER_CONFIG_FILE" "VCONSOLE_FONT" "$VCONSOLE_FONT"
         replace_property_value "$INSTALLER_CONFIG_FILE" "X11_KEYBOARD_LAYOUT" "$X11_KEYBOARD_LAYOUT"
         replace_property_value "$INSTALLER_CONFIG_FILE" "X11_KEYBOARD_VARIANT" "$X11_KEYBOARD_VARIANT"
     fi
