@@ -442,7 +442,7 @@ exec_install_core() {
     # Reflector
     #----------------------------------------
     gauge_tui_update 16 "Reflactor (optimize Pacman)"
-    exec_command_wrap pacman -Sy reflector
+    exec_command_wrap pacman --noconfirm --needed -Sy reflector
     exec_command_wrap reflector --latest 10 --sort rate --save /etc/pacman.d/mirrorlist
     exec_command_wrap pacman -Sy
 
