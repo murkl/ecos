@@ -11,18 +11,11 @@ PLYMOUTH_WATERMARK_PNG="$TWEAK_RES_DIR/plymouth.png"
 install() {
 
     #----------------------------------------
-    # Check UEFI
-    #----------------------------------------
-    echo 'CHECK UEFI'
-    if ! efivar -l >/dev/null; then echo "BIOS detected. Plymouth only available on UEFI!" && exit 1; fi
-    echo -e 'OK'
-
-    #----------------------------------------
     # Install Plymouth
     #----------------------------------------
     echo 'INSTALL PLYMOUTH'
     wait
-    if ! paru --noconfirm --needed --sudoloop -Syyu plymouth; then echo "ERROR paru" && exit 1; fi
+    if ! paru --noconfirm --needed --sudoloop -S plymouth; then echo "ERROR paru" && exit 1; fi
     echo -e 'OK'
 
     #----------------------------------------
