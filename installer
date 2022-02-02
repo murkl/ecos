@@ -436,6 +436,13 @@ exec_install_core() {
     exec_command_wrap mount "$BOOT_PARTITION" /mnt/boot
 
     #----------------------------------------
+    # Reflector
+    #----------------------------------------
+    gauge_tui_update 16 "Reflactor (optimize Pacman)"
+    exec_command_wrap pacman -Sy reflector
+    exec_command_wrap pacman -Sy reflector --latest 10 --sort rate --save /etc/pacman.d/mirrorlist
+
+    #----------------------------------------
     # Pacstrap base arch packages
     #----------------------------------------
     gauge_tui_update 24 "Pacstrap Installation (this will take a while)..."
@@ -463,9 +470,15 @@ exec_install_core() {
     exec_command_wrap chmod +x /mnt/$INSTALLER_ID
 
     #----------------------------------------
+    # Copy Pacman mirrorlist in chroot env
+    #----------------------------------------
+    gauge_tui_update 54 "Copy Pacman mirrorlist"
+    exec_command_wrap cp -f "/etc/pacman.d/mirrorlist" /mnt/etc/pacman.d/mirrorlist
+
+    #----------------------------------------
     # Chroot into new system
     #----------------------------------------
-    gauge_tui_update 54 "Enter CHROOT Environement"
+    gauge_tui_update 55 "Enter CHROOT Environement"
     log_txt="arch-chroot /mnt /$INSTALLER_ID --chroot $uefi_mode <ENCRYPTION_PASSWORD>"
     if ! arch-chroot /mnt "/$INSTALLER_ID" --chroot "$uefi_mode" "$password_encryption"; then
         # FAILED
