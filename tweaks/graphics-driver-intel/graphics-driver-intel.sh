@@ -2,6 +2,7 @@
 # https://wiki.archlinux.org/title/Intel_graphics
 
 # BUG (xf86-video-intel): After scrensafer the screen still be black
+# Solution: https://wiki.archlinux.org/title/intel_graphics#DRI3_issues
 
 install() {
 
@@ -30,7 +31,7 @@ install() {
 Section "Device"
     Identifier  "Intel Graphics"
     Driver      "intel"
-    Option      "DRI" "3"
+    Option      "DRI" "2"
     #Option      "AccelMethod" "uxa"
     #Option      "TearFree" "true" # Will not work with AccelMethod=uxa
 EndSection'
