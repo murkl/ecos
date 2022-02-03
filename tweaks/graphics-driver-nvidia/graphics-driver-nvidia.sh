@@ -117,7 +117,6 @@ install() {
     Identifier "intel"
     MatchDriver "i915"
     Driver "modesetting"
-    Option      "DRI" "2"
 EndSection
 
 Section "OutputClass"
