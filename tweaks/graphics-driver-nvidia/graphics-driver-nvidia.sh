@@ -31,7 +31,7 @@ install() {
     if [ "$whiptail_result" = 'nvidia' ]; then
 
         # Install
-        paru --noconfirm --needed --sudoloop -S nvidia nvidia-settings lib32-nvidia-utils
+        paru --noconfirm --needed --sudoloop -S nvidia-dkms nvidia-settings lib32-nvidia-utils opencl-nvidia lib32-opencl-nvidia virtualgl lib32-virtualgl mesa
 
         # Early Loading
         sudo sed -i "s/MODULES=(ext4)/MODULES=(ext4 nvidia nvidia_modeset nvidia_uvm nvidia_drm)/g" "/etc/mkinitcpio.conf"
