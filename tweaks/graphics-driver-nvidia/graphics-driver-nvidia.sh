@@ -24,8 +24,29 @@ TWEAK_CACHE_DIR="$3" && if [ -z "$3" ]; then TWEAK_CACHE_DIR="$(pwd)"; fi
 
 install() {
 
-    if ! local whiptail_result=$(whiptail --menu --notags "NVIDIA GRAPHICS DRIVER" 0 0 4 "nouveau" "NVIDIA (nouveau)" "nvidia" "NVIDIA (nvidia)" "nvidia-390xx" "NVIDIA 390xx" "nvidia-390xx-bumblebee" "Intel HD + NVIDIA 390xx (Bumblebee)" 3>&1 1>&2 2>&3); then
+    if ! local whiptail_result=$(whiptail --menu --notags "NVIDIA GRAPHICS DRIVER" 0 0 5 "nvidia" "NVIDIA" "nouveau" "NVIDIA (nouveau)" "nvidia-frogging" "NVIDIA (frogging-family)" "nvidia-390xx" "NVIDIA 390xx" "nvidia-390xx-bumblebee" "Intel HD + NVIDIA 390xx (Bumblebee)" 3>&1 1>&2 2>&3); then
         exit 1
+    fi
+
+    if [ "$whiptail_result" = 'nvidia' ]; then
+
+        # Install
+        paru --noconfirm --needed --sudoloop -S nvidia nvidia-settings lib32-nvidia-utils
+
+        # Early Loading
+        sudo sed -i "s/MODULES=(ext4)/MODULES=(ext4 nvidia nvidia_modeset nvidia_uvm nvidia_drm)/g" "/etc/mkinitcpio.conf"
+
+        # DRM kernel mode setting (nvidia-drm.modeset=1)
+        sudo sed -i "s/quiet splash/nvidia-drm.modeset=1 quiet splash/g" "/boot/loader/entries/ecos.conf"
+        sudo sed -i "s/quiet splash/nvidia-drm.modeset=1 quiet splash/g" "/etc/default/grub"
+
+        # Rebuild
+        sudo mkinitcpio -P
+
+        # Update Grub
+        sudo grub-mkconfig -o /boot/grub/grub.cfg
+
+        exit 0
     fi
 
     if [ "$whiptail_result" = 'nouveau' ]; then
@@ -35,7 +56,7 @@ install() {
         exit 0
     fi
 
-    if [ "$whiptail_result" = 'nvidia' ]; then
+    if [ "$whiptail_result" = 'nvidia-frogging' ]; then
 
         # https://www.reddit.com/r/linux_gaming/comments/rtsxey/pacman_install_nvidia_driver_470/
         # https://github.com/frogging-family/nvidia-all
@@ -53,11 +74,14 @@ install() {
         sudo sed -i "s/MODULES=(ext4)/MODULES=(ext4 nvidia nvidia_modeset nvidia_uvm nvidia_drm)/g" "/etc/mkinitcpio.conf"
 
         # DRM kernel mode setting (nvidia-drm.modeset=1)
-        sudo sed -i "s/quiet splash nvidia-drm.modeset=1/quiet splash/g" "/boot/loader/entries/ecos.conf"
-        sudo sed -i "s/quiet/nvidia-drm.modeset=1 quiet/g" "/boot/grub/grub.cfg"
+        sudo sed -i "s/quiet splash/nvidia-drm.modeset=1 quiet splash/g" "/boot/loader/entries/ecos.conf"
+        sudo sed -i "s/quiet splash/nvidia-drm.modeset=1 quiet splash/g" "/etc/default/grub"
 
         # Rebuild
         sudo mkinitcpio -P
+
+        # Update Grub
+        sudo grub-mkconfig -o /boot/grub/grub.cfg
 
         exit 0
     fi
@@ -80,16 +104,20 @@ install() {
         sudo sed -i "s/MODULES=(ext4)/MODULES=(ext4 nvidia nvidia_modeset nvidia_uvm nvidia_drm)/g" "/etc/mkinitcpio.conf"
 
         # DRM kernel mode setting (nvidia-drm.modeset=1)
-        sudo sed -i "s/quiet splash nvidia-drm.modeset=1/quiet splash/g" "/boot/loader/entries/ecos.conf"
-        sudo sed -i "s/quiet/nvidia-drm.modeset=1 quiet/g" "/boot/grub/grub.cfg"
+        sudo sed -i "s/quiet splash/nvidia-drm.modeset=1 quiet splash/g" "/boot/loader/entries/ecos.conf"
+        sudo sed -i "s/quiet splash/nvidia-drm.modeset=1 quiet splash/g" "/etc/default/grub"
 
         # Rebuild
         sudo mkinitcpio -P
+
+        # Update Grub
+        sudo grub-mkconfig -o /boot/grub/grub.cfg
 
         echo 'Section "OutputClass"
     Identifier "intel"
     MatchDriver "i915"
     Driver "modesetting"
+    Option      "DRI" "2"
 EndSection
 
 Section "OutputClass"
@@ -137,8 +165,20 @@ X-GNOME-Autostart-Phase=DisplayServer' >/tmp/optimus.desktop
 
         sudo systemctl enable bumblebeed.service
 
+        # Intel Driver
+        echo 'COGL_ATLAS_DEFAULT_BLIT_MODE=framebuffer' | sudo tee -a "/etc/environment" # Font and screen corruption in GTK applications (missing glyphs after suspend/resume)
+        local conf='
+Section "Device"
+    Identifier  "Intel Graphics"
+    Driver      "intel"
+    Option      "DRI" "3"
+    #Option      "AccelMethod" "uxa"
+    #Option      "TearFree" "true" # Will not work with AccelMethod=uxa
+EndSection'
+        echo "$conf" | sudo tee -a "/etc/X11/xorg.conf.d/20-intel.conf"
+
         # Early Loading
-        sudo sed -i "s/MODULES=(ext4)/MODULES=(ext4 i915)/g" "/etc/mkinitcpio.conf"
+        sudo sed -i "s/MODULES=(ext4)/MODULES=(ext4 intel_agp i915)/g" "/etc/mkinitcpio.conf"
 
         # Rebuild
         sudo mkinitcpio -P
@@ -148,6 +188,11 @@ X-GNOME-Autostart-Phase=DisplayServer' >/tmp/optimus.desktop
 }
 
 remove() {
+
+    # NVIDIA
+    paru --noconfirm --sudoloop -Rsn nvidia nvidia-settings lib32-nvidia-utils
+
+    # NVIDIA Frogging
     paru --noconfirm --sudoloop -Rsn lib32-nvidia-utils-tkg lib32-opencl-nvidia-tkg nvidia-dkms-tkg nvidia-egl-wayland-tkg nvidia-settings-tkg nvidia-utils-tkg opencl-nvidia-tkg
     paru --noconfirm --sudoloop -Rsn lib32-nvidia-dev-utils-tkg lib32-opencl-nvidia-dev-tkg nvidia-dev-dkms-tkg nvidia-dev-egl-wayland-tkg nvidia-dev-settings-tkg nvidia-dev-utils-tkg opencl-nvidia-dev-tkg
 
@@ -155,14 +200,15 @@ remove() {
     paru --noconfirm --sudoloop -Rsn nvidia-390xx-dkms nvidia-390xx-settings nvidia-390xx-utils lib32-nvidia-390xx-utils opencl-nvidia-390xx lib32-opencl-nvidia-390xx lib32-virtualgl
     paru --noconfirm --sudoloop -Rsn xf86-video-nouveau
 
-    sudo sed -i "s/MODULES=(ext4 i915)/MODULES=(ext4)/g" "/etc/mkinitcpio.conf"
+    sudo sed -i "s/MODULES=(ext4 intel_agp i915)/MODULES=(ext4)/g" "/etc/mkinitcpio.conf"
     sudo sed -i "s/MODULES=(ext4 nouveau)/MODULES=(ext4)/g" "/etc/mkinitcpio.conf"
     sudo sed -i "s/MODULES=(ext4 nvidia nvidia_modeset nvidia_uvm nvidia_drm)/MODULES=(ext4)/g" "/etc/mkinitcpio.conf"
 
-    sudo sed -i "s/quiet splash nvidia-drm.modeset=1/quiet splash/g" "/boot/loader/entries/ecos.conf"
-    sudo sed -i "s/nvidia-drm.modeset=1 quiet/quiet/g" "/boot/grub/grub.cfg"
+    sudo sed -i "s/nvidia-drm.modeset=1 quiet splash/quiet splash/g" "/boot/loader/entries/ecos.conf"
+    sudo sed -i "s/nvidia-drm.modeset=1 quiet splash/quiet splash/g" "/boot/grub/grub.cfg"
 
-    sudo mkinitcpio -P
+    sudo rm -f "/etc/X11/xorg.conf.d/20-intel.conf"
+    sudo sed -i '/COGL_ATLAS_DEFAULT_BLIT_MODE=framebuffer/d' "/etc/environment"
 
     sudo rm -f /etc/X11/xorg.conf.d/30-nvidia-ignoreabi.conf
 
@@ -174,6 +220,12 @@ remove() {
     sudo rm -f /etc/X11/xorg.conf.d/10-nvidia-drm-outputclass.conf
     sudo rm -f /usr/share/gdm/greeter/autostart/optimus.desktop
     sudo rm -f /etc/xdg/autostart/optimus.desktop
+
+    # Rebuild
+    sudo mkinitcpio -P
+
+    # Update Grub
+    sudo grub-mkconfig -o /boot/grub/grub.cfg
 }
 
 update() {
