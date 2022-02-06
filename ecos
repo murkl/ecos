@@ -310,7 +310,7 @@ api_zenity_root_password() {
 #/////////////////////////////////////////////////////
 
 zenity() {
-    /usr/bin/zenity --name="$SCRIPT_ID" --width=380 --height=320 --title='' --text='' --window-icon="$ECOS_ICON_FILE" "$@" 2>/dev/null
+    /usr/bin/zenity --name="$SCRIPT_ID" --width=360 --height=260 --title='' --text='' --window-icon="$ECOS_ICON_FILE" "$@" 2>/dev/null
 }
 
 notify() {
