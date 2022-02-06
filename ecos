@@ -63,12 +63,6 @@ ECOS_TWEAKS_DIR="$SCRIPT_DIR/tweaks"
 ECOS_TWEAKS_USER_DIR="$ECOS_HOME/tweaks"
 ECOS_TWEAKS_META_DIR="$ECOS_WORKING_DIR/tweaks-meta"
 
-# ECOS DRIVER
-ECOS_DRIVER_DIR="$SCRIPT_DIR/driver"
-ECOS_DRIVER_GRAPHICS_SCRIPT="$ECOS_DRIVER_DIR/graphics.sh"
-ECOS_DRIVER_AUDIO_SCRIPT="$ECOS_DRIVER_DIR/audio.sh"
-ECOS_DRIVER_META_DIR="$ECOS_WORKING_DIR/driver-meta"
-
 # ECOS UPDATE
 ECOS_REMOTE_VERSION_FILE="$ECOS_WORKING_DIR/ecos.remote"
 
@@ -312,6 +306,29 @@ api_zenity_root_password() {
 }
 
 #/////////////////////////////////////////////////////
+# ZENITY
+#/////////////////////////////////////////////////////
+
+zenity() {
+    /usr/bin/zenity --name="$SCRIPT_ID" --width=380 --height=320 --title='' --text='' --window-icon="$ECOS_ICON_FILE" "$@" 2>/dev/null
+}
+
+notify() {
+    zenity --notification --text="$SCRIPT_TITLE\n$1"
+}
+
+print_zenity_header() {
+    local title="$1"
+    local header='<span font_family="monospace" foreground="#404448" font="18"><b>'$SCRIPT_TITLE' Manager</b></span>'
+    local version='<span font_family="monospace" foreground="#da52e2" font="11">'$ECOS_STATE_VERSION_INSTALLED'</span>'
+    if [ "$ECOS_STATE_VERSION_INSTALLED" != "$ECOS_STATE_VERSION_REMOTE" ]; then
+        local version='<span font_family="monospace" foreground="#db7844" font="10"><b>'$ECOS_STATE_VERSION_INSTALLED'</b></span><span font_family="monospace" foreground="#404448" font="10"><b> ➤ </b></span><span font_family="monospace" foreground="#A3BE8C" font="10"><b>'$ECOS_STATE_VERSION_REMOTE'</b></span>'
+    fi
+    local title='<span font_family="monospace" foreground="#404448" font="10"><b>'$title'</b></span>'
+    echo "\n$header\n$version\n\n$title"
+}
+
+#/////////////////////////////////////////////////////
 # ZENITY MENUS
 #/////////////////////////////////////////////////////
 
@@ -337,9 +354,7 @@ zenity_main_menu() {
 
     local menu_items=()
     menu_items+=("Update")
-    menu_items+=("Dotfiles")
     menu_items+=("Tweaks")
-    menu_items+=("Driver")
     menu_items+=("Settings")
     if ! zenity_result="$(zenity --list --hide-header --column="" --text="$(print_zenity_header 'Menu')" --cancel-label='Exit' --ok-label='Ok' "${menu_items[@]}")"; then
         exit 0
@@ -349,54 +364,14 @@ zenity_main_menu() {
         zenity_update_progress
         exit 0
     fi
-    if [ "$zenity_result" = "Dotfiles" ]; then
-        zenity_dotfiles_menu
-        zenity_main_menu
-        exit 0
-    fi
     if [ "$zenity_result" = "Tweaks" ]; then
         ${TERMINAL_EXEC} 'bash -c "'$SCRIPT_FILE' --install-tweaks"'
-        exit 0
-    fi
-    if [ "$zenity_result" = "Driver" ]; then
-        zenity_driver_menu
         exit 0
     fi
     if [ "$zenity_result" = "Settings" ]; then
         zenity_settings
         zenity_main_menu
         exit 0
-    fi
-}
-
-zenity_dotfiles_menu() {
-    local menu_items=()
-    menu_items+=("Edit Init Script")
-    menu_items+=("Reset Dotfiles")
-    menu_items+=("Clone Dotfiles Repo")
-    if ! zenity_result="$(zenity --list --hide-header --column="" --text="$(print_zenity_header 'Dotfiles')" --cancel-label='Back' --ok-label='Ok' "${menu_items[@]}")"; then
-        return 0
-    fi
-
-    if [ "$zenity_result" = "Edit Init Script" ]; then
-        if zenity_result=$(zenity --text-info --width=1200 --height=600 --title="Init Script" --ok-label="Save" --cancel-label="Cancel" --font="monospace" --editable --filename="$ECOS_INIT_SCRIPT"); then
-            echo "$zenity_result" >"$ECOS_INIT_SCRIPT"
-            notify "Init Script saved"
-        fi
-        zenity_dotfiles_menu
-        return 0
-    fi
-    if [ "$zenity_result" = "Reset Dotfiles" ]; then
-        notify "In Development..."
-        zenity_dotfiles_menu
-        # TODO
-        return 0
-    fi
-    if [ "$zenity_result" = "Clone Dotfiles Repo" ]; then
-        notify "In Development..."
-        zenity_dotfiles_menu
-        # TODO
-        return 0
     fi
 }
 
@@ -409,29 +384,6 @@ zenity_settings() {
         notify "Settings saved"
     fi
 
-}
-
-zenity_driver_menu() {
-
-    local menu_items=()
-    menu_items+=("Audio Driver")
-    menu_items+=("Graphics Driver")
-    if ! zenity_result="$(zenity --list --hide-header --column="" --text="$(print_zenity_header 'Dotfiles')" --cancel-label='Back' --ok-label='Ok' "${menu_items[@]}")"; then
-        zenity_main_menu
-        return 0
-    fi
-
-    if [ "$zenity_result" = "Audio Driver" ]; then
-        bash -c "$ECOS_DRIVER_AUDIO_SCRIPT" && wait
-        zenity_main_menu
-        return 0
-    fi
-
-    if [ "$zenity_result" = "Graphics Driver" ]; then
-        bash -c "$ECOS_DRIVER_GRAPHICS_SCRIPT" && wait
-        zenity_main_menu
-        return 0
-    fi
 }
 
 zenity_show_changelog() {
@@ -1140,29 +1092,6 @@ update_tweaks() {
 }
 
 #/////////////////////////////////////////////////////
-# ZENITY
-#/////////////////////////////////////////////////////
-
-zenity() {
-    /usr/bin/zenity --name="$SCRIPT_ID" --width=380 --height=320 --title='' --text='' --window-icon="$ECOS_ICON_FILE" "$@" 2>/dev/null
-}
-
-notify() {
-    zenity --notification --text="$SCRIPT_TITLE\n$1"
-}
-
-print_zenity_header() {
-    local title="$1"
-    local header='<span font_family="monospace" foreground="#404448" font="18"><b>'$SCRIPT_TITLE' Manager</b></span>'
-    local version='<span font_family="monospace" foreground="#da52e2" font="11">'$ECOS_STATE_VERSION_INSTALLED'</span>'
-    if [ "$ECOS_STATE_VERSION_INSTALLED" != "$ECOS_STATE_VERSION_REMOTE" ]; then
-        local version='<span font_family="monospace" foreground="#db7844" font="10"><b>'$ECOS_STATE_VERSION_INSTALLED'</b></span><span font_family="monospace" foreground="#404448" font="10"><b> ➤ </b></span><span font_family="monospace" foreground="#A3BE8C" font="10"><b>'$ECOS_STATE_VERSION_REMOTE'</b></span>'
-    fi
-    local title='<span font_family="monospace" foreground="#404448" font="10"><b>'$title'</b></span>'
-    echo "\n$header\n$version\n\n$title"
-}
-
-#/////////////////////////////////////////////////////
 # HELPER FUNCTIONS
 #/////////////////////////////////////////////////////
 
@@ -1230,11 +1159,15 @@ kill_pid() {
     local pid_array=()
     pid_array+=("$pid_kill")
     pid_array+=($(print_children_pid "$pid_kill"))
-    for pid in ${pid_array[@]}; do
+    for pid in "${pid_array[@]}"; do
         kill -9 "$pid"
         log -i --file "PID killed: $pid"
     done
 }
+
+#/////////////////////////////////////////////////////
+# TUI
+#/////////////////////////////////////////////////////
 
 tui_init() {
     rm -f "$SCRIPT_TUI_FILE"
@@ -1269,6 +1202,10 @@ tui_add() {
 
     sleep 0.1
 }
+
+#/////////////////////////////////////////////////////
+# PRINT
+#/////////////////////////////////////////////////////
 
 print_header() {
     local print_version="${ECOS_STATE_VERSION_INSTALLED}"
