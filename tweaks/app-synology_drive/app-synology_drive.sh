@@ -1,4 +1,8 @@
 #!/bin/bash
+
+# Icon format:  png
+# Icon size:    72x72
+
 TWEAK_RES_DIR="$2" && if [ -z "$2" ]; then TWEAK_RES_DIR="$(pwd)"; fi
 
 install() {
