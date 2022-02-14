@@ -834,16 +834,6 @@ update_ecos_system() {
     create_autostart_file
     echo -e ">> DONE"
 
-    # FETCH PACKAGES
-    print_title 'FETCH PACMAN/AUR PACKAGES'
-    paru -Syy
-
-    # LIST PACKAGES
-    print_title 'FETCH PACMAN/AUR PACKAGES'
-    if ! paru -Qu; then
-        echo -e ">>> ${TERM_COLOR_GREEN}No Package Updates available${TERM_COLOR_NULL}"
-    fi
-
     # Ask for system upgrade
     print_title 'CONTINUE SYSTEM UPGRADE'
     read -p "Enter q to quit: " user_input
@@ -852,10 +842,20 @@ update_ecos_system() {
         exit 0
     fi
 
-    # PACKAGE UPGRADE
-    print_title 'UPADE PACMAN/AUR PACKAGES'
-    paru -Syu --noconfirm archlinux-keyring
-    paru -Su --noconfirm
+    # FETCH PACKAGES
+    print_title 'FETCH PACMAN/AUR PACKAGES'
+    paru -Syy
+
+    # LIST PACKAGES
+    print_title 'FETCH PACMAN/AUR PACKAGES'
+    if ! paru -Qu; then
+        echo -e ">>> ${TERM_COLOR_GREEN}No Package Updates available${TERM_COLOR_NULL}"
+    else
+        # PACKAGE UPGRADE
+        print_title 'UPADE PACMAN/AUR PACKAGES'
+        paru -Syu --noconfirm archlinux-keyring
+        paru -Su --noconfirm
+    fi
 
     # CHECK NEW INIT SCRIPT VERSION
     print_title "CHECK NEW INIT SCRIPT UPDATE"
@@ -881,10 +881,12 @@ update_ecos_system() {
     fi
 
     # UPDATE TWEAKS
-    update_tweaks
+    print_title 'UPDATE ECOS TWEAKS'
+    echo ">>> ..."
+    update_tweaks >/dev/null
+    echo ">>> FINISHED"
 
     # FINISH
-    echo -e "\n\n\n\n"
     print_title "${TERM_COLOR_GREEN} !! ECOS UPDATE FINISHED !! ${TERM_COLOR_NULL}"
     echo -e "\n"
     read -p "Press any Key to close..."

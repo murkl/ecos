@@ -3,7 +3,7 @@ TWEAK_RES_DIR="$2" && if [ -z "$2" ]; then TWEAK_RES_DIR="$(pwd)"; fi
 TWEAK_CACHE_DIR="$3" && if [ -z "$3" ]; then TWEAK_CACHE_DIR="$(pwd)"; fi
 
 # https://github.com/MartinPL/Tray-Icons-Reloaded/releases
-URL="https://github.com/MartinPL/Tray-Icons-Reloaded/releases/download/19/trayIconsReloaded@selfmade.pl.zip"
+URL="https://github.com/MartinPL/Tray-Icons-Reloaded/releases/download/20/trayIconsReloaded@selfmade.pl.zip"
 
 install() {
     rm -rf "$HOME/.local/share/gnome-shell/extensions"/trayIconsReloaded@selfmade.pl*
