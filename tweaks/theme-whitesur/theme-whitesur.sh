@@ -31,7 +31,7 @@ update() {
 
     # Install Theme
     # --monterey
-    sudo $THEME_REPO_DIR/install.sh --silent-mode --name 'ECOS' --icon simple --nautilus-style glassy --background blank --theme default --normalshowapps
+    sudo $THEME_REPO_DIR/install.sh --silent-mode --name 'ECOS' --icon simple --nautilus-style mojave --background blank --theme default --normalshowapps
 
     # Install GDM theme
     sudo $THEME_REPO_DIR/tweaks.sh --silent-mode --gdm
