@@ -701,7 +701,7 @@ exec_install_chroot() {
     echo 'GRUB_CMDLINE_LINUX="cryptdevice=UUID='$(blkid -s UUID -o value $ROOT_PARTITION)':main"' >>/etc/default/grub
     echo 'GRUB_CMDLINE_LINUX_DEFAULT="quiet splash vt.global_cursor_default=0 loglevel=2 rd.systemd.show_status=false rd.udev.log_priority=3 '$KERNEL_PARAMETER'"' >>/etc/default/grub
     #echo 'GRUB_ENABLE_CRYPTODISK="y"' >>/etc/default/grub
-    #echo 'GRUB_PRELOAD_MODULES="part_gpt part_msdos lvm"' >>/etc/default/grub
+    echo 'GRUB_PRELOAD_MODULES="part_gpt part_msdos lvm"' >>/etc/default/grub
     echo 'GRUB_DEFAULT="0"' >>/etc/default/grub
     #echo 'GRUB_DEFAULT="saved"' >>/etc/default/grub
     #echo 'GRUB_SAVEDEFAULT="true"' >>/etc/default/grub
