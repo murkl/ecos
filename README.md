@@ -17,8 +17,7 @@
 # Features
 
 - TUI Installer
-- Tweak Scripts
-- Driver Scripts
+- Tweaks & Driver Scripts
 - UEFI Support only
 - Supports Virtualbox & GNOME Boxes (qemu)
 - Sandbox ECOS Home Dir (~/.ecos)
@@ -36,7 +35,7 @@
 
 - Disable Secure Boot
 - Disable Legacy Support
-- Set Boot Mode to UEFI (Legacy BIOS supported)
+- Set Boot Mode to UEFI
 - Connect to Internet via cable (recommended)
 
 ## Connect to WLAN (optional)
@@ -52,8 +51,6 @@ exit
 
 # Installation
 
-- Create bootable USB Stick
-  - `curl -sL http://ecos.webhop.me | bash`
 - Boot [Arch ISO](https://www.archlinux.de/download) from USB Stick...
   - `loadkeys de-latin1` _(use your prefered language layout)_
   - `curl -L http://ecos.webhop.me > installer`
@@ -131,7 +128,7 @@ For Example: Have a look into the official GNOME Dotfiles repo: https://github.c
   <img width="45%" src="https://raw.githubusercontent.com/murkl/ecos/master/assets/screenshots/bspwm-02.png">
 </span>
 
-## ECOS Installation
+## ECOS Installation Screenshots
 
 ### Screenshots
 
@@ -146,16 +143,4 @@ For Example: Have a look into the official GNOME Dotfiles repo: https://github.c
   <img width="22%" src="https://raw.githubusercontent.com/murkl/ecos/master/assets/screenshots/ecos-core-08.png">
   <img width="22%" src="https://raw.githubusercontent.com/murkl/ecos/master/assets/screenshots/ecos-core-09.png">
   <img width="22%" src="https://raw.githubusercontent.com/murkl/ecos/master/assets/screenshots/ecos-core-10.png">
-</span>
-
-## ECOS Manager
-
-### Screenshots
-
-<span align="center">
-  <img width="22%" src="https://raw.githubusercontent.com/murkl/ecos/master/assets/screenshots/ecos-manager-01.png">
-  <img width="22%" src="https://raw.githubusercontent.com/murkl/ecos/master/assets/screenshots/ecos-manager-02.png">
-  <img width="22%" src="https://raw.githubusercontent.com/murkl/ecos/master/assets/screenshots/ecos-manager-03.png">
-  <img width="22%" src="https://raw.githubusercontent.com/murkl/ecos/master/assets/screenshots/ecos-manager-04.png">
-  <img width="22%" src="https://raw.githubusercontent.com/murkl/ecos/master/assets/screenshots/ecos-manager-05.png">
 </span>

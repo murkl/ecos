@@ -61,7 +61,6 @@ LOCALE_GEN=('')
 TIMEZONE=''
 VCONSOLE_KEYMAP=''
 VCONSOLE_FONT=''
-KERNEL_PARAMETER=''
 X11_KEYBOARD_LAYOUT=''
 X11_KEYBOARD_VARIANT=''
 REFLECTOR_COUNTRY=''
@@ -81,7 +80,6 @@ set_lang_en_US() {
     VCONSOLE_FONT='lat9w-16'
     X11_KEYBOARD_LAYOUT='en'
     X11_KEYBOARD_VARIANT='nodeadkeys'
-    KERNEL_PARAMETER="lang=en locale=en_US.UTF-8"
     REFLECTOR_COUNTRY='Germany'
 }
 
@@ -93,7 +91,6 @@ set_lang_de_DE() {
     VCONSOLE_FONT='lat9w-16'
     X11_KEYBOARD_LAYOUT='de'
     X11_KEYBOARD_VARIANT='nodeadkeys'
-    KERNEL_PARAMETER="lang=de locale=de_DE.UTF-8"
     REFLECTOR_COUNTRY='Germany'
 }
 
@@ -879,7 +876,6 @@ check_config() {
     # Add default values
     #----------------------------------------
 
-    check_config_key "$INSTALLER_CONFIG_FILE" "KERNEL_PARAMETER" "$KERNEL_PARAMETER"
     check_config_key "$INSTALLER_CONFIG_FILE" "WIPE_DISK" "$WIPE_DISK"
     check_config_key "$INSTALLER_CONFIG_FILE" "AUTO_UNMOUNT" "$AUTO_UNMOUNT"
     check_config_key "$INSTALLER_CONFIG_FILE" "CUSTOM_PACKAGES" "$CUSTOM_PACKAGES"
