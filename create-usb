@@ -1,6 +1,7 @@
 #!/bin/bash
 
 # ARCH ISO
+DOWNLOAD_DIR="$HOME/Downloads"
 ECOS_ARCH_ISO_ROOT_URL="https://www.archlinux.de/download/iso/$(date "+%Y.%m.01")"
 ECOS_ARCH_ISO_FILE="archlinux-$(date "+%Y.%m.01")-x86_64.iso"
 ECOS_ARCH_ISO_SHA1="sha1sums.txt"
@@ -59,13 +60,12 @@ create_usb() {
         exit 0
     fi
 
-    local local_iso_dir="/tmp/arch-iso"
     local iso_url="$ECOS_ARCH_ISO_ROOT_URL/$ECOS_ARCH_ISO_FILE"
     local sha1_url="$ECOS_ARCH_ISO_ROOT_URL/$ECOS_ARCH_ISO_SHA1"
-    local local_iso_file="$local_iso_dir/$ECOS_ARCH_ISO_FILE"
-    local local_sha1_file="$local_iso_dir/$ECOS_ARCH_ISO_FILE.sha1"
+    local local_iso_file="$DOWNLOAD_DIR/$ECOS_ARCH_ISO_FILE"
+    local local_sha1_file="$DOWNLOAD_DIR/$ECOS_ARCH_ISO_FILE.sha1"
 
-    mkdir -p "$local_iso_dir"
+    mkdir -p "$DOWNLOAD_DIR"
 
     # Check and download arch iso
     #--------------------------------------------
@@ -100,7 +100,7 @@ create_usb() {
     fi
 
     # Check SHA1 Sum
-    cd "$local_iso_dir" || exit 1
+    cd "$DOWNLOAD_DIR" || exit 1
     if grep -qrnw "$local_sha1_file" -e "$(sha1sum "$ECOS_ARCH_ISO_FILE")"; then
         print_info "SHA1 Checksum" "correct"
     else
