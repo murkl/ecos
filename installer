@@ -581,8 +581,8 @@ exec_install_chroot() {
     core_log "Modify /etc/mkinitcpio.conf"
     sed -i "s/MODULES=()/MODULES=(ext4)/g" /etc/mkinitcpio.conf
     sed -i "s/filesystems keyboard fsck/filesystems fsck/g" /etc/mkinitcpio.conf
-    sed -i "s/udev autodetect/systemd keyboard autodetect/g" /etc/mkinitcpio.conf
-    sed -i "s/block filesystems fsck/block keymap sd-encrypt sd-lvm2 filesystems sd-vconsole fsck/g" /etc/mkinitcpio.conf
+    sed -i "s/udev autodetect/systemd keyboard autodetect sd-vconsole/g" /etc/mkinitcpio.conf
+    sed -i "s/block filesystems fsck/block keymap sd-encrypt lvm2 filesystems fsck/g" /etc/mkinitcpio.conf
 
     #----------------------------------------
     # Rebuild initrc
@@ -608,14 +608,16 @@ exec_install_chroot() {
     echo 'linux   /vmlinuz-linux' >>/boot/loader/entries/ecos.conf
     [ "$UCODE" != "disabled" ] && echo "initrd  /$UCODE.img" >>/boot/loader/entries/ecos.conf
     echo 'initrd  /initramfs-linux.img' >>/boot/loader/entries/ecos.conf
-    echo "options cryptdevice=$ROOT_PARTITION:main root=/dev/mapper/main-root init=/usr/lib/systemd/systemd quiet splash loglevel=3 rd.systemd.show_status=false rd.udev.log_priority=3 vt.global_cursor_default=0 rw" >>/boot/loader/entries/ecos.conf
+    # If using sd-crypt hook, replace cryptdevice with rd.luks.name
+    # cryptdevice=UUID='$(blkid -s UUID -o value $ROOT_PARTITION)':main
+    echo "options rd.luks.name=$(blkid -s UUID -o value $ROOT_PARTITION):main root=/dev/mapper/main-root init=/usr/lib/systemd/systemd quiet splash loglevel=3 rd.systemd.show_status=false rd.udev.log_priority=3 vt.global_cursor_default=0 rw" >>/boot/loader/entries/ecos.conf
 
     # Create arch fallback entry
     echo 'title   ECOS Fallback' >/boot/loader/entries/ecos-fallback.conf
     echo 'linux   /vmlinuz-linux' >>/boot/loader/entries/ecos-fallback.conf
     [ "$UCODE" != "disabled" ] && echo "initrd  /$UCODE.img" >>/boot/loader/entries/ecos-fallback.conf
     echo 'initrd  /initramfs-linux-fallback.img' >>/boot/loader/entries/ecos-fallback.conf
-    echo "options cryptdevice=$ROOT_PARTITION:main root=/dev/mapper/main-root init=/usr/lib/systemd/systemd rw" >>/boot/loader/entries/ecos-fallback.conf
+    echo "options rd.luks.name=$(blkid -s UUID -o value $ROOT_PARTITION):main root=/dev/mapper/main-root init=/usr/lib/systemd/systemd rw" >>/boot/loader/entries/ecos-fallback.conf
 
     #----------------------------------------
     # Create new user
