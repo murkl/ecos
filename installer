@@ -24,7 +24,6 @@ INSTALLER_WORKING_DIR="$(cd "$(dirname "$0")" >/dev/null 2>&1 && pwd)"
 INSTALLER_SCRIPT_FILE="$INSTALLER_WORKING_DIR/$(basename "$0")"
 INSTALLER_CONFIG_FILE="$INSTALLER_WORKING_DIR/$INSTALLER_ID.conf"
 INSTALLER_LOG_FILE="$INSTALLER_WORKING_DIR/$INSTALLER_ID.log"
-UEFI_ENABLED=''
 
 # DEFAULT PASSWORD
 ECOS_DEFAULT_PASSWORD='ecos'
@@ -40,11 +39,6 @@ TUI_HEIGHT=24
 # ECOS URL
 ECOS_REPO_URL="https://github.com/murkl/ecos.git"
 
-# ARCH ISO
-ECOS_ARCH_ISO_ROOT_URL="https://www.archlinux.de/download/iso/$(date "+%Y.%m.01")"
-ECOS_ARCH_ISO_FILE="archlinux-$(date "+%Y.%m.01")-x86_64.iso"
-ECOS_ARCH_ISO_SHA1="sha1sums.txt"
-
 # TERMINAL COLORS
 TERM_COLOR_RED='\033[0;31m'
 TERM_COLOR_GREEN='\033[1;32m'
@@ -57,9 +51,8 @@ TERM_COLOR_NULL='\033[0m' # No Color
 USERNAME=''
 HOSTNAME=''
 WORKSTATION=''
-SWAP_SIZE='0'
+SWAP_SIZE=''
 DISK=''
-BIOS_PARTITION=''
 BOOT_PARTITION=''
 ROOT_PARTITION=''
 UCODE=''
@@ -72,8 +65,6 @@ KERNEL_PARAMETER=''
 X11_KEYBOARD_LAYOUT=''
 X11_KEYBOARD_VARIANT=''
 REFLECTOR_COUNTRY=''
-DUALBOOT='default' # windows10
-BOOTLOADER_RESOLUTION='auto'
 WIPE_DISK='false'
 AUTO_UNMOUNT='true'
 CUSTOM_PACKAGES=''
@@ -113,48 +104,23 @@ set_lang_de_DE() {
 main() {
 
     #----------------------------------------
-    # PRINT VERSION
+    # CHECK UEFI
     #----------------------------------------
-    if [ "$1" = "--version" ]; then
-        echo -e "$VERSION"
-        exit 0
-    fi
+    [ ! -d /sys/firmware/efi ] && echo "BIOS not supported" && exit 1
 
     #----------------------------------------
     # CHROOT INSTALLER
     #----------------------------------------
-    if [ "$1" = "--chroot" ] && [ "$2" != "" ] && [ "$3" != "" ]; then
-        exec_install_chroot "$2" "$3"
+    if [ "$1" = "--chroot" ]; then
+        exec_install_chroot "$2"
         exit $?
     fi
 
     # ---------------------------------------
-    # FORCE: INSTALL ECOS CORE
+    # OPEN INSTALLER MENU
     # ---------------------------------------
-    if [ "$1" = "--core" ]; then
-        tui_core_installer_menu
-        exit $?
-    fi
+    tui_core_installer_menu
 
-    # ---------------------------------------
-    # FORCE: CREATE BOOTABLE USB
-    # ---------------------------------------
-    if [ "$1" = "--usb" ]; then
-        tui_create_usb
-        exit $?
-    fi
-
-    # ---------------------------------------
-    # AUTO DETECT
-    # ---------------------------------------
-    if [ "$1" = "" ]; then
-        # Check if started from arch live iso
-        if [ -f "/proc/sys/kernel/hostname" ] && [ "$(cat /proc/sys/kernel/hostname)" = "archiso" ]; then
-            tui_core_installer_menu
-        else
-            tui_create_usb
-        fi
-    fi
 }
 
 #/////////////////////////////////////////////////////
@@ -162,13 +128,6 @@ main() {
 #/////////////////////////////////////////////////////
 
 tui_core_installer_menu() {
-
-    #----------------------------------------
-    # Check UEFI boot
-    #----------------------------------------
-    [ -d /sys/firmware/efi ] && UEFI_ENABLED='true' || UEFI_ENABLED='false'
-    # if [ -x "$(command -v efivar)" ] && [ "$(efivar -l >/dev/null)" != "" ]; then
-    #if [ -x "$(command -v efivar)" ] && [ "$(efivar -l >/dev/null)" != "" ]; then; fi
 
     #----------------------------------------
     # Show TUI menu
@@ -182,7 +141,7 @@ tui_core_installer_menu() {
     # Install core
     #----------------------------------------
     if [ "$menu_input" = "1" ]; then
-        tui_install_ecos_core "$UEFI_ENABLED"
+        tui_install_ecos_core
         exit $?
     fi
 
@@ -190,7 +149,7 @@ tui_core_installer_menu() {
     # Recovery
     #----------------------------------------
     if [ "$menu_input" = "2" ]; then
-        tui_open_recovery "$UEFI_ENABLED"
+        tui_open_recovery
         exit 0
     fi
 
@@ -210,16 +169,12 @@ tui_core_installer_menu() {
 
 tui_install_ecos_core() {
 
-    local uefi_mode="$1"
-
     #----------------------------------------
     # Reset logfile
     #----------------------------------------
     if [ -f "$INSTALLER_LOG_FILE" ]; then
         mv -f "$INSTALLER_LOG_FILE" "$INSTALLER_LOG_FILE"".backup"
     fi
-
-    core_log "UEFI MODE: $UEFI_ENABLED"
 
     #----------------------------------------
     # Ask for reset core config
@@ -282,7 +237,7 @@ tui_install_ecos_core() {
     # Execute install (will execute chroot)
     #----------------------------------------
     tui_init 0 "Core Installation..."
-    exec_install_core "$uefi_mode" "$password_encryption" "$PROGRESS_FILE" | whiptail --gauge "$(cat "$TUI_FILE")" "$TUI_HEIGHT" "$TUI_WIDTH" 0 3>&1 1>&2 2>&3
+    exec_install_core "$password_encryption" "$PROGRESS_FILE" | whiptail --gauge "$(cat "$TUI_FILE")" "$TUI_HEIGHT" "$TUI_WIDTH" 0 3>&1 1>&2 2>&3
     wait
 
     # Finish
@@ -322,9 +277,8 @@ tui_install_ecos_core() {
 
 exec_install_core() {
 
-    local uefi_mode="$1"
-    local password_encryption="$2"
-    local progress_result_file="$3"
+    local password_encryption="$1"
+    local progress_result_file="$2"
 
     #----------------------------------------
     # Source config
@@ -360,36 +314,17 @@ exec_install_core() {
     # Reload partition table
     exec_command_wrap partprobe "$DISK"
 
-    if [ "$uefi_mode" = "true" ]; then
+    # Create partition /boot efi partition: 512MiB
+    exec_command_wrap sgdisk -n 0:0:+512MiB -t 0:ef00 -c 1:boot "$DISK"
 
-        # /boot efi partition: 512MiB
-        exec_command_wrap sgdisk -n 0:0:+512MiB -t 0:ef00 -c 1:boot "$DISK"
-
-        # / partition: Rest of space
-        exec_command_wrap sgdisk -n 0:0:0 -t 0:8300 -c 2:root "$DISK"
-
-    else
-
-        # BIOS only: 1MiB partition is needed for GRUB (if GPT is used instead of MBR) with no filesystem and no mount point
-        exec_command_wrap sgdisk -n 0:0:+1MiB -t 0:ef02 -c 1:bios "$DISK"
-
-        # /boot partition: 512 MB
-        exec_command_wrap sgdisk -n 0:0:+512MiB -t 0:8300 -c 2:boot "$DISK"
-
-        # / partition: Rest of space
-        exec_command_wrap sgdisk -n 0:0:0 -t 0:8300 -c 3:root "$DISK"
-    fi
+    # Create partition / partition: Rest of space
+    exec_command_wrap sgdisk -n 0:0:0 -t 0:8300 -c 2:root "$DISK"
 
     #----------------------------------------
     # Encrypt Disk
     #----------------------------------------
     gauge_tui_update 10 "Encrypt $DISK"
 
-    # GRUB < 2.06: luks2 is not implemented!
-    # BUG: There is a bug on GRUB with luks2 and encrypted /boot (https://wiki.archlinux.org/title/GRUB#Encrypted_/boot)
-
-    # Encrypt disk
-    #local crypt_cmd="cryptsetup -c aes-xts-plain -s 512 luksFormat --type luks1 $ROOT_PARTITION"
     local crypt_cmd="cryptsetup -c aes-xts-plain -s 512 luksFormat $ROOT_PARTITION"
     if ! echo -n "$password_encryption" | $crypt_cmd -d - >/dev/null; then # !! DO NOT USE exec_command_wrap
         core_log "e" "$crypt_cmd"
@@ -398,7 +333,10 @@ exec_install_core() {
         core_log "c" "$crypt_cmd"
     fi
 
-    # Open encrypted disk
+    #----------------------------------------
+    # Open encrypted Disk
+    #----------------------------------------
+
     crypt_cmd="cryptsetup open $ROOT_PARTITION lvm"
     if ! echo -n "$password_encryption" | $crypt_cmd -d - >/dev/null; then # !! DO NOT USE exec_command_wrap
         core_log "e" "$crypt_cmd"
@@ -408,7 +346,7 @@ exec_install_core() {
     fi
 
     #----------------------------------------
-    # LVM
+    # Create LVM
     #----------------------------------------
     gauge_tui_update 11 "Create LVM ($DISK)"
     exec_command_wrap pvcreate /dev/mapper/lvm
@@ -425,8 +363,7 @@ exec_install_core() {
     # Format /boot
     #----------------------------------------
     gauge_tui_update 13 "Format $BOOT_PARTITION"
-    [ "$uefi_mode" = "true" ] && exec_command_wrap mkfs.fat -F 32 -n efi "$BOOT_PARTITION"
-    [ "$uefi_mode" = "false" ] && exec_command_wrap mkfs.ext4 -L root "$BOOT_PARTITION"
+    exec_command_wrap mkfs.fat -F 32 -n efi "$BOOT_PARTITION"
 
     #----------------------------------------
     # Mount /
@@ -484,50 +421,47 @@ exec_install_core() {
     exec_command_wrap cp -f "/etc/pacman.d/mirrorlist" /mnt/etc/pacman.d/mirrorlist
 
     #----------------------------------------
+    # Chroot cleanup
+    #----------------------------------------
+    chroot_cleanup() {
+
+        # Merge ECOS logs
+        wait && cat "/mnt/$INSTALLER_ID.log" >>"$INSTALLER_LOG_FILE"
+
+        # Remove files from new system
+        rm -f "/mnt/$INSTALLER_ID"
+        rm -f "/mnt/$INSTALLER_ID.conf"
+        rm -f "/mnt/$INSTALLER_ID.log"
+        rm -f "/mnt/$INSTALLER_ID.tui"
+        rm -f "/mnt/$INSTALLER_ID.progress"
+
+        # Unmount
+        if [ "$AUTO_UNMOUNT" = "true" ]; then
+            swapoff -a
+            umount -R /mnt/boot
+            umount -R /mnt
+        fi
+    }
+
+    #----------------------------------------
     # Chroot into new system
     #----------------------------------------
     gauge_tui_update 55 "Enter CHROOT Environement"
-    log_txt="arch-chroot /mnt /$INSTALLER_ID --chroot $uefi_mode <ENCRYPTION_PASSWORD>"
-    if ! arch-chroot /mnt "/$INSTALLER_ID" --chroot "$uefi_mode" "$password_encryption"; then
+    log_txt="arch-chroot /mnt /$INSTALLER_ID --chroot <ENCRYPTION_PASSWORD>"
+    if ! arch-chroot /mnt "/$INSTALLER_ID" --chroot "$password_encryption"; then
         # FAILED
         core_log "e" "$log_txt"
-        cleanup
+        chroot_cleanup
         exit 1
     else
         # SUCCESS
         core_log "c" "$log_txt"
-        cleanup
+        chroot_cleanup
         gauge_tui_update 100 "Installation finished!"
         core_log "!!! INSTALLATION SUCCESSFULLY FINISHED !!!"
         # SET STATUS SUCCESS
         echo "PROGRESS_SUCCESS" >"$progress_result_file"
         exit 0
-    fi
-}
-
-cleanup() {
-
-    #----------------------------------------
-    # Merge ECOS logs
-    #----------------------------------------
-    wait && cat "/mnt/$INSTALLER_ID.log" >>"$INSTALLER_LOG_FILE"
-
-    #----------------------------------------
-    # Remove files from new system
-    #----------------------------------------
-    rm -f "/mnt/$INSTALLER_ID"
-    rm -f "/mnt/$INSTALLER_ID.conf"
-    rm -f "/mnt/$INSTALLER_ID.log"
-    rm -f "/mnt/$INSTALLER_ID.tui"
-    rm -f "/mnt/$INSTALLER_ID.progress"
-
-    #----------------------------------------
-    # Unmount
-    #----------------------------------------
-    if [ "$AUTO_UNMOUNT" = "true" ]; then
-        swapoff -a
-        umount -R /mnt/boot
-        umount -R /mnt
     fi
 }
 
@@ -537,13 +471,7 @@ cleanup() {
 
 exec_install_chroot() {
 
-    local uefi_mode="$1"
-    local password_encryption="$2"
-
-    #----------------------------------------
-    # Set UEFI Mode
-    #----------------------------------------
-    UEFI_ENABLED="$uefi_mode"
+    local password_encryption="$1"
 
     #----------------------------------------
     # Source config
@@ -558,15 +486,9 @@ exec_install_chroot() {
     gauge_tui_update 56 "$gauge_txt"
     exec_command_wrap pacman -Syy
 
-    # Boootloader, Microcode Kernel Updates for CPU & Core Tools
-    # os-prober will detect existings operating systems like Windows or other Linux Distributions
-    gauge_tui_update 58 "$gauge_txt"
-    local bootloader_pkgs="grub os-prober"
-    [ "$uefi_mode" = "true" ] && bootloader_pkgs="$bootloader_pkgs efibootmgr"
-
     local ucode_pkg="$UCODE"
     [ "$ucode_pkg" = "disabled" ] && ucode_pkg=""
-    exec_command_wrap pacman --noconfirm --needed -S $ucode_pkg $bootloader_pkgs dosfstools gptfdisk lvm2 $CUSTOM_PACKAGES
+    exec_command_wrap pacman --noconfirm --needed -S $ucode_pkg efibootmgr dosfstools gptfdisk lvm2 $CUSTOM_PACKAGES
 
     # Network manager
     gauge_tui_update 60 "$gauge_txt"
@@ -659,9 +581,8 @@ exec_install_chroot() {
     core_log "Modify /etc/mkinitcpio.conf"
     sed -i "s/MODULES=()/MODULES=(ext4)/g" /etc/mkinitcpio.conf
     sed -i "s/filesystems keyboard fsck/filesystems fsck/g" /etc/mkinitcpio.conf
-    sed -i "s/udev autodetect/udev keyboard autodetect/g" /etc/mkinitcpio.conf
-    sed -i "s/block filesystems fsck/block keymap encrypt filesystems fsck/g" /etc/mkinitcpio.conf
-    sed -i "s/encrypt filesystems fsck/encrypt lvm2 filesystems fsck shutdown/g" /etc/mkinitcpio.conf
+    sed -i "s/udev autodetect/systemd keyboard autodetect/g" /etc/mkinitcpio.conf
+    sed -i "s/block filesystems fsck/block keymap sd-encrypt sd-lvm2 filesystems sd-vconsole fsck/g" /etc/mkinitcpio.conf
 
     #----------------------------------------
     # Rebuild initrc
@@ -670,57 +591,31 @@ exec_install_chroot() {
     exec_command_wrap mkinitcpio -P
 
     #----------------------------------------
-    # Bootloader: GRUB (UEFI & BIOS)
+    # Bootloader (systemd)
     #----------------------------------------
-    gauge_tui_update 85 "Install Bootloader"
 
-    # Create cryptfile - to avoid having to enter the encryption passphrase twice (once for GRUB, once for initramfs)
-    #----------------------------------------
-    # local crypt_key="/crypto_keyfile.bin"
-    # exec_command_wrap dd if=/dev/random of="$crypt_key" bs=512 count=8 iflag=fullblock
-    # exec_command_wrap chmod 600 "$crypt_key"
-    # # When initramfs' permissions are set to 644 (by default), then all users will be able to dump the keyfile
-    # exec_command_wrap chmod 600 /boot/initramfs-linux*
-    # local crypt_cmd="cryptsetup luksAddKey $ROOT_PARTITION $crypt_key"
-    # if ! echo -n "$password_encryption" | $crypt_cmd -d - >/dev/null; then
-    #     core_log "e" "$crypt_cmd"
-    #     exit 1
-    # else
-    #     core_log "c" "$crypt_cmd"
-    # fi
-    # sed -i 's^FILES=()^FILES=('$crypt_key')^g' /etc/mkinitcpio.conf
-    # exec_command_wrap mkinitcpio -P
+    #exec_command_wrap bootctl --esp-path=/boot install
+    exec_command_wrap bootctl install # systemd-boot will try to locate the ESP at /efi, /boot, and /boot/efi
 
-    # GRUB Configuration
-    #----------------------------------------
-    # cryptdevice='$ROOT_PARTITION':main
-    # root=/dev/mapper/main-root
-    # cryptkey=rootfs:'$crypt_key'
-    mv -f "/etc/default/grub" "/etc/default/grub.bak"
-    echo 'GRUB_DISTRIBUTOR="ECOS"' >/etc/default/grub
-    echo 'GRUB_CMDLINE_LINUX="cryptdevice=UUID='$(blkid -s UUID -o value $ROOT_PARTITION)':main"' >>/etc/default/grub
-    echo 'GRUB_CMDLINE_LINUX_DEFAULT="quiet splash vt.global_cursor_default=0 loglevel=2 rd.systemd.show_status=false rd.udev.log_priority=3 '$KERNEL_PARAMETER'"' >>/etc/default/grub
-    #echo 'GRUB_ENABLE_CRYPTODISK="y"' >>/etc/default/grub
-    echo 'GRUB_PRELOAD_MODULES="part_gpt part_msdos lvm"' >>/etc/default/grub
-    echo 'GRUB_DEFAULT="0"' >>/etc/default/grub
-    #echo 'GRUB_DEFAULT="saved"' >>/etc/default/grub
-    #echo 'GRUB_SAVEDEFAULT="true"' >>/etc/default/grub
-    echo 'GRUB_TERMINAL_INPUT="console"' >>/etc/default/grub
-    echo 'GRUB_TIMEOUT="0"' >>/etc/default/grub
-    echo 'GRUB_TIMEOUT_STYLE="menu"' >>/etc/default/grub
-    echo 'GRUB_RECORDFAIL_TIMEOUT="$GRUB_HIDDEN_TIMEOUT"' >>/etc/default/grub
-    echo 'GRUB_GFXMODE="auto"' >>/etc/default/grub
-    [ "$BOOTLOADER_RESOLUTION" != "auto" ] && echo 'GRUB_GFXMODE="'$BOOTLOADER_RESOLUTION',auto"' >>/etc/default/grub
-    echo 'GRUB_GFXPAYLOAD_LINUX="keep"' >>/etc/default/grub
-    echo 'GRUB_DISABLE_RECOVERY="true"' >>/etc/default/grub
-    echo 'GRUB_DISABLE_OS_PROBER="false"' >>/etc/default/grub
+    # Create bootloader config
+    echo 'default ecos.conf' >/boot/loader/loader.conf
+    echo 'console-mode auto' >>/boot/loader/loader.conf
+    echo 'timeout 0' >>/boot/loader/loader.conf
+    echo 'editor  yes' >>/boot/loader/loader.conf
 
-    # Install GRUB
-    [ "$uefi_mode" = "true" ] && exec_command_wrap grub-install --target=x86_64-efi --efi-directory=/boot --bootloader-id="ECOS" --no-floppy --recheck "$DISK"
-    [ "$uefi_mode" = "false" ] && exec_command_wrap grub-install --target=i386-pc --no-floppy --recheck "$DISK"
+    # Create arch default entry
+    echo 'title   ECOS' >/boot/loader/entries/ecos.conf
+    echo 'linux   /vmlinuz-linux' >>/boot/loader/entries/ecos.conf
+    [ "$UCODE" != "disabled" ] && echo "initrd  /$UCODE.img" >>/boot/loader/entries/ecos.conf
+    echo 'initrd  /initramfs-linux.img' >>/boot/loader/entries/ecos.conf
+    echo "options cryptdevice=$ROOT_PARTITION:main root=/dev/mapper/main-root init=/usr/lib/systemd/systemd quiet splash loglevel=3 rd.systemd.show_status=false rd.udev.log_priority=3 vt.global_cursor_default=0 rw" >>/boot/loader/entries/ecos.conf
 
-    # Create GRUB Config
-    exec_command_wrap grub-mkconfig -o /boot/grub/grub.cfg
+    # Create arch fallback entry
+    echo 'title   ECOS Fallback' >/boot/loader/entries/ecos-fallback.conf
+    echo 'linux   /vmlinuz-linux' >>/boot/loader/entries/ecos-fallback.conf
+    [ "$UCODE" != "disabled" ] && echo "initrd  /$UCODE.img" >>/boot/loader/entries/ecos-fallback.conf
+    echo 'initrd  /initramfs-linux-fallback.img' >>/boot/loader/entries/ecos-fallback.conf
+    echo "options cryptdevice=$ROOT_PARTITION:main root=/dev/mapper/main-root init=/usr/lib/systemd/systemd rw" >>/boot/loader/entries/ecos-fallback.conf
 
     #----------------------------------------
     # Create new user
@@ -969,18 +864,25 @@ check_config() {
     #----------------------------------------
     check_config_disk
     replace_property_value "$INSTALLER_CONFIG_FILE" "DISK" "$DISK"
-    [ "$UEFI_ENABLED" = "false" ] && replace_property_value "$INSTALLER_CONFIG_FILE" "BIOS_PARTITION" "$BIOS_PARTITION"
     replace_property_value "$INSTALLER_CONFIG_FILE" "BOOT_PARTITION" "$BOOT_PARTITION"
     replace_property_value "$INSTALLER_CONFIG_FILE" "ROOT_PARTITION" "$ROOT_PARTITION"
 
     #----------------------------------------
+    # Check Swap
+    #----------------------------------------
+    if [ "$SWAP_SIZE" = "" ]; then
+        local rm_kb=$(grep MemTotal /proc/meminfo | awk '{print $2}')
+        local ram_mb=$(expr $rm_kb / 1024)
+        local ram_gb=$(expr $ram_mb / 1024)
+        replace_property_value "$INSTALLER_CONFIG_FILE" "SWAP_SIZE" "$ram_gb"
+    fi
+
+    #----------------------------------------
     # Add default values
     #----------------------------------------
-    check_config_key "$INSTALLER_CONFIG_FILE" "BOOTLOADER_RESOLUTION" "$BOOTLOADER_RESOLUTION"
+
     check_config_key "$INSTALLER_CONFIG_FILE" "KERNEL_PARAMETER" "$KERNEL_PARAMETER"
-    check_config_key "$INSTALLER_CONFIG_FILE" "DUALBOOT" "$DUALBOOT"
     check_config_key "$INSTALLER_CONFIG_FILE" "WIPE_DISK" "$WIPE_DISK"
-    check_config_key "$INSTALLER_CONFIG_FILE" "SWAP_SIZE" "$SWAP_SIZE"
     check_config_key "$INSTALLER_CONFIG_FILE" "AUTO_UNMOUNT" "$AUTO_UNMOUNT"
     check_config_key "$INSTALLER_CONFIG_FILE" "CUSTOM_PACKAGES" "$CUSTOM_PACKAGES"
 
@@ -1027,14 +929,9 @@ check_config_disk() {
             exit 0
         fi
 
-        if [ "$UEFI_ENABLED" = "true" ]; then
-            [[ "$DISK" = "/dev/nvm"* ]] && BOOT_PARTITION="${DISK}p1" || BOOT_PARTITION="${DISK}1"
-            [[ "$DISK" = "/dev/nvm"* ]] && ROOT_PARTITION="${DISK}p2" || ROOT_PARTITION="${DISK}2"
-        else
-            [[ "$DISK" = "/dev/nvm"* ]] && BIOS_PARTITION="${DISK}p1" || BIOS_PARTITION="${DISK}1"
-            [[ "$DISK" = "/dev/nvm"* ]] && BOOT_PARTITION="${DISK}p2" || BOOT_PARTITION="${DISK}2"
-            [[ "$DISK" = "/dev/nvm"* ]] && ROOT_PARTITION="${DISK}p3" || ROOT_PARTITION="${DISK}3"
-        fi
+        [[ "$DISK" = "/dev/nvm"* ]] && BOOT_PARTITION="${DISK}p1" || BOOT_PARTITION="${DISK}1"
+        [[ "$DISK" = "/dev/nvm"* ]] && ROOT_PARTITION="${DISK}p2" || ROOT_PARTITION="${DISK}2"
+
     fi
 
 }
@@ -1044,8 +941,6 @@ check_config_disk() {
 #/////////////////////////////////////////////////////
 
 tui_open_recovery() {
-
-    local uefi_mode="$1"
 
     #----------------------------------------
     # Select Disk
@@ -1088,115 +983,6 @@ tui_open_recovery() {
     swapoff -a
     umount -R "$mnt_recovery"
     wait && clear
-}
-
-#/////////////////////////////////////////////////////
-# CREATE BOOTABLE USB STICK
-#/////////////////////////////////////////////////////
-
-tui_create_usb() {
-
-    clear
-
-    if ! [ -x "$(command -v whiptail)" ]; then
-        echo "ERROR: whiptail not installed"
-        exit 1
-    fi
-
-    if ! [ -x "$(command -v curl)" ]; then
-        echo "ERROR: curl not installed"
-        exit 1
-    fi
-
-    if ! [ -x "$(command -v dd)" ]; then
-        echo "ERROR: dd not installed"
-        exit 1
-    fi
-
-    # Select Disk
-    #--------------------------------------------
-    local disk_array=()
-    while read disk_line; do
-        disk_size=$(lsblk -d -n -o SIZE /dev/$disk_line)
-        disk_array+=("/dev/$disk_line")
-        disk_array+=(" ($disk_size)")
-    done < <(lsblk -I 8 -d -o KNAME -n)
-
-    if [ ${#disk_array[@]} == 0 ]; then
-        tui_init 0 "No supported Disk found"
-        whiptail --msgbox "$(cat "$TUI_FILE")" 0 "$TUI_WIDTH"
-        exit 1
-    fi
-
-    local usb_disk=''
-    tui_init 17 "CREATE BOOTABLE USB STICK"
-    tui_add 20 "Choose Target Device"
-    if ! usb_disk=$(whiptail --menu "$(cat "$TUI_FILE")\n" "$TUI_HEIGHT" "$TUI_WIDTH" "${#disk_array[@]}" "${disk_array[@]}" 3>&1 1>&2 2>&3); then
-        exit 0
-    fi
-
-    local local_iso_dir="/tmp/arch-iso"
-    local iso_url="$ECOS_ARCH_ISO_ROOT_URL/$ECOS_ARCH_ISO_FILE"
-    local sha1_url="$ECOS_ARCH_ISO_ROOT_URL/$ECOS_ARCH_ISO_SHA1"
-    local local_iso_file="$local_iso_dir/$ECOS_ARCH_ISO_FILE"
-    local local_sha1_file="$local_iso_dir/$ECOS_ARCH_ISO_FILE.sha1"
-
-    mkdir -p "$local_iso_dir"
-
-    # Check and download arch iso
-    #--------------------------------------------
-    print_info "Target USB Device" "$usb_disk"
-
-    # Downloading ISO
-    if ! [ -f "$local_iso_file" ]; then
-        print_info "Downloading Arch ISO" "$iso_url"
-        if ! curl -L "$iso_url" -o "$local_iso_file.part"; then
-            echo "ERROR: Downloading ISO $iso_url"
-            exit 1
-        fi
-        wait
-        if ! mv "$local_iso_file.part" "$local_iso_file"; then
-            echo "ERROR: Moving ISO $local_iso_file"
-            exit 1
-        fi
-    fi
-
-    # Downloading SHA1 Sum
-    if ! [ -f "$local_sha1_file" ]; then
-        print_info "Downloading SHA1 Checksum" "$sha1_url"
-        if ! curl -L "$sha1_url" -o "$local_sha1_file.part"; then
-            echo "ERROR: Downloading SHA1 Sum $sha1_url"
-            exit 1
-        fi
-        wait
-        if ! mv "$local_sha1_file.part" "$local_sha1_file"; then
-            echo "ERROR: Moving SHA1 Sum $local_sha1_file"
-            exit 1
-        fi
-    fi
-
-    # Check SHA1 Sum
-    cd "$local_iso_dir" || exit 1
-    if grep -qrnw "$local_sha1_file" -e "$(sha1sum "$ECOS_ARCH_ISO_FILE")"; then
-        print_info "SHA1 Checksum" "correct"
-    else
-        echo "ERROR: SHA1 Checksum" "incorrect"
-        exit 1
-    fi
-
-    print_info "Arch ISO File" "$local_iso_file"
-
-    # Create Bootable USB Stick
-    #--------------------------------------------
-    print_info "Create Bootable USB Device..."
-
-    if ! sudo dd bs=4M if="$local_iso_file" of="$usb_disk" status=progress oflag=sync; then
-        echo "ERROR: Creating USB Stick"
-        exit 1
-    fi
-
-    # Finished
-    wait && print_info "FINISHED" "Please remove the USB Device $usb_disk"
 }
 
 #/////////////////////////////////////////////////////
@@ -1316,16 +1102,12 @@ replace_property_array_value() {
 
 tui_init() {
     rm -f "$TUI_FILE"
-    local uefi_info=""
-    [ "$UEFI_ENABLED" = "true" ] && uefi_info="- UEFI Mode -"
-    [ "$UEFI_ENABLED" = "false" ] && uefi_info="- BIOS Mode -"
     echo -e '\n
              ███████  ██████  ██████  ███████ 
              ██      ██      ██    ██ ██      
              █████   ██      ██    ██ ███████ 
              ██      ██      ██    ██      ██ 
-             ███████  ██████  ██████  ███████\n
-                       '$uefi_info'
+             ███████  ██████  ██████  ███████\n                   
              ' >"$TUI_FILE"
     tui_add "$1" "$2"
 }

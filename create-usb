@@ -1,0 +1,126 @@
+#!/bin/bash
+
+# ARCH ISO
+ECOS_ARCH_ISO_ROOT_URL="https://www.archlinux.de/download/iso/$(date "+%Y.%m.01")"
+ECOS_ARCH_ISO_FILE="archlinux-$(date "+%Y.%m.01")-x86_64.iso"
+ECOS_ARCH_ISO_SHA1="sha1sums.txt"
+
+# TERMINAL COLORS
+TERM_COLOR_RED='\033[0;31m'
+TERM_COLOR_GREEN='\033[1;32m'
+TERM_COLOR_BLUE='\033[1;34m'
+TERM_COLOR_PURPLE='\033[1;35m'
+TERM_COLOR_YELLOW='\033[1;33m'
+TERM_COLOR_NULL='\033[0m' # No Color
+
+if ! [ -x "$(command -v whiptail)" ]; then
+    echo "ERROR: whiptail not installed"
+    exit 1
+fi
+
+if ! [ -x "$(command -v curl)" ]; then
+    echo "ERROR: curl not installed"
+    exit 1
+fi
+
+if ! [ -x "$(command -v dd)" ]; then
+    echo "ERROR: dd not installed"
+    exit 1
+fi
+
+print_info() {
+    local title="$1"
+    local info="$2"
+    local prefix="${TERM_COLOR_BLUE}>>>${TERM_COLOR_NULL}"
+    local output="${prefix} ${TERM_COLOR_PURPLE}${title}${TERM_COLOR_NULL}"
+    if [ "$info" != "" ]; then
+        output="${output}: ${TERM_COLOR_YELLOW}${info}${TERM_COLOR_NULL}"
+    fi
+    echo -e "\n$output"
+}
+
+create_usb() {
+    # Select Disk
+    #--------------------------------------------
+    local disk_array=()
+    while read disk_line; do
+        disk_size=$(lsblk -d -n -o SIZE /dev/$disk_line)
+        disk_array+=("/dev/$disk_line")
+        disk_array+=(" ($disk_size)")
+    done < <(lsblk -I 8 -d -o KNAME -n)
+
+    if [ ${#disk_array[@]} == 0 ]; then
+        whiptail --msgbox "No supported Disk found" 0 0
+        exit 1
+    fi
+
+    local usb_disk=''
+    if ! usb_disk=$(whiptail --menu "Choose Target Device\n" 0 0 "${#disk_array[@]}" "${disk_array[@]}" 3>&1 1>&2 2>&3); then
+        exit 0
+    fi
+
+    local local_iso_dir="/tmp/arch-iso"
+    local iso_url="$ECOS_ARCH_ISO_ROOT_URL/$ECOS_ARCH_ISO_FILE"
+    local sha1_url="$ECOS_ARCH_ISO_ROOT_URL/$ECOS_ARCH_ISO_SHA1"
+    local local_iso_file="$local_iso_dir/$ECOS_ARCH_ISO_FILE"
+    local local_sha1_file="$local_iso_dir/$ECOS_ARCH_ISO_FILE.sha1"
+
+    mkdir -p "$local_iso_dir"
+
+    # Check and download arch iso
+    #--------------------------------------------
+    print_info "Target USB Device" "$usb_disk"
+
+    # Downloading ISO
+    if ! [ -f "$local_iso_file" ]; then
+        print_info "Downloading Arch ISO" "$iso_url"
+        if ! curl -L "$iso_url" -o "$local_iso_file.part"; then
+            echo "ERROR: Downloading ISO $iso_url"
+            exit 1
+        fi
+        wait
+        if ! mv "$local_iso_file.part" "$local_iso_file"; then
+            echo "ERROR: Moving ISO $local_iso_file"
+            exit 1
+        fi
+    fi
+
+    # Downloading SHA1 Sum
+    if ! [ -f "$local_sha1_file" ]; then
+        print_info "Downloading SHA1 Checksum" "$sha1_url"
+        if ! curl -L "$sha1_url" -o "$local_sha1_file.part"; then
+            echo "ERROR: Downloading SHA1 Sum $sha1_url"
+            exit 1
+        fi
+        wait
+        if ! mv "$local_sha1_file.part" "$local_sha1_file"; then
+            echo "ERROR: Moving SHA1 Sum $local_sha1_file"
+            exit 1
+        fi
+    fi
+
+    # Check SHA1 Sum
+    cd "$local_iso_dir" || exit 1
+    if grep -qrnw "$local_sha1_file" -e "$(sha1sum "$ECOS_ARCH_ISO_FILE")"; then
+        print_info "SHA1 Checksum" "correct"
+    else
+        echo "ERROR: SHA1 Checksum" "incorrect"
+        exit 1
+    fi
+
+    print_info "Arch ISO File" "$local_iso_file"
+
+    # Create Bootable USB Stick
+    #--------------------------------------------
+    print_info "Create Bootable USB Device..."
+
+    if ! sudo dd bs=4M if="$local_iso_file" of="$usb_disk" status=progress oflag=sync; then
+        echo "ERROR: Creating USB Stick"
+        exit 1
+    fi
+
+    # Finished
+    wait && print_info "FINISHED" "Please remove the USB Device $usb_disk"
+}
+
+create_usb

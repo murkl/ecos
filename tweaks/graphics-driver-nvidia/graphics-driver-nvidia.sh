@@ -38,13 +38,9 @@ install() {
 
         # DRM kernel mode setting (nvidia-drm.modeset=1)
         sudo sed -i "s/quiet splash/nvidia-drm.modeset=1 quiet splash/g" "/boot/loader/entries/ecos.conf"
-        sudo sed -i "s/quiet splash/nvidia-drm.modeset=1 quiet splash/g" "/etc/default/grub"
 
         # Rebuild
         sudo mkinitcpio -P
-
-        # Update Grub
-        sudo grub-mkconfig -o /boot/grub/grub.cfg
 
         exit 0
     fi
@@ -75,13 +71,9 @@ install() {
 
         # DRM kernel mode setting (nvidia-drm.modeset=1)
         sudo sed -i "s/quiet splash/nvidia-drm.modeset=1 quiet splash/g" "/boot/loader/entries/ecos.conf"
-        sudo sed -i "s/quiet splash/nvidia-drm.modeset=1 quiet splash/g" "/etc/default/grub"
 
         # Rebuild
         sudo mkinitcpio -P
-
-        # Update Grub
-        sudo grub-mkconfig -o /boot/grub/grub.cfg
 
         exit 0
     fi
@@ -105,13 +97,9 @@ install() {
 
         # DRM kernel mode setting (nvidia-drm.modeset=1)
         sudo sed -i "s/quiet splash/nvidia-drm.modeset=1 quiet splash/g" "/boot/loader/entries/ecos.conf"
-        sudo sed -i "s/quiet splash/nvidia-drm.modeset=1 quiet splash/g" "/etc/default/grub"
 
         # Rebuild
         sudo mkinitcpio -P
-
-        # Update Grub
-        sudo grub-mkconfig -o /boot/grub/grub.cfg
 
         echo 'Section "OutputClass"
     Identifier "intel"
@@ -204,7 +192,6 @@ remove() {
     sudo sed -i "s/MODULES=(ext4 nvidia nvidia_modeset nvidia_uvm nvidia_drm)/MODULES=(ext4)/g" "/etc/mkinitcpio.conf"
 
     sudo sed -i "s/nvidia-drm.modeset=1 quiet splash/quiet splash/g" "/boot/loader/entries/ecos.conf"
-    sudo sed -i "s/nvidia-drm.modeset=1 quiet splash/quiet splash/g" "/boot/grub/grub.cfg"
 
     sudo rm -f "/etc/X11/xorg.conf.d/20-intel.conf"
     sudo sed -i '/COGL_ATLAS_DEFAULT_BLIT_MODE=framebuffer/d' "/etc/environment"
@@ -223,8 +210,6 @@ remove() {
     # Rebuild
     sudo mkinitcpio -P
 
-    # Update Grub
-    sudo grub-mkconfig -o /boot/grub/grub.cfg
 }
 
 update() {
