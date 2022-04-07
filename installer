@@ -64,7 +64,7 @@ VCONSOLE_FONT=''
 X11_KEYBOARD_LAYOUT=''
 X11_KEYBOARD_VARIANT=''
 REFLECTOR_COUNTRY=''
-WIPE_DISK='false'
+WIPE_OVERRIDE='false'
 AUTO_UNMOUNT='true'
 CUSTOM_PACKAGES=''
 
@@ -295,7 +295,7 @@ exec_install_core() {
     exec_command_wrap sgdisk -Z "$DISK"
 
     # Override complete disk with 0
-    if [ "$WIPE_DISK" = "true" ]; then
+    if [ "$WIPE_OVERRIDE" = "true" ]; then
         gauge_tui_update 6 "Wipe $DISK and override with zero (this will take a while...)"
         exec_command_wrap dd status=progress if=/dev/zero of="$DISK"
     fi
@@ -876,7 +876,7 @@ check_config() {
     # Add default values
     #----------------------------------------
 
-    check_config_key "$INSTALLER_CONFIG_FILE" "WIPE_DISK" "$WIPE_DISK"
+    check_config_key "$INSTALLER_CONFIG_FILE" "WIPE_OVERRIDE" "$WIPE_OVERRIDE"
     check_config_key "$INSTALLER_CONFIG_FILE" "AUTO_UNMOUNT" "$AUTO_UNMOUNT"
     check_config_key "$INSTALLER_CONFIG_FILE" "CUSTOM_PACKAGES" "$CUSTOM_PACKAGES"
 
