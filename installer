@@ -610,14 +610,15 @@ exec_install_chroot() {
     echo 'initrd  /initramfs-linux.img' >>/boot/loader/entries/ecos.conf
     # If using sd-crypt hook, replace cryptdevice with rd.luks.name
     # cryptdevice=UUID='$(blkid -s UUID -o value $ROOT_PARTITION)':main
-    echo "options rd.luks.name=$(blkid -s UUID -o value $ROOT_PARTITION):main root=/dev/mapper/main-root init=/usr/lib/systemd/systemd quiet splash loglevel=3 rd.systemd.show_status=false rd.udev.log_priority=3 vt.global_cursor_default=0 rw" >>/boot/loader/entries/ecos.conf
+    # rd.luks.name=$(blkid -s UUID -o value $ROOT_PARTITION)=main
+    echo "options rd.luks.name=$(blkid -s UUID -o value $ROOT_PARTITION)=main root=/dev/mapper/main-root init=/usr/lib/systemd/systemd quiet splash loglevel=3 rd.systemd.show_status=false rd.udev.log_priority=3 vt.global_cursor_default=0 rw" >>/boot/loader/entries/ecos.conf
 
     # Create arch fallback entry
     echo 'title   ECOS Fallback' >/boot/loader/entries/ecos-fallback.conf
     echo 'linux   /vmlinuz-linux' >>/boot/loader/entries/ecos-fallback.conf
     [ "$UCODE" != "disabled" ] && echo "initrd  /$UCODE.img" >>/boot/loader/entries/ecos-fallback.conf
     echo 'initrd  /initramfs-linux-fallback.img' >>/boot/loader/entries/ecos-fallback.conf
-    echo "options rd.luks.name=$(blkid -s UUID -o value $ROOT_PARTITION):main root=/dev/mapper/main-root init=/usr/lib/systemd/systemd rw" >>/boot/loader/entries/ecos-fallback.conf
+    echo "options rd.luks.name=$(blkid -s UUID -o value $ROOT_PARTITION)=main root=/dev/mapper/main-root init=/usr/lib/systemd/systemd rw" >>/boot/loader/entries/ecos-fallback.conf
 
     #----------------------------------------
     # Create new user
@@ -632,16 +633,16 @@ exec_install_chroot() {
     sed -i 's^# %wheel ALL=(ALL:ALL) ALL^%wheel ALL=(ALL:ALL) ALL^g' /etc/sudoers
 
     #----------------------------------------
-    # Auto login tty5
+    # Auto login tty1
     #----------------------------------------
     gauge_tui_update 90 "Enable Automatic Login"
-    mkdir -p "/etc/systemd/system/getty@tty5.service.d/"
+    mkdir -p "/etc/systemd/system/getty@tty1.service.d/"
     {
         echo "[Service]"
         echo "ExecStart="
         echo "ExecStart=-/usr/bin/agetty --skip-login --nonewline --noissue --autologin $USERNAME --noclear %I \$TERM"
-    } >"/etc/systemd/system/getty@tty5.service.d/override.conf"
-    exec_command_wrap systemctl enable getty@tty5
+    } >"/etc/systemd/system/getty@tty1.service.d/autologin.conf"
+    exec_command_wrap systemctl enable getty@tty1
 
     #----------------------------------------
     # Xorg config
