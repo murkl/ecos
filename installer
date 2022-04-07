@@ -630,16 +630,16 @@ exec_install_chroot() {
     sed -i 's^# %wheel ALL=(ALL:ALL) ALL^%wheel ALL=(ALL:ALL) ALL^g' /etc/sudoers
 
     #----------------------------------------
-    # Auto login tty1
+    # Auto login tty5
     #----------------------------------------
     gauge_tui_update 90 "Enable Automatic Login"
-    mkdir -p "/etc/systemd/system/getty@tty1.service.d/"
+    mkdir -p "/etc/systemd/system/getty@tty5.service.d/"
     {
         echo "[Service]"
         echo "ExecStart="
         echo "ExecStart=-/usr/bin/agetty --skip-login --nonewline --noissue --autologin $USERNAME --noclear %I \$TERM"
-    } >"/etc/systemd/system/getty@tty1.service.d/override.conf"
-    exec_command_wrap systemctl enable getty@tty1
+    } >"/etc/systemd/system/getty@tty5.service.d/override.conf"
+    exec_command_wrap systemctl enable getty@tty5
 
     #----------------------------------------
     # Xorg config
@@ -703,11 +703,6 @@ exec_install_chroot() {
     # Timesync service
     #----------------------------------------
     exec_command_wrap systemctl enable "systemd-timesyncd.service"
-
-    #----------------------------------------
-    # TODO (FAILED): Network browsing service
-    #----------------------------------------
-    #exec_command_wrap systemctl enable "avahi-daemon"
 
     #----------------------------------------
     # TLP (Notebook)

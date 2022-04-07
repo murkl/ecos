@@ -19,7 +19,7 @@
 - TUI Installer
 - Tweak Scripts
 - Driver Scripts
-- UEFI & BIOS Support
+- UEFI Support only
 - Supports Virtualbox & GNOME Boxes (qemu)
 - Sandbox ECOS Home Dir (~/.ecos)
 - Easy expandable (have a look in ECOS home dir)
