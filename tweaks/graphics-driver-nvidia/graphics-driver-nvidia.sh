@@ -42,6 +42,9 @@ install() {
         # Rebuild
         sudo mkinitcpio -P
 
+        # Create xorg settings
+        sudo nvidia-xconfig
+
         exit 0
     fi
 
@@ -75,6 +78,9 @@ install() {
         # Rebuild
         sudo mkinitcpio -P
 
+        # Create xorg settings
+        sudo nvidia-xconfig
+
         exit 0
     fi
 
@@ -100,6 +106,9 @@ install() {
 
         # Rebuild
         sudo mkinitcpio -P
+
+        # Create xorg settings
+        sudo nvidia-xconfig
 
         echo 'Section "OutputClass"
     Identifier "intel"
