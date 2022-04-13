@@ -24,6 +24,8 @@ install() {
         sudo sed -i "s/MODULES=(ext4)/MODULES=(ext4 intel_agp i915)/g" "/etc/mkinitcpio.conf"
         sudo mkinitcpio -P
 
+        sudo sed -i "s/quiet splash/snd_hda_codec_hdmi.enable_silent_stream=0 quiet splash/g" "/boot/loader/entries/ecos.conf"
+
         # Font and screen corruption in GTK applications (missing glyphs after suspend/resume)
         echo 'COGL_ATLAS_DEFAULT_BLIT_MODE=framebuffer' | sudo tee -a "/etc/environment"
         local conf='
@@ -45,6 +47,7 @@ remove() {
     sudo sed -i "s/MODULES=(ext4 intel_agp i915)/MODULES=(ext4)/g" "/etc/mkinitcpio.conf"
     sudo sed -i '/COGL_ATLAS_DEFAULT_BLIT_MODE=framebuffer/d' "/etc/environment"
     sudo rm -f "/etc/X11/xorg.conf.d/20-intel.conf"
+    sudo sed -i "s/snd_hda_codec_hdmi.enable_silent_stream=0 quiet splash/quiet splash/g" "/boot/loader/entries/ecos.conf"
     sudo mkinitcpio -P
 }
 
